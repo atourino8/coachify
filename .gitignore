@@ -1,0 +1,12 @@
+node_modules
+/.svelte-kit
+/build
+/.vercel
+.DS_Store
+*.log
+
+# Variables de entorno (claves de Supabase, Cloudinary, etc.)
+.env
+.env.local
+.env.*.local
+!.env.example

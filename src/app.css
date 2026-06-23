@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============== Variables globales (complementan Tailwind) ============== */
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0a1628;
+  color: #f1f5f9;
+  min-height: 100vh;
+}
+
+/* Selección de texto consistente con la marca */
+::selection {
+  background-color: rgba(59, 130, 246, 0.35);
+  color: #f1f5f9;
+}
+
+/* Focus visible accesible (foco azul mar) */
+*:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============== Componentes utilitarios reutilizables ============== */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3
+           font-medium text-sm tracking-wide
+           transition-all duration-200
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5
+           shadow-md hover:shadow-glow;
+  }
+
+  .btn-ghost {
+    @apply btn border border-text-mute/30 text-text hover:bg-surface
+           hover:border-text-mute/60;
+  }
+
+  .container-narrow {
+    @apply max-w-6xl mx-auto px-6 sm:px-8;
+  }
+
+  .container-text {
+    @apply max-w-3xl mx-auto px-6;
+  }
+
+  .eyebrow {
+    @apply uppercase tracking-[0.32em] text-xs font-semibold text-accent;
+  }
+
+  .card {
+    @apply bg-surface border border-text-mute/10 rounded-md p-6
+           transition-all duration-200
+           hover:bg-surface-2 hover:border-text-mute/30;
+  }
+}
