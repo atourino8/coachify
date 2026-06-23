@@ -1,0 +1,7 @@
+# Coachify · BETA PRIVADA
+# Mientras estemos en pruebas, NO permitimos que ningún crawler indexe el sitio.
+# Cuando el producto esté listo para lanzamiento, sustituir este archivo por uno
+# que permita el rastreo y apunte a sitemap.xml.
+
+User-agent: *
+Disallow: /
