@@ -4,7 +4,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env as publicEnv } from '$env/dynamic/public';
+
+const PUBLIC_SUPABASE_URL = publicEnv.PUBLIC_SUPABASE_URL;
+const PUBLIC_SUPABASE_ANON_KEY = publicEnv.PUBLIC_SUPABASE_ANON_KEY;
 import type { Database } from '$lib/supabase/types';
 
 const supabase: Handle = async ({ event, resolve }) => {

@@ -2,7 +2,10 @@
 // para mantener la sesión sincronizada.
 
 import { createBrowserClient, createServerClient, isBrowser } from '@supabase/ssr';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { env as publicEnv } from '$env/dynamic/public';
+
+const PUBLIC_SUPABASE_URL = publicEnv.PUBLIC_SUPABASE_URL;
+const PUBLIC_SUPABASE_ANON_KEY = publicEnv.PUBLIC_SUPABASE_ANON_KEY;
 import type { LayoutLoad } from './$types';
 import type { Database } from '$lib/supabase/types';
 

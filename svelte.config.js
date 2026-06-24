@@ -5,7 +5,12 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
-    adapter: adapter(),
+    adapter: adapter({
+      // Runtime explícito porque tu Node local (v24) está por delante de lo
+      // que adapter-vercel soporta para autodetectar. Node 22 es el LTS actual
+      // y el más reciente soportado por Vercel.
+      runtime: 'nodejs22.x'
+    }),
     alias: {
       $lib: './src/lib',
       '$lib/*': './src/lib/*'
