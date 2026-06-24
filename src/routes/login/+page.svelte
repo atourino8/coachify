@@ -1,6 +1,7 @@
 <script lang="ts">
-  // Login UI · Fase A
-  // En Fase B se conectará a Supabase Auth (signInWithPassword)
+  // Login real con Supabase Auth + redirección según rol.
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
 
   let email = $state('');
   let password = $state('');
@@ -11,11 +12,45 @@
     e.preventDefault();
     loading = true;
     error = '';
-    // TODO Fase B: signInWithPassword({ email, password })
-    setTimeout(() => {
+
+    const supabase = page.data.supabase;
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (authError) {
       loading = false;
-      error = 'Auth aún no implementado (Fase B). Las credenciales no se validan todavía.';
-    }, 600);
+      error = traducirError(authError.message);
+      return;
+    }
+
+    // Leer el rol del perfil para decidir a dónde redirigir
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    loading = false;
+
+    if (profile?.role === 'coach') {
+      goto('/dashboard');
+    } else if (profile?.role === 'client') {
+      goto('/today');
+    } else {
+      // Sin perfil aún (raro): mandamos a la home
+      goto('/');
+    }
+  }
+
+  function traducirError(msg: string): string {
+    const map: Record<string, string> = {
+      'Invalid login credentials': 'Email o contraseña incorrectos.',
+      'Email not confirmed':
+        'Confirma tu email antes de entrar. Revisa tu bandeja de entrada.'
+    };
+    return map[msg] ?? msg;
   }
 </script>
 
@@ -54,8 +89,7 @@
           required
           autocomplete="email"
           class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md
-                 focus:border-primary focus:ring-2 focus:ring-primary/20
-                 transition-all"
+                 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
       </div>
 
@@ -70,13 +104,12 @@
           required
           autocomplete="current-password"
           class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md
-                 focus:border-primary focus:ring-2 focus:ring-primary/20
-                 transition-all"
+                 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
       </div>
 
       {#if error}
-        <p class="text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-3">
+        <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
           {error}
         </p>
       {/if}
