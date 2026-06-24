@@ -1,10 +1,14 @@
-# Lecciones aprendidas · Can Ficus
+# Lecciones aprendidas · freelance playbook
 
 Documento vivo. Captura todo lo que sirvió y todo lo que no, para reutilizar
 en futuros proyectos. Dos partes: **técnica** (cómo construir) y **comercial**
 (cómo vender, cobrar, traspasar).
 
-Última revisión: 22 de junio de 2026.
+Proyectos cubiertos:
+- **Can Ficus** (web estática + Decap CMS, junio 2026).
+- **Coachify** (SaaS B2B con SvelteKit + Supabase + Vercel, junio 2026).
+
+Última revisión: 24 de junio de 2026.
 
 ---
 
@@ -334,6 +338,109 @@ Cosas que merecería la pena codificar en plantillas reutilizables algún día:
 - **Generador de favicons + OG images** desde un YAML de marca (color, letra, nombre).
 - **Validador de proyecto** pre-commit: corre el servidor, abre headless Chrome, valida que la consola está limpia.
 - **Email transaccional listo**: formulario que va a Resend/Loops en vez de mailto.
+
+---
+
+## PARTE 6 · LECCIONES DE COACHIFY (Tier 2 — apps con backend)
+
+Coachify es SvelteKit + Supabase + Vercel. Las lecciones aquí solo aplican a
+apps con autenticación real, base de datos y deploy serverless. Para webs
+estáticas, las de Can Ficus siguen siendo la guía.
+
+### 6.1 Errores cometidos en Coachify
+
+| Error | Síntoma | Causa raíz | Cómo evitarlo |
+| --- | --- | --- | --- |
+| **`$env/static/public` rompe el build si la var falta** | Vercel build error: `"PUBLIC_X" is not exported by virtual:env/static/public` | SvelteKit valida las env vars en build time cuando usas `static`. Si Vercel no las tiene configuradas, el build falla aunque el código sea correcto. | Para variables que se leen server-side en hooks, usar `$env/dynamic/public`. Para client-side cuando deben estar disponibles, `static` está bien pero asegurar config en Vercel ANTES del primer push. |
+| **Adapter Vercel no soporta Node 24** | "Building locally with unsupported Node.js version: v24.17.0" | El adapter por defecto autodetecta el runtime, y la lista de soportados va por detrás de Node Current. | En `svelte.config.js`, especificar runtime explícito: `adapter({ runtime: 'nodejs22.x' })`. O instalar Node 22 LTS local con nvm-windows. |
+| **EPERM symlink en Windows local** | `npm run build` falla con `EPERM: operation not permitted, symlink` | El adapter-vercel crea symlinks que Windows bloquea sin Developer Mode. | Activar Developer Mode en Windows (Settings → For developers). O simplemente no buildear local — usar `npm run dev` para desarrollo, Vercel hace el build real. |
+| **Env vars Team vs Project** | App deployada pero el cliente no carga datos / muestra versión antigua | En Vercel hay variables a nivel Team (compartidas) y a nivel Project. Por defecto las del Team NO se inyectan al proyecto. | Añadir env vars desde la página del PROYECTO concreto, no del Team. Ruta: `vercel.com/[team]/[proyecto]/settings/environment-variables`. |
+| **No redeploy tras añadir env vars** | Mismas vars correctas pero app sigue sin funcionar | Vercel no rebuilda automáticamente al añadir vars. El build existente no las tiene. | Tras añadir vars: Deployments → último → ⋯ → Redeploy (sin cache). O un push vacío: `git commit --allow-empty -m "Redeploy"`. |
+| **Vercel sirve último deploy verde como Production** | Producción muestra versión muy antigua aunque hay commits nuevos | Si todos los deploys recientes han fallado, Vercel mantiene activo el último verde, que puede ser de hace semanas. | Verificar **qué commit está en Production**, no asumir que es el último push. Si Production está obsoleto: arreglar errores, redeploy, "Promote to Production" si hace falta. |
+| **Typo en nombre de env var** | App buildea verde pero falla silenciosamente en runtime | `PUBASE_SUPABASE_ANON_KEY` en lugar de `PUBLIC_...`. SvelteKit con `dynamic` no rompe el build si falta, la var queda como undefined y el cliente Supabase no conecta. | Copy-paste de los nombres desde el `.env.local` al panel de Vercel. **Nunca escribirlos a mano**. Y verificar el listado tras añadirlos. |
+| **Recursión infinita en RLS de profiles** | Login devuelve `42P17 infinite recursion detected in policy for relation "profiles"` | Una policy de `profiles` hacía subquery a `profiles` → bucle. Postgres evalúa todas las policies SELECT, basta con que UNA recurra para que ROMPA toda la query. | Usar **helper functions con `SECURITY DEFINER`** (`current_user_coach_id()`) que leen profiles bypassando RLS. Las policies llaman a la función en vez de subquery directo. |
+| **Trigger no leía coach_id desde metadata** | Al invitar cliente con `inviteUserByEmail({ data: { coach_id } })`, el profile creado tenía `coach_id = NULL` | El trigger `handle_new_user` solo leía `role` y `full_name` de `raw_user_meta_data`. | Ampliar el trigger para leer también `coach_id`. Migración 0004 en Coachify. |
+| **Cliente invitado entra sin contraseña y queda atascado** | Tras aceptar email de invitación va directo al dashboard. Si cierra sesión y vuelve, "credenciales incorrectas" porque nunca puso password. | Magic link de invite establece sesión pero no contraseña. Asumí que Supabase forzaría el flujo. | Crear página intermedia `/set-password`. En la action `invite`, pasar `?invite=1` en el `redirectTo`. El callback detecta ese flag y redirige a `/set-password` antes del dashboard. |
+| **Callback server-side no veía tokens de invitación** | Tras aceptar link de invite: `/login?error=missing-code#access_token=...` | Supabase usa DOS flujos distintos: PKCE (signup) manda `?code=` en query, implicit (invitaciones) manda `#access_token=` en el HASH. Los hashes nunca llegan al servidor. Mi callback server-side solo veía PKCE. | Convertir el callback a **client-side** (`+page.svelte` en vez de `+server.ts`). El cliente browser ve tanto query como hash, y con `detectSessionInUrl: true` (default en `createBrowserClient`) procesa automáticamente el hash. |
+| **Rate limit en emails de Supabase free** | "email rate limit exceeded" al invitar al 3º o 4º cliente | Free tier permite ~4 emails/hora. Crítico durante desarrollo (testeas re-invitando). | Para desarrollo: usar emails reales que tengas a mano (no quemar inboxes). Para producción: configurar **SMTP propio** (Resend, AWS SES, Mailgun) en Supabase → Authentication → SMTP Settings. Quita el rate limit. |
+
+### 6.2 Buenas prácticas confirmadas
+
+- **Migraciones SQL versionadas en carpeta `supabase/migrations/`** (`0001_initial.sql`, `0002_fix.sql`…). Aunque no uses Supabase CLI todavía, mantener el orden en el repo. El día que adoptes la CLI o cambies de DB, lo agradeces.
+- **`SECURITY DEFINER` helpers** para todo lo que recursaría en RLS. Funciones simples que devuelven `auth.uid()`-derivado y se usan en las policies.
+- **`safeGetSession()` helper en hooks.server.ts**: valida el JWT vía `getUser()` antes de confiar en la sesión. Si solo usas `getSession()`, un atacante puede inyectar un JWT inválido vía cookie.
+- **Server actions (`+page.server.ts`)** para todo lo que toque DB sensible. El cliente NUNCA manda queries SQL directamente; el servidor valida el `user.id` y aplica la mutación.
+- **Service role aislada en `lib/supabase/admin.ts`** que solo se importa desde `.server.ts`. SvelteKit detecta automáticamente y NUNCA lo envía al bundle del cliente.
+- **`$env/dynamic/private` para secretos**: la service role va aquí. Si se cuela en client bundle, SvelteKit aborta el build.
+- **`set-password` como flujo separado tras invitación**: limpia y reutilizable para "reset password" en futuro.
+- **`svelte-dnd-action`** para drag & drop: ligero, touch nativo, integración natural con Svelte 5 runes.
+- **Filtros client-side sobre listas en `$derived`**: para listas <500 items es más rápido que ir a la DB con cada keypress. Búsqueda inmediata, sin latencia.
+
+### 6.3 Stack que funcionó bien (Tier 2 — apps con backend)
+
+| Capa | Elección | Cuándo usar |
+| --- | --- | --- |
+| Frontend | **SvelteKit 2 + Svelte 5** | Apps reactivas con SSR. Sintaxis runes limpia. Bundle pequeño. |
+| Estilos | **Tailwind CSS 3 + design tokens** | Productividad alta + paleta consistente. |
+| Backend | **Supabase** | Postgres + Auth + Storage + RLS en una cuenta. Free hasta 500 MB. |
+| Hosting | **Vercel** | Deploy automático desde GitHub. SvelteKit adapter oficial. |
+| Drag & drop | **svelte-dnd-action** | Ligero, touch, Svelte 5 nativo. |
+| Email transaccional | Supabase nativo (dev) / Resend (producción) | Free tier de Supabase es ~4/h, insuficiente para escala real. |
+
+### 6.4 Checklist específico apps Tier 2
+
+```
+ANTES DE EMPEZAR
+[ ] Modelar la base de datos en papel ANTES de tocar UI
+[ ] Diseñar las RLS policies en paralelo a las tablas
+[ ] Identificar funciones SECURITY DEFINER que evitarán recursión
+
+PRE-DESPLIEGUE A PRODUCCIÓN
+[ ] Variables de entorno añadidas en Vercel PROJECT (no Team)
+[ ] Las 3 categorías: Production + Preview + Development
+[ ] Copy-paste literal desde .env.local, no escribir a mano
+[ ] Runtime explícito en svelte.config.js
+[ ] Supabase URL Configuration: Site URL + Redirect URLs con tu dominio
+
+POR CADA MIGRATION SQL
+[ ] Probarla en SQL Editor de Supabase
+[ ] Verificar que las RLS no recursan (testear queries básicas tras aplicar)
+[ ] Versionarla en supabase/migrations/NNNN_descripcion.sql
+[ ] Actualizar types.ts si la migration cambia el schema
+
+POR CADA NUEVO INPUT DE USUARIO
+[ ] Validación client-side + server-side
+[ ] Sanitize antes de meter en DB / URLs externas
+[ ] Verificar que el server action valida user.id
+
+TRAS CADA DEPLOY
+[ ] Confirmar que Production sirve el último commit (no uno antiguo)
+[ ] Probar flujo crítico en producción + en local (deben ser idénticos)
+[ ] Si añadiste env vars, Redeploy SIN cache
+```
+
+### 6.5 Costes operativos reales
+
+| Servicio | Plan | Coste/mes | Cuándo upgrade |
+| --- | --- | --- | --- |
+| Supabase | Free | 0 € | A los ~50 usuarios activos o si necesitas SMTP propio. Pro 25 $/mes. |
+| Vercel | Hobby | 0 € | Cuando facturas servicios. Pro 20 $/mes incluye preview password, analytics, más límites. |
+| Cloudinary | Free | 0 € | Hasta 25 GB. Si subes muchos vídeos: Plus 99 $/mes. |
+| Dominio | Anual | ~1 €/mes | Compra inicial. |
+| **Total inicio** | | **~1 €/mes** | |
+| **Total con 50+ clientes** | | **~25-50 €/mes** | |
+
+---
+
+## PARTE 7 · APRENDIZAJES META (proceso de trabajo)
+
+Estos son sobre **cómo trabajar conmigo** (LLM) o con cualquier dev junior+:
+
+1. **Pedir las 3 cosas críticas al principio, no en 4 mensajes diferentes.** Si te pregunto por logs, env vars, deploys y configuración… debería haber pedido las 4 cosas en mi primer mensaje, no ir tirando del hilo. Ahorra muchos saltos.
+2. **Una sola fuente de verdad por sesión.** Cuando hay errores en producción, el orden es: ¿está el commit en GitHub? ¿está el deploy verde? ¿está sirviéndose ese commit? ¿están las env vars correctas? Si pregunto en otro orden, perdemos tiempo.
+3. **No asumir caché del navegador como respuesta.** Si Ctrl+Shift+R no resuelve, no era caché. Pasar al siguiente diagnóstico.
+4. **Los rate limits de free tier importan en desarrollo.** Plan los testeos contra esos límites desde el principio (mock de email, usuarios pre-creados, etc.).
+5. **Cada deploy en Vercel sin variables completas es un commit perdido.** Mejor un commit grande con todo listo que 5 commits pequeños fallando en cadena por el mismo motivo.
 
 ---
 
