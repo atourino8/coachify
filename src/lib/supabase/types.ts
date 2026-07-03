@@ -95,6 +95,37 @@ export interface Session {
   updated_at: string;
 }
 
+// ============== Tipos "compuestos" para joins ==============
+// Los joins de Supabase se infieren mal (como arrays cuando son objetos), así
+// que casteamos localmente con estos tipos en las páginas donde hacemos joins.
+
+export type WorkoutItemWithRelations = WorkoutItem & {
+  exercise: Exercise;
+  set_logs: SetLog[];
+};
+
+export type WorkoutWithItems = Workout & {
+  workout_items: WorkoutItemWithRelations[];
+};
+
+// Versión ligera para el calendario del coach (solo id/date/title/notes + items count)
+export type WorkoutSummary = Pick<Workout, 'id' | 'date' | 'title' | 'notes'> & {
+  workout_items: Pick<WorkoutItem, 'id'>[];
+};
+
+// Para el detalle de item con su workout (join hacia workouts)
+export type WorkoutItemWithWorkout = WorkoutItem & {
+  exercise: Exercise;
+  workout: Pick<Workout, 'id' | 'date' | 'client_id'>;
+  set_logs: SetLog[];
+};
+
+// Para queries que sólo necesitan el client_id del workout
+export type WorkoutItemMinimal = {
+  exercise_id: string;
+  workout: Pick<Workout, 'client_id'>;
+};
+
 export interface AvailabilitySlot {
   id: string;
   coach_id: string;

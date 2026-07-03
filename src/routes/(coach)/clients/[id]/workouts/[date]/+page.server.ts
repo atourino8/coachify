@@ -2,6 +2,7 @@
 // + la biblioteca completa del coach para poder arrastrar.
 
 import { error, fail, redirect } from '@sveltejs/kit';
+import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -25,16 +26,21 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     .order('name');
 
   // ¿Existe ya un workout para esa fecha? Si no, lo dejamos como null.
-  const { data: workout } = await supabase
+  const { data: workoutRaw } = await supabase
     .from('workouts')
     .select('*, workout_items(*, exercise:exercises(*))')
     .eq('client_id', params.id)
     .eq('date', params.date)
     .maybeSingle();
 
+  // Cast: joins de Supabase se infieren mal (array vs objeto).
+  const workout = workoutRaw as unknown as WorkoutWithItems | null;
+
   // Ordenar items por order_index si existen
   if (workout?.workout_items) {
-    workout.workout_items.sort((a, b) => a.order_index - b.order_index);
+    workout.workout_items.sort(
+      (a: WorkoutItemWithRelations, b: WorkoutItemWithRelations) => a.order_index - b.order_index
+    );
   }
 
   return {

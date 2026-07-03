@@ -1,12 +1,13 @@
 // Detalle de un workout_item para el cliente: vídeo + form para registrar series.
 
 import { error, fail, redirect } from '@sveltejs/kit';
+import type { WorkoutItemWithWorkout, SetLog, WorkoutItemMinimal } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
 
-  const { data: item, error: itemError } = await supabase
+  const { data: itemRaw, error: itemError } = await supabase
     .from('workout_items')
     .select(
       `*,
@@ -17,12 +18,16 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     .eq('id', params.id)
     .single();
 
-  if (itemError || !item) error(404, 'Ejercicio no encontrado');
+  if (itemError || !itemRaw) error(404, 'Ejercicio no encontrado');
+
+  // Cast: los joins de Supabase se infieren como array, pero aquí son objeto.
+  const item = itemRaw as unknown as WorkoutItemWithWorkout;
+
   // Validar que el workout es del cliente autenticado
   if (item.workout.client_id !== user.id) error(403, 'No autorizado');
 
   // Ordenar set_logs por número
-  item.set_logs?.sort((a, b) => a.set_number - b.set_number);
+  item.set_logs?.sort((a: SetLog, b: SetLog) => a.set_number - b.set_number);
 
   return { item };
 };
@@ -43,11 +48,12 @@ export const actions: Actions = {
     if (!set_number || set_number < 1) return fail(400, { error: 'Serie inválida.' });
 
     // Obtener exercise_id del workout_item
-    const { data: item } = await supabase
+    const { data: itemRaw } = await supabase
       .from('workout_items')
       .select('exercise_id, workout:workouts(client_id)')
       .eq('id', params.id)
       .single();
+    const item = itemRaw as unknown as WorkoutItemMinimal | null;
     if (!item || item.workout.client_id !== user.id) return fail(403, { error: 'No autorizado.' });
 
     // ¿Existe ya un log para esta serie? Si sí, actualizar; si no, crear.

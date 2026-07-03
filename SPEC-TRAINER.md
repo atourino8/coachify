@@ -940,4 +940,102 @@ Cada iteración: rama, commits pequeños, despliegue de preview a Vercel, prueba
 
 ---
 
+## 16. Modelo de despliegue · multi-tenant ahora, Enterprise en v3+
+
+Decisión documentada el 24 de junio de 2026 tras debate sobre modelos
+single-tenant vs multi-tenant.
+
+### 16.1 Decisión
+
+Coachify se construye y se mantiene como **SaaS multi-tenant** (todos los
+coaches en una única instancia de Supabase + Vercel, aislamiento por RLS).
+Es el modelo correcto para captar coaches individuales pagando 19 €/mes.
+
+A futuro (v3+), se ofrecerá un **tier Enterprise single-tenant** sin
+abandonar el multi-tenant principal. Los dos modelos coexisten, no se
+sustituyen.
+
+### 16.2 Por qué NO single-tenant desde el principio
+
+- **Onboarding manual**: cada cliente nuevo requeriría desplegar a mano.
+  Mata la conversión por self-service.
+- **Mantenimiento N veces**: cada bugfix se aplicaría N veces, una por cada
+  deploy de cliente.
+- **Costes fijos por cliente** (~10-30 €/mes en infraestructura) limitan
+  el precio mínimo viable, dejándote fuera del coach individual.
+- **Sin "network effect"**: imposible marketplace de plantillas, analítica
+  agregada, viralidad orgánica.
+- **Modelo del 95 % del sector**: Shopify, Linear, Notion, Vercel — todos
+  empezaron multi-tenant. El single-tenant llegó como upsell.
+
+### 16.3 Por qué SÍ ofrecer Enterprise en v3+
+
+- **Cliente target diferente**: cadenas de gimnasios, franquicias, estudios
+  premium con presupuesto serio (250-500 €/mes).
+- **Lo que pagan**: dominio propio, branding completo, SLA garantizado,
+  datos físicamente aislados, features custom negociables.
+- **Margen por cliente alto**: cobrando 299 €/mes, infraestructura ~30 €,
+  beneficio ~270 €. Con 5 clientes Enterprise = ~1.350 €/mes recurrente
+  adicional al SaaS principal.
+
+### 16.4 Estructura propuesta de pricing futuro
+
+| Plan | Precio | Tipo de despliegue | Quién |
+| --- | --- | --- | --- |
+| Free | 0 € | Multi-tenant | Coach individual probando |
+| Pro | 19 €/mes | Multi-tenant | Coach individual establecido |
+| Studio | 79 €/mes | Multi-tenant | Estudio 2-5 coaches |
+| **Enterprise** | **desde 299 €/mes** | **Single-tenant** | **Cadenas, franquicias, premium** |
+
+### 16.5 Cómo se construye Enterprise sin reescribir nada
+
+Enterprise NO es un proyecto distinto. Es **el mismo código desplegado en
+otra cuenta Supabase + otro Vercel** con env vars distintas. La arquitectura
+actual (multi-tenant) ya lo permite trivialmente:
+
+- Repo: el mismo `coachify` (o un fork si se necesita custom feature).
+- Supabase: cuenta nueva, ejecutar las migraciones SQL en orden.
+- Vercel: proyecto nuevo apuntando a ese Supabase, dominio propio del cliente.
+- CI: cuando arregles un bug en el repo, GitHub Actions deploya a todos los
+  Vercel Enterprise automáticamente.
+
+**Coste de tu tiempo por primer Enterprise**: ~6-8 h de despliegue +
+configuración + onboarding personal. Se cobra como **setup fee** de
+1.500-3.000 €, no se regala.
+
+### 16.6 Reglas de oro
+
+- **NO vender Enterprise antes de tener 30+ clientes Pro pagando.** Si lo
+  haces, te conviertes en consultor de implantación en lugar de en producto.
+- **Enterprise = ingresos adicionales, no sustitutivos.** El SaaS Pro sigue
+  siendo el motor.
+- **Setup de Enterprise se cobra aparte** de la cuota mensual. Nunca lo
+  regales prometiéndote recuperarlo con la mensualidad.
+- **No customizar features por cliente sin contrato extra**. Cada feature
+  pedida por un cliente Enterprise se cotiza aparte. El producto base es
+  común a todos.
+
+### 16.7 Cuándo plantearlo seriamente
+
+- **Señal de demanda real**: cuando ≥3 prospectos pregunten por dominio
+  propio + branding completo. Antes de eso, no es necesidad real.
+- **Capacidad para entregar**: el primer Enterprise va a comer 2-3 semanas
+  de trabajo entre despliegue, custom features y soporte. No lo aceptes si
+  no tienes hueco.
+- **Calendario indicativo**: realista, no antes del mes 9-12 desde el
+  lanzamiento del SaaS Pro.
+
+### 16.8 Lo que hay que hacer HOY para preparar el futuro Enterprise
+
+(Nada urgente, pero apuntado para no olvidar):
+
+- [ ] Variables de entorno bien tipadas y documentadas (ya hecho en `.env.example`).
+- [ ] Migraciones SQL siempre versionadas y reproducibles (ya hecho).
+- [ ] Componentes del frontend con paleta vía CSS variables (ya hecho) —
+  el día de Enterprise, el cliente pasa 5 colores y los inyectamos.
+- [ ] Mantener cualquier referencia a "Coachify" como variable o constante,
+  no hardcodear (revisar antes de v3).
+
+---
+
 *Documento vivo. Editar conforme avance el proyecto.*

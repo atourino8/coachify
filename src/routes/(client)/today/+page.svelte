@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
   import { formatDateISO } from '$lib/week';
+  import type { WorkoutItemWithRelations } from '$lib/supabase/types';
 
   let { data } = $props();
   const profile = $derived(page.data.profile);
@@ -13,11 +14,11 @@
     })
   );
 
-  function setsCompleted(item: typeof data.workout.workout_items[number]) {
+  function setsCompleted(item: WorkoutItemWithRelations) {
     return item.set_logs?.length ?? 0;
   }
 
-  function isComplete(item: typeof data.workout.workout_items[number]) {
+  function isComplete(item: WorkoutItemWithRelations) {
     return setsCompleted(item) >= item.sets;
   }
 </script>

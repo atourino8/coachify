@@ -3,7 +3,7 @@
   import { flip } from 'svelte/animate';
   import { enhance } from '$app/forms';
   import { formatHumanDate } from '$lib/week';
-  import type { Exercise } from '$lib/supabase/types';
+  import type { Exercise, WorkoutItemWithRelations } from '$lib/supabase/types';
 
   let { data, form } = $props();
 
@@ -20,10 +20,11 @@
 
   // Estado: lista de ejercicios del día.
   // Iniciamos desde data.workout?.workout_items si existe.
+  // svelte-ignore state_referenced_locally
   let dayItems = $state<DayItem[]>(
-    (data.workout?.workout_items ?? []).map((it) => ({
+    (data.workout?.workout_items ?? []).map((it: WorkoutItemWithRelations) => ({
       id: crypto.randomUUID(),
-      exercise: it.exercise as Exercise,
+      exercise: it.exercise,
       sets: it.sets,
       reps_prescribed: it.reps_prescribed ?? '',
       weight_prescribed: it.weight_prescribed ?? '',
@@ -32,7 +33,9 @@
     }))
   );
 
+  // svelte-ignore state_referenced_locally
   let title = $state(data.workout?.title ?? '');
+  // svelte-ignore state_referenced_locally
   let notes = $state(data.workout?.notes ?? '');
   let saving = $state(false);
   let filterText = $state('');
@@ -298,8 +301,9 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label class="text-[10px] uppercase tracking-wider text-text-mute">Series</label>
+                <label for="sets-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Series</label>
                 <input
+                  id="sets-{item.id}"
                   type="number"
                   min="1"
                   max="20"
@@ -308,8 +312,9 @@
                 />
               </div>
               <div>
-                <label class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label>
+                <label for="reps-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label>
                 <input
+                  id="reps-{item.id}"
                   type="text"
                   bind:value={item.reps_prescribed}
                   placeholder="8-10"
@@ -317,8 +322,9 @@
                 />
               </div>
               <div>
-                <label class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label>
+                <label for="weight-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label>
                 <input
+                  id="weight-{item.id}"
                   type="text"
                   bind:value={item.weight_prescribed}
                   placeholder="80kg"
@@ -326,8 +332,9 @@
                 />
               </div>
               <div>
-                <label class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label>
+                <label for="rest-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label>
                 <input
+                  id="rest-{item.id}"
                   type="number"
                   min="0"
                   step="15"

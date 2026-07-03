@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import type { SetLog } from '$lib/supabase/types';
 
   let { data, form } = $props();
 
@@ -10,7 +11,7 @@
   }
 
   function logForSet(n: number) {
-    return data.item.set_logs?.find((l) => l.set_number === n);
+    return data.item.set_logs?.find((l: SetLog) => l.set_number === n);
   }
 
   const ytId = $derived(youtubeId(data.item.exercise.video_url));
@@ -139,8 +140,9 @@
           <input type="hidden" name="set_number" value={n} />
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-xs uppercase tracking-wider text-text-mute">Peso (kg)</label>
+              <label for="log-weight" class="text-xs uppercase tracking-wider text-text-mute">Peso (kg)</label>
               <input
+                id="log-weight"
                 name="weight_done"
                 type="number"
                 step="0.5"
@@ -150,8 +152,9 @@
               />
             </div>
             <div>
-              <label class="text-xs uppercase tracking-wider text-text-mute">Reps reales</label>
+              <label for="log-reps" class="text-xs uppercase tracking-wider text-text-mute">Reps reales</label>
               <input
+                id="log-reps"
                 name="reps_done"
                 type="number"
                 bind:value={reps}
@@ -160,10 +163,10 @@
               />
             </div>
           </div>
-          <div>
-            <label class="text-xs uppercase tracking-wider text-text-mute mb-2 block"
-              >¿Cómo te salió?</label
-            >
+          <fieldset class="border-0 p-0 m-0">
+            <legend class="text-xs uppercase tracking-wider text-text-mute mb-2 block">
+              ¿Cómo te salió?
+            </legend>
             <div class="grid grid-cols-3 gap-2">
               <label
                 class="card cursor-pointer text-center py-3 {feedback === 'easy'
@@ -211,7 +214,7 @@
                 <div class="text-xs text-text-mute">Duro</div>
               </label>
             </div>
-          </div>
+          </fieldset>
           <div class="flex gap-2">
             <button type="submit" class="btn-primary flex-1">Guardar serie</button>
             <button type="button" onclick={closeSet} class="btn-ghost">Cerrar</button>

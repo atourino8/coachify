@@ -2,6 +2,7 @@
 
 import { redirect } from '@sveltejs/kit';
 import { formatDateISO } from '$lib/week';
+import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) => {
@@ -11,7 +12,7 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
   const dateParam = url.searchParams.get('date');
   const today = dateParam ?? formatDateISO(new Date());
 
-  const { data: workout } = await supabase
+  const { data: workoutRaw } = await supabase
     .from('workouts')
     .select(
       `id, date, title, notes, published,
@@ -26,8 +27,13 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
     .eq('published', true)
     .maybeSingle();
 
+  // Cast: joins de Supabase se infieren mal (arrays donde son objetos).
+  const workout = workoutRaw as unknown as WorkoutWithItems | null;
+
   if (workout?.workout_items) {
-    workout.workout_items.sort((a, b) => a.order_index - b.order_index);
+    workout.workout_items.sort(
+      (a: WorkoutItemWithRelations, b: WorkoutItemWithRelations) => a.order_index - b.order_index
+    );
   }
 
   return { workout, date: today };

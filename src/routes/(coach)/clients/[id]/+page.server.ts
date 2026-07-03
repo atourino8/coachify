@@ -2,6 +2,7 @@
 
 import { error, redirect } from '@sveltejs/kit';
 import { startOfWeek, addDays, formatDateISO } from '$lib/week';
+import type { WorkoutSummary } from '$lib/supabase/types';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { supabase, user } }) => {
@@ -24,16 +25,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
   const weekEnd = addDays(weekStart, 6);
 
   // Cargar workouts de esa semana para ese cliente
-  const { data: workouts } = await supabase
+  const { data: workoutsRaw } = await supabase
     .from('workouts')
     .select('id, date, title, notes, workout_items(id)')
     .eq('client_id', params.id)
     .gte('date', formatDateISO(weekStart))
     .lte('date', formatDateISO(weekEnd));
 
+  // Cast: joins de Supabase se infieren como array anidado con any.
+  const workouts = (workoutsRaw ?? []) as unknown as WorkoutSummary[];
+
   // Indexar por fecha para fácil acceso desde la UI
-  const workoutsByDate: Record<string, typeof workouts[number]> = {};
-  for (const w of workouts ?? []) workoutsByDate[w.date] = w;
+  const workoutsByDate: Record<string, WorkoutSummary> = {};
+  for (const w of workouts) workoutsByDate[w.date] = w;
 
   return {
     client,
