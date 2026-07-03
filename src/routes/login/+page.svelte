@@ -8,6 +8,17 @@
   let loading = $state(false);
   let error = $state('');
 
+  // Mostrar mensaje amigable si venimos redirigidos por un error concreto
+  $effect(() => {
+    const errParam = page.url.searchParams.get('error');
+    if (errParam === 'session-mismatch') {
+      error =
+        'Por seguridad hemos cerrado tu sesión (detectamos dos cuentas activas en este navegador). Vuelve a entrar.';
+    } else if (errParam === 'auth-callback') {
+      error = 'No se pudo confirmar la sesión. Vuelve a intentar el login.';
+    }
+  });
+
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     loading = true;

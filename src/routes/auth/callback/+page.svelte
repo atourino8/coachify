@@ -1,15 +1,20 @@
 <script lang="ts">
-  // Callback client-side: maneja AMBOS flujos de Supabase Auth.
+  // Callback client-side: maneja los flujos de Supabase Auth.
   //
-  // 1) PKCE (signup/recovery): el código viene en ?code=XXX en query string.
+  // 1) PKCE (signup/recovery via code): el código viene en ?code=XXX en query string.
   //    El cliente Supabase lo intercambia por sesión llamando a exchangeCodeForSession.
-  // 2) Implicit (invitaciones): los tokens vienen en el HASH (#access_token=..., #type=invite).
-  //    El cliente Supabase los detecta automáticamente al instanciarse con
-  //    detectSessionInUrl: true (que es el default de createBrowserClient).
+  // 2) Implicit (invitaciones, recovery via hash): tokens en el HASH
+  //    (#access_token=..., #type=invite|recovery).
   //
-  // En ambos casos, una vez tenemos sesión, leemos el rol del perfil y
-  // redirigimos al destino correcto (set-password si es invite, dashboard/today
-  // si es flujo normal).
+  // IMPORTANTE: antes de procesar los tokens, cerramos la sesión previa que pudiera
+  // existir en el navegador (p. ej. si el coach abre en la misma pestaña el email
+  // del cliente). Sin esto, los tokens del invitado se solapan con los del coach y
+  // acaban cruzándose (bug conocido).
+  //
+  // Redirección final:
+  //  - invite  → /set-password  (definir contraseña por primera vez)
+  //  - recovery → /set-password  (definir contraseña nueva)
+  //  - resto   → dashboard/today según rol
 
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -21,30 +26,44 @@
     const supabase = page.data.supabase;
     const url = new URL(window.location.href);
 
-    // Detectar tipo de flujo
+    // ---------- Detectar tipo de flujo ----------
     const code = url.searchParams.get('code');
     const isInviteQuery = url.searchParams.get('invite') === '1';
+    const isRecoveryQuery = url.searchParams.get('recovery') === '1';
     const hashParams = new URLSearchParams(url.hash.startsWith('#') ? url.hash.slice(1) : url.hash);
     const hashType = hashParams.get('type');
     const isInviteHash = hashType === 'invite';
+    const isRecoveryHash = hashType === 'recovery';
     const isInvite = isInviteQuery || isInviteHash;
+    const isRecovery = isRecoveryQuery || isRecoveryHash;
     const hasAccessToken = hashParams.has('access_token');
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
 
     try {
-      // CASO 1: PKCE flow (signup normal)
+      // Fix defensivo: si hay hash de invite/recovery, primero limpiar la sesión
+      // previa del navegador. Evita que se solape con la nueva.
+      if (hasAccessToken && (isInvite || isRecovery)) {
+        status = 'Preparando sesión…';
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+
+      // CASO 1: PKCE flow (signup normal, recovery via code)
       if (code) {
         status = 'Confirmando cuenta…';
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) throw error;
       }
 
-      // CASO 2: implicit flow (invitación)
-      // El cliente Supabase con detectSessionInUrl ya procesa el hash al cargar.
-      // Solo necesitamos esperar un poquito a que se establezca la sesión.
-      if (hasAccessToken) {
+      // CASO 2: implicit flow (invite/recovery via hash tokens)
+      if (hasAccessToken && accessToken && refreshToken) {
         status = 'Estableciendo sesión…';
-        // Pequeño tick para que el cliente procese el hash
-        await new Promise((r) => setTimeout(r, 200));
+        // setSession explícito: no dependemos de detectSessionInUrl automático.
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+        if (error) throw error;
       }
 
       // Verificar que tenemos usuario
@@ -59,14 +78,19 @@
       // Limpiar el hash de la URL (no queremos tokens visibles en histórico)
       history.replaceState({}, '', '/auth/callback');
 
-      // Si es invitación → set-password
+      // Invite o recovery → set-password (pasamos el motivo por query)
       if (isInvite) {
         status = 'Redirigiendo a definir contraseña…';
-        await goto('/set-password');
+        await goto('/set-password?reason=invite');
+        return;
+      }
+      if (isRecovery) {
+        status = 'Redirigiendo a definir nueva contraseña…';
+        await goto('/set-password?reason=recovery');
         return;
       }
 
-      // Si no, leer rol y redirigir
+      // Flow normal: leer rol y redirigir
       status = 'Cargando tu panel…';
       const { data: profile } = await supabase
         .from('profiles')

@@ -1,7 +1,13 @@
 <script lang="ts">
-  // Esta página se muestra al cliente recién invitado, justo después de
-  // aceptar el magic link y antes de ver el dashboard. Le pide definir
-  // contraseña para futuras entradas.
+  // Esta página se muestra:
+  //  - al cliente recién invitado (reason=invite), tras aceptar el magic link
+  //  - a cualquier usuario que pasó por /recover (reason=recovery)
+  //
+  // FIX DEFENSIVO: antes de actualizar la password, verificamos que la sesión
+  // del browser client (localStorage) coincide con la del server (cookies).
+  // Si no coinciden, es señal de que el flow se cruzó con otra sesión activa
+  // en el mismo navegador (bug conocido: coach logueado abre email del cliente).
+  // En ese caso cerramos todo y mandamos al login.
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
 
@@ -10,6 +16,17 @@
   let password2 = $state('');
   let loading = $state(false);
   let error = $state('');
+
+  const isRecovery = $derived(data.reason === 'recovery');
+  const title = $derived(isRecovery ? 'Nueva contraseña' : '¡Casi listo!');
+  const subtitle = $derived(
+    isRecovery
+      ? 'Define una contraseña nueva para tu cuenta.'
+      : 'Define una contraseña para entrar a Coachify cada vez que quieras.'
+  );
+  const submitLabel = $derived(
+    isRecovery ? 'Guardar contraseña' : 'Definir contraseña y entrar'
+  );
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
@@ -25,6 +42,30 @@
 
     loading = true;
     const supabase = page.data.supabase;
+
+    // Verificación cruzada server vs browser: si la sesión activa del navegador
+    // no es la misma cuenta que el server dice tener, abortar. Evita cruces de
+    // password cuando hay dos sesiones convivientes en el mismo navegador.
+    const { data: userData, error: getUserErr } = await supabase.auth.getUser();
+    if (getUserErr || !userData?.user) {
+      loading = false;
+      error = 'No hay sesión activa. Vuelve a solicitar el enlace.';
+      return;
+    }
+    if (userData.user.email !== data.email) {
+      // Sesiones cruzadas: cerrar todo por seguridad y mandar al login.
+      console.warn(
+        '[set-password] Sesión cruzada detectada. Server dice',
+        data.email,
+        'browser dice',
+        userData.user.email
+      );
+      await supabase.auth.signOut({ scope: 'global' });
+      loading = false;
+      goto('/login?error=session-mismatch');
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
       loading = false;
@@ -36,7 +77,7 @@
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', (await supabase.auth.getUser()).data.user!.id)
+      .eq('id', userData.user.id)
       .single();
 
     loading = false;
@@ -59,10 +100,8 @@
       >
         C
       </div>
-      <h1 class="text-3xl font-bold mb-2">¡Casi listo!</h1>
-      <p class="text-text-mute">
-        Define una contraseña para entrar a Coachify cada vez que quieras.
-      </p>
+      <h1 class="text-3xl font-bold mb-2">{title}</h1>
+      <p class="text-text-mute">{subtitle}</p>
       <p class="text-xs text-text-mute mt-2">
         Cuenta: <strong class="text-text">{data.email}</strong>
       </p>
@@ -107,7 +146,7 @@
       {/if}
 
       <button type="submit" disabled={loading} class="btn-primary w-full">
-        {loading ? 'Guardando…' : 'Definir contraseña y entrar'}
+        {loading ? 'Guardando…' : submitLabel}
       </button>
     </form>
   </div>
