@@ -444,4 +444,4 @@ Estos son sobre **cómo trabajar conmigo** (LLM) o con cualquier dev junior+:
 
 ---
 
-*Fin del documento. Este archivo se actualiza con cada proyecto.*
+## PARTE 8 · PRINCIPIOS OPERATIVOS AL TRABAJAR CON UN LLM (Can Fi

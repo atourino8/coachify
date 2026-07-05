@@ -85,6 +85,7 @@
           <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
             Tu email
           </label>
+          <!-- svelte-ignore a11y_autofocus -->
           <input
             type="email"
             id="email"
