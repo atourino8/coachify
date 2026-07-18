@@ -444,4 +444,64 @@ Estos son sobre **cómo trabajar conmigo** (LLM) o con cualquier dev junior+:
 
 ---
 
-## PARTE 8 · PRINCIPIOS OPERATIVOS AL TRABAJAR CON UN LLM (Can Fi
+## PARTE 8 · PRINCIPIOS OPERATIVOS AL TRABAJAR CON UN LLM (Can Ficus, jul 2026)
+
+Este bloque nace de un episodio concreto en Can Ficus donde varios ciclos de "está arreglado" resultaron no estarlo. La causa siempre fue la misma: **anunciar sin verificar**. Estos son los principios que aplicarás/exigirás en todos los proyectos futuros.
+
+### 8.1 Verificar antes de anunciar
+
+Si dices "esto está arreglado", "esto funciona" o "el commit está bien", tiene que estar **verificado empíricamente**, no deducido lógicamente. Cada tipo de cambio tiene su check obligatorio:
+
+| Tipo de cambio | Verificación obligatoria antes de anunciar |
+|---|---|
+| Escritura de archivo | Contar bytes/líneas, buscar NULL bytes y CR spuriosos, sanity check tags (HTML/XML), validador de sintaxis (`node --check`, `python -c`, `yaml.safe_load`) |
+| Bug corregido | Reproducir el bug original y confirmar que ya no ocurre |
+| Feature nueva | Ejecutar el flujo completo end-to-end o declarar explícitamente qué le toca al usuario probar |
+| Push a origen | Confirmar que llegó (`git log origin/main` o CI verde) |
+| Integración A ↔ B | Verificar que B **realmente lee** lo que A escribe. No basta con que ambos compilen o "estén bien" por separado |
+
+### 8.2 No dar por hecho lo que no puedo ver
+
+Si afirmas "el botón X está en el toolbar Y", "los cambios ya se ven en la web", "esta librería típicamente hace…" tienes que basarte en:
+
+- Una **screenshot** o log que el usuario me haya pasado explícitamente, o
+- Un **grep** o `Read` sobre el código real, o
+- Un check en **doc oficial** (con web fetch si hace falta), o
+- Decir explícitamente **"creo que…"** y pedir confirmación.
+
+Errores reales cometidos en Can Ficus por saltarme esto:
+
+- Afirmé "el botón Save está arriba a la derecha" sin haberlo visto en el CMS real → resulta que con `publish_mode: simple` la UI es distinta y ese botón estaba tapado por otro elemento mío. Consecuencia: el cliente hacía cambios y creía que los publicaba, pero solo eran drafts locales.
+- Afirmé "el commit del CMS actualizó el teléfono en la web" sin verificar que el HTML leyera el JSON → resulta que el HTML jamás hacía `fetch('info.json')`, tenía los datos hardcodeados. El CMS estaba escribiendo en un archivo que nadie leía. Bug latente que llevaba ahí desde el commit inicial del proyecto.
+- Escribí `admin/index.html` con `bash heredoc` contra un mount de Windows y anuncié "listo" sin verificar bytes → tenía 452 bytes NULL incrustados que reventaban el parser del navegador. El admin no cargaba.
+
+### 8.3 Regla operativa concreta a partir de ahora
+
+1. **Cada `Write` de archivo termina con verificación**: bytes, tags, sintaxis. No mueves a la siguiente tarea si no pasan.
+2. **Cada integración entre dos sistemas termina con un test de extremo a extremo**: el receptor consume la salida del emisor. Si no puedes ejecutarlo tú, describes al usuario exactamente qué probar y esperas confirmación antes de darlo por cerrado.
+3. **Cada afirmación sobre UI de terceros va con fuente** (screenshot, grep, doc). Si no la tienes, "creo que…" + petición de confirmación.
+4. **Auditar integraciones antes de dar por bueno un flujo**: no basta con arreglar "el sitio que se ve"; hay que revisar si el patrón ("CMS edita → HTML lee") existe en todos los campos afectados o solo en algunos. En Can Ficus el bug del teléfono era la punta del iceberg — había 5 campos más igual de rotos que solo aparecieron al hacer auditoría CMS↔HTML completa.
+
+### 8.4 Anti-patrón detectado: heredoc + Windows mount con archivos grandes
+
+Usar `cat > archivo << 'EOF'` para escribir archivos grandes en un mount de Windows introduce basura (NULL bytes, CRLF residuales, cortes a mitad). **No fiable para >200 líneas**. El patrón robusto es:
+
+```python
+python3 << 'PYEOF'
+data = '''<html>...</html>'''.encode('utf-8')
+assert b'\x00' not in data
+assert b'\r' not in data
+with open('archivo', 'wb') as f:
+    f.write(data)
+# Re-leer y comparar byte a byte
+with open('archivo', 'rb') as f:
+    check = f.read()
+assert check == data
+PYEOF
+```
+
+Verificación byte a byte tras la escritura. Sin excusas.
+
+---
+
+*Fin del documento. Este archivo se actualiza con cada proyecto.*
