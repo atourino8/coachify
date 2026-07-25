@@ -1,9 +1,11 @@
 // Detalle del cliente: perfil + calendario semanal con sus workouts.
 
 import { error, redirect } from '@sveltejs/kit';
-import { startOfWeek, addDays, formatDateISO } from '$lib/week';
+import { addDays, formatDateISO, todayISOLocal } from '$lib/week';
 import type { WorkoutSummary } from '$lib/supabase/types';
 import type { PageServerLoad } from './$types';
+
+const WINDOW_DAYS = 7;
 
 export const load: PageServerLoad = async ({ params, url, locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
@@ -18,30 +20,29 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   if (clientError || !client) error(404, 'Cliente no encontrado');
 
-  // ¿Qué semana mostrar? Parametro ?week=YYYY-MM-DD del lunes
-  const weekParam = url.searchParams.get('week');
-  const refDate = weekParam ? new Date(weekParam + 'T00:00:00') : new Date();
-  const weekStart = startOfWeek(refDate);
-  const weekEnd = addDays(weekStart, 6);
+  // Ventana móvil de WINDOW_DAYS días. Por defecto empieza HOY (no el lunes),
+  // para que el coach nunca vea días pasados por defecto. El parámetro
+  // ?start=YYYY-MM-DD permite navegar hacia adelante/atrás.
+  const startParam = url.searchParams.get('start');
+  const windowStart = startParam ?? todayISOLocal();
+  const windowEnd = formatDateISO(addDays(new Date(windowStart + 'T00:00:00'), WINDOW_DAYS - 1));
 
-  // Cargar workouts de esa semana para ese cliente
   const { data: workoutsRaw } = await supabase
     .from('workouts')
     .select('id, date, title, notes, workout_items(id)')
     .eq('client_id', params.id)
-    .gte('date', formatDateISO(weekStart))
-    .lte('date', formatDateISO(weekEnd));
+    .gte('date', windowStart)
+    .lte('date', windowEnd);
 
-  // Cast: joins de Supabase se infieren como array anidado con any.
   const workouts = (workoutsRaw ?? []) as unknown as WorkoutSummary[];
 
-  // Indexar por fecha para fácil acceso desde la UI
   const workoutsByDate: Record<string, WorkoutSummary> = {};
   for (const w of workouts) workoutsByDate[w.date] = w;
 
   return {
     client,
-    weekStart: formatDateISO(weekStart),
+    windowStart,
+    windowDays: WINDOW_DAYS,
     workoutsByDate
   };
 };
