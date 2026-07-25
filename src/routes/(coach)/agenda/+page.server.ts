@@ -74,8 +74,89 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     (t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length })
   );
 
-  return { pending, confirmed, history, workoutsByClient, templates };
+  // Clientes del coach (para proponer una cita a uno de ellos).
+  const { data: clientsRaw } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .eq('coach_id', user.id)
+    .eq('archived', false)
+    .order('full_name');
+  const clients = (clientsRaw ?? []) as { id: string; full_name: string | null }[];
+
+  return { pending, confirmed, history, workoutsByClient, templates, clients };
 };
+
+// Materializa una plantilla como entreno (workout) para un cliente en una fecha,
+// y devuelve el id del workout. Reutilizado por assignTemplate y createSession.
+async function materializeTemplate(
+  supabase: App.Locals['supabase'],
+  coachId: string,
+  clientId: string,
+  date: string,
+  templateId: string
+): Promise<{ workoutId: string } | { error: string }> {
+  const { data: tpl, error: tplErr } = await supabase
+    .from('workout_templates')
+    .select(
+      'id, name, workout_template_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
+    )
+    .eq('id', templateId)
+    .eq('coach_id', coachId)
+    .single();
+  if (tplErr || !tpl) return { error: 'Plantilla no encontrada.' };
+  const template = tpl as unknown as {
+    name: string;
+    workout_template_items: {
+      exercise_id: string;
+      order_index: number;
+      sets: number;
+      reps_prescribed: string | null;
+      weight_prescribed: string | null;
+      rest_seconds: number | null;
+      notes: string | null;
+    }[];
+  };
+
+  const { data: existing } = await supabase
+    .from('workouts')
+    .select('id')
+    .eq('client_id', clientId)
+    .eq('date', date)
+    .maybeSingle();
+
+  let workoutId: string;
+  if (existing) {
+    workoutId = (existing as { id: string }).id;
+    await supabase.from('workouts').update({ title: template.name } as never).eq('id', workoutId);
+    await supabase.from('workout_items').delete().eq('workout_id', workoutId);
+  } else {
+    const { data: created, error: createErr } = await supabase
+      .from('workouts')
+      .insert({ client_id: clientId, coach_id: coachId, date, title: template.name } as never)
+      .select('id')
+      .single();
+    if (createErr || !created) return { error: createErr?.message ?? 'No se pudo crear el entreno.' };
+    workoutId = (created as { id: string }).id;
+  }
+
+  const tplItems = [...(template.workout_template_items ?? [])].sort((a, b) => a.order_index - b.order_index);
+  if (tplItems.length > 0) {
+    const rows = tplItems.map((it, i) => ({
+      workout_id: workoutId,
+      exercise_id: it.exercise_id,
+      order_index: i,
+      sets: it.sets,
+      reps_prescribed: it.reps_prescribed,
+      weight_prescribed: it.weight_prescribed,
+      rest_seconds: it.rest_seconds,
+      notes: it.notes
+    }));
+    const { error: insErr } = await supabase.from('workout_items').insert(rows as never);
+    if (insErr) return { error: insErr.message };
+  }
+
+  return { workoutId };
+}
 
 async function setStatus(
   supabase: App.Locals['supabase'],
@@ -160,7 +241,6 @@ export const actions: Actions = {
     const templateId = fd.get('template_id') as string;
     if (!sessionId || !templateId) return fail(400, { error: 'Falta la cita o la plantilla.' });
 
-    // Cargar la cita (cliente + fecha).
     const { data: sess, error: sessErr } = await supabase
       .from('sessions')
       .select('id, client_id, starts_at')
@@ -171,77 +251,72 @@ export const actions: Actions = {
     const session = sess as { client_id: string; starts_at: string };
     const date = isoDateInTZ(new Date(session.starts_at), DEFAULT_TZ);
 
-    // Cargar los items de la plantilla.
-    const { data: tpl, error: tplErr } = await supabase
-      .from('workout_templates')
-      .select(
-        'id, name, workout_template_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
-      )
-      .eq('id', templateId)
-      .eq('coach_id', user.id)
-      .single();
-    if (tplErr || !tpl) return fail(404, { error: 'Plantilla no encontrada.' });
-    const template = tpl as unknown as {
-      name: string;
-      workout_template_items: {
-        exercise_id: string;
-        order_index: number;
-        sets: number;
-        reps_prescribed: string | null;
-        weight_prescribed: string | null;
-        rest_seconds: number | null;
-        notes: string | null;
-      }[];
-    };
+    const res = await materializeTemplate(supabase, user.id, session.client_id, date, templateId);
+    if ('error' in res) return fail(500, { error: res.error });
 
-    // Crear o actualizar el workout del cliente en esa fecha.
-    const { data: existing } = await supabase
-      .from('workouts')
-      .select('id')
-      .eq('client_id', session.client_id)
-      .eq('date', date)
-      .maybeSingle();
-
-    let workoutId: string;
-    if (existing) {
-      workoutId = (existing as { id: string }).id;
-      await supabase.from('workouts').update({ title: template.name } as never).eq('id', workoutId);
-      await supabase.from('workout_items').delete().eq('workout_id', workoutId);
-    } else {
-      const { data: created, error: createErr } = await supabase
-        .from('workouts')
-        .insert({ client_id: session.client_id, coach_id: user.id, date, title: template.name } as never)
-        .select('id')
-        .single();
-      if (createErr || !created) return fail(500, { error: createErr?.message ?? 'No se pudo crear el entreno.' });
-      workoutId = (created as { id: string }).id;
-    }
-
-    // Copiar los items de la plantilla al workout.
-    const tplItems = [...(template.workout_template_items ?? [])].sort((a, b) => a.order_index - b.order_index);
-    if (tplItems.length > 0) {
-      const rows = tplItems.map((it, i) => ({
-        workout_id: workoutId,
-        exercise_id: it.exercise_id,
-        order_index: i,
-        sets: it.sets,
-        reps_prescribed: it.reps_prescribed,
-        weight_prescribed: it.weight_prescribed,
-        rest_seconds: it.rest_seconds,
-        notes: it.notes
-      }));
-      const { error: insErr } = await supabase.from('workout_items').insert(rows as never);
-      if (insErr) return fail(500, { error: insErr.message });
-    }
-
-    // Ligar el workout a la cita.
     const { error: linkErr } = await supabase
       .from('sessions')
-      .update({ workout_id: workoutId } as never)
+      .update({ workout_id: res.workoutId } as never)
       .eq('id', sessionId)
       .eq('coach_id', user.id);
     if (linkErr) return fail(500, { error: linkErr.message });
 
     return { success: true, fromTemplate: true };
+  },
+
+  // El coach PROPONE una cita a un cliente. Queda 'requested' (requested_by =
+  // coach) para que el cliente la confirme. Opcionalmente asigna una plantilla.
+  createSession: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const clientId = fd.get('client_id') as string;
+    const startsAt = fd.get('starts_at') as string;
+    const endsAt = fd.get('ends_at') as string;
+    const modality = (fd.get('modality') as string) || 'presencial';
+    const templateId = (fd.get('template_id') as string) || '';
+
+    if (!clientId || !startsAt || !endsAt) {
+      return fail(400, { error: 'Elige cliente, fecha y hora.' });
+    }
+
+    // Verificar que el cliente es del coach.
+    const { data: client } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', clientId)
+      .eq('coach_id', user.id)
+      .maybeSingle();
+    if (!client) return fail(403, { error: 'Ese cliente no es tuyo.' });
+
+    const { data: created, error: createErr } = await supabase
+      .from('sessions')
+      .insert({
+        coach_id: user.id,
+        client_id: clientId,
+        starts_at: startsAt,
+        ends_at: endsAt,
+        status: 'requested',
+        modality: modality as never,
+        requested_by: user.id
+      } as never)
+      .select('id')
+      .single();
+    if (createErr || !created) return fail(500, { error: createErr?.message ?? 'No se pudo crear la cita.' });
+    const sessionId = (created as { id: string }).id;
+
+    // Si eligió plantilla, materializarla y ligarla.
+    if (templateId) {
+      const date = isoDateInTZ(new Date(startsAt), DEFAULT_TZ);
+      const res = await materializeTemplate(supabase, user.id, clientId, date, templateId);
+      if (!('error' in res)) {
+        await supabase
+          .from('sessions')
+          .update({ workout_id: res.workoutId } as never)
+          .eq('id', sessionId)
+          .eq('coach_id', user.id);
+      }
+    }
+
+    return { success: true, proposed: true };
   }
 };

@@ -88,15 +88,34 @@
                 {#if s.notes}<div class="text-xs text-text-mute mt-1 italic">{s.notes}</div>{/if}
               </div>
               <div class="flex flex-col items-end gap-2">
-                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
-                <form method="POST" action="?/cancel" use:enhance>
+                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">
+                  {s.proposedByCoach ? 'Te la propone tu coach' : statusLabel[s.status]}
+                </span>
+                {#if !s.proposedByCoach}
+                  <form method="POST" action="?/cancel" use:enhance>
+                    <input type="hidden" name="session_id" value={s.id} />
+                    <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
+                      Cancelar
+                    </button>
+                  </form>
+                {/if}
+              </div>
+            </div>
+
+            {#if s.proposedByCoach}
+              <div class="flex gap-2">
+                <form method="POST" action="?/confirm" use:enhance class="flex-1">
                   <input type="hidden" name="session_id" value={s.id} />
-                  <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
-                    Cancelar
+                  <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar cita</button>
+                </form>
+                <form method="POST" action="?/reject" use:enhance>
+                  <input type="hidden" name="session_id" value={s.id} />
+                  <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
+                    Rechazar
                   </button>
                 </form>
               </div>
-            </div>
+            {/if}
             {#if s.workout}
               <a
                 href="/today?date={s.workout.date}"

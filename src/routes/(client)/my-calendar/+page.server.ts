@@ -105,10 +105,16 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
 
   const allSessions = (sessionsRaw ?? []) as unknown as SessionRow[];
   const now = Date.now();
-  const upcoming = allSessions.filter(
+  // Marcar las citas que ha propuesto el COACH (requested_by != cliente) y
+  // están pendientes: el cliente debe confirmarlas o rechazarlas.
+  const withMeta = allSessions.map((s) => ({
+    ...s,
+    proposedByCoach: s.status === 'requested' && s.requested_by !== user.id
+  }));
+  const upcoming = withMeta.filter(
     (s) => new Date(s.starts_at).getTime() >= now && s.status !== 'cancelled' && s.status !== 'rejected'
   );
-  const past = allSessions
+  const past = withMeta
     .filter((s) => new Date(s.starts_at).getTime() < now || s.status === 'cancelled' || s.status === 'rejected')
     .reverse();
 
@@ -197,5 +203,33 @@ export const actions: Actions = {
 
     if (error) return fail(500, { error: error.message });
     return { success: true, cancelled: true };
+  },
+
+  // El cliente confirma una cita que le propuso el coach.
+  confirm: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const id = (await request.formData()).get('session_id') as string;
+    if (!id) return fail(400, { error: 'Falta el id.' });
+    const { error } = await supabase
+      .from('sessions')
+      .update({ status: 'confirmed', decided_at: new Date().toISOString() } as never)
+      .eq('id', id)
+      .eq('client_id', user.id);
+    if (error) return fail(500, { error: error.message });
+    return { success: true, confirmedByClient: true };
+  },
+
+  // El cliente rechaza una cita que le propuso el coach.
+  reject: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const id = (await request.formData()).get('session_id') as string;
+    if (!id) return fail(400, { error: 'Falta el id.' });
+    const { error } = await supabase
+      .from('sessions')
+      .update({ status: 'rejected', decided_at: new Date().toISOString() } as never)
+      .eq('id', id)
+      .eq('client_id', user.id);
+    if (error) return fail(500, { error: error.message });
+    return { success: true, rejectedByClient: true };
   }
 };

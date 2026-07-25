@@ -3,6 +3,28 @@
 
   let { data, form } = $props();
 
+  // --- Proponer cita (coach) ---
+  let showPropose = $state(false);
+  let npClient = $state('');
+  let npDate = $state('');
+  let npTime = $state('');
+  let npDur = $state('60');
+  let npModality = $state('presencial');
+  let npTemplate = $state('');
+  let proposing = $state(false);
+
+  // starts_at / ends_at en ISO, calculados en el navegador (zona horaria local
+  // del coach = correcta). new Date('YYYY-MM-DDTHH:MM') se interpreta como local.
+  const npStartsAt = $derived(
+    npDate && npTime ? new Date(`${npDate}T${npTime}`).toISOString() : ''
+  );
+  const npEndsAt = $derived.by(() => {
+    if (!npStartsAt) return '';
+    const d = new Date(npStartsAt);
+    d.setMinutes(d.getMinutes() + Number(npDur || 60));
+    return d.toISOString();
+  });
+
   const modalityLabel: Record<string, string> = {
     presencial: 'Presencial',
     online: 'Online',
@@ -136,13 +158,97 @@
 {/snippet}
 
 <div class="space-y-8 max-w-2xl">
-  <div>
-    <span class="eyebrow">Citas</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">Agenda</h1>
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <span class="eyebrow">Citas</span>
+      <h1 class="text-4xl font-bold tracking-tight mt-2">Agenda</h1>
+    </div>
+    {#if data.clients.length > 0}
+      <button onclick={() => (showPropose = !showPropose)} class="btn-primary py-2 px-4 whitespace-nowrap">
+        + Proponer cita
+      </button>
+    {/if}
   </div>
 
   {#if form?.error}
     <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+  {/if}
+  {#if form?.success && form?.proposed}
+    <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Cita propuesta. El cliente la verá y podrá confirmarla.
+    </p>
+  {/if}
+
+  {#if showPropose}
+    <form
+      method="POST"
+      action="?/createSession"
+      use:enhance={() => {
+        proposing = true;
+        return async ({ update }) => {
+          await update();
+          proposing = false;
+          npClient = ''; npDate = ''; npTime = ''; npTemplate = '';
+          showPropose = false;
+        };
+      }}
+      class="card space-y-4"
+    >
+      <h2 class="font-semibold">Proponer una cita</h2>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label for="np-client" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Cliente</label>
+          <select id="np-client" bind:value={npClient} name="client_id" required
+            class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+            <option value="" disabled>Elige un cliente…</option>
+            {#each data.clients as c (c.id)}<option value={c.id}>{c.full_name ?? 'Cliente'}</option>{/each}
+          </select>
+        </div>
+        <div>
+          <label for="np-mod" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Modalidad</label>
+          <select id="np-mod" bind:value={npModality}
+            class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+            <option value="presencial">Presencial</option>
+            <option value="online">Online</option>
+          </select>
+        </div>
+        <div>
+          <label for="np-date" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Fecha</label>
+          <input id="np-date" type="date" bind:value={npDate} required
+            class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="np-time" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Hora</label>
+            <input id="np-time" type="time" bind:value={npTime} required
+              class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+          </div>
+          <div>
+            <label for="np-dur" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Duración</label>
+            <select id="np-dur" bind:value={npDur}
+              class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+              <option value="30">30 min</option><option value="45">45 min</option>
+              <option value="60">60 min</option><option value="90">90 min</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      {#if data.templates.length > 0}
+        <div>
+          <label for="np-tpl" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Entreno (opcional)</label>
+          <select id="np-tpl" bind:value={npTemplate} name="template_id"
+            class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+            <option value="">Sin entreno por ahora</option>
+            {#each data.templates as t (t.id)}<option value={t.id}>📋 {t.name} ({t.itemCount} ej.)</option>{/each}
+          </select>
+        </div>
+      {/if}
+      <input type="hidden" name="starts_at" value={npStartsAt} />
+      <input type="hidden" name="ends_at" value={npEndsAt} />
+      <button type="submit" disabled={proposing || !npClient || !npStartsAt} class="btn-primary w-full">
+        {proposing ? 'Proponiendo…' : 'Proponer cita al cliente'}
+      </button>
+    </form>
   {/if}
 
   <!-- Pendientes -->
