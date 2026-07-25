@@ -50,29 +50,12 @@
     })
   );
 
-  // Drag&drop: la biblioteca solo es FUENTE (clonamos al day). El día es destino.
+  // Drag&drop SOLO para reordenar dentro del día (la biblioteca añade con "+").
   function handleDayConsider(e: CustomEvent<DndEvent<DayItem>>) {
     dayItems = e.detail.items;
   }
   function handleDayFinalize(e: CustomEvent<DndEvent<DayItem>>) {
-    // Si el item viene de la biblioteca (no tiene los campos extra), lo "envolvemos"
-    dayItems = e.detail.items.map((it) => {
-      // dnd a veces inyecta los exercises crudos cuando vienen de la biblioteca.
-      // Detectamos por shape y los normalizamos.
-      const asAny = it as unknown as Record<string, unknown>;
-      if (!('exercise' in asAny) && 'name' in asAny && 'coach_id' in asAny) {
-        return {
-          id: crypto.randomUUID(),
-          exercise: asAny as unknown as Exercise,
-          sets: 4,
-          reps_prescribed: '8-10',
-          weight_prescribed: '',
-          rest_seconds: 90,
-          notes: ''
-        };
-      }
-      return it;
-    });
+    dayItems = e.detail.items;
   }
 
   function removeItem(id: string) {
@@ -213,27 +196,14 @@
             : 'Ningún ejercicio coincide.'}
         </div>
       {:else}
-        <div
-          class="space-y-2 max-h-[600px] overflow-y-auto pr-1"
-          use:dndzone={{
-            items: filteredExercises,
-            type: 'exercise',
-            dropFromOthersDisabled: true,
-            dragDisabled: false,
-            morphDisabled: true
-          }}
-          onconsider={(e) => {
-            /* la biblioteca no acepta drops, solo emite */
-          }}
-          onfinalize={(e) => {
-            /* idem */
-          }}
-        >
+        <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1">
           {#each filteredExercises as ex (ex.id)}
-            <div
-              animate:flip={{ duration: 200 }}
-              class="bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3
-                     hover:border-primary/40 cursor-grab active:cursor-grabbing"
+            <button
+              type="button"
+              onclick={() => addExercise(ex)}
+              class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3
+                     hover:border-primary/40 transition-colors group"
+              title="Añadir al día"
             >
               <div class="text-2xl">🏋️</div>
               <div class="flex-1 min-w-0">
@@ -242,14 +212,8 @@
                   <div class="text-xs text-text-mute">{muscleLabels[ex.muscle_group]}</div>
                 {/if}
               </div>
-              <button
-                onclick={() => addExercise(ex)}
-                class="text-primary hover:text-accent text-lg font-bold"
-                title="Añadir al día"
-              >
-                +
-              </button>
-            </div>
+              <span class="text-primary group-hover:text-accent text-lg font-bold">+</span>
+            </button>
           {/each}
         </div>
       {/if}
@@ -269,7 +233,8 @@
           items: dayItems,
           type: 'exercise',
           flipDurationMs: 200,
-          dropTargetStyle: { outline: '2px dashed #38bdf8' }
+          dropFromOthersDisabled: true,
+          dropTargetStyle: {}
         }}
         onconsider={handleDayConsider}
         onfinalize={handleDayFinalize}
@@ -354,8 +319,8 @@
           </div>
         {:else}
           <div class="text-center text-text-mute text-sm">
-            <p class="mb-1">Arrastra ejercicios desde la biblioteca →</p>
-            <p class="text-xs">o usa el botón <span class="text-primary">+</span> de cada uno</p>
+            <p class="mb-1">Añade ejercicios con el botón <span class="text-primary">+</span> de la biblioteca ←</p>
+            <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
           </div>
         {/each}
       </div>
