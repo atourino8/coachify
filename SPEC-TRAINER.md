@@ -1036,6 +1036,28 @@ configuración + onboarding personal. Se cobra como **setup fee** de
 - [ ] Mantener cualquier referencia a "Coachify" como variable o constante,
   no hardcodear (revisar antes de v3).
 
+## 17. Epico futuro - Marketplace de entrenadores (a evaluar)
+
+Idea (jul 2026): permitir que un cliente se registre por su cuenta y descubra
+entrenadores de su zona para contactarlos, en vez del modelo actual invite-only.
+
+Es un cambio de modelo de producto (pivota B2B -> B2C), no una feature pequena.
+Requiere: perfiles publicos de entrenador (bio, foto, especialidades, zona,
+precios, valoraciones); descubrimiento (busqueda por ubicacion/especialidad,
+filtros, quiza mapa); auto-registro de cliente y estado "cliente sin coach";
+contacto/solicitud de vinculacion cliente->coach; moderacion; implicaciones
+legales nuevas.
+
+Decision pendiente antes de construir: definir si Coachify es herramienta B2B
+(el coach con SUS clientes, actual) o marketplace B2C (clientes buscan coach).
+Son productos distintos. No mezclar sin decidirlo.
+
+Preparado sin construirlo: la landing ya tiene la tarjeta "Soy cliente" (hoy
+"entra, te invitaron"). Cuando se apruebe el marketplace, esa tarjeta evoluciona
+a "busca tu entrenador / registrate". La puerta queda lista; el motor es el epico.
+
+---
+
 ---
 
 *Documento vivo. Editar conforme avance el proyecto.*
