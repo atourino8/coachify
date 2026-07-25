@@ -78,23 +78,38 @@
         <p class="text-sm text-text-mute">No tienes citas próximas. Solicita una abajo.</p>
       {:else}
         {#each data.upcoming as s (s.id)}
-          <div class="card flex items-center justify-between gap-4">
-            <div>
-              <div class="font-semibold capitalize">{fmt(s.starts_at)}</div>
-              <div class="text-xs text-text-mute mt-1">
-                {modalityLabel[s.modality] ?? s.modality}{s.location ? ' · ' + s.location : ''}
+          <div class="card space-y-3">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="font-semibold capitalize">{fmt(s.starts_at)}</div>
+                <div class="text-xs text-text-mute mt-1">
+                  {modalityLabel[s.modality] ?? s.modality}{s.location ? ' · ' + s.location : ''}
+                </div>
+                {#if s.notes}<div class="text-xs text-text-mute mt-1 italic">{s.notes}</div>{/if}
               </div>
-              {#if s.notes}<div class="text-xs text-text-mute mt-1 italic">{s.notes}</div>{/if}
+              <div class="flex flex-col items-end gap-2">
+                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
+                <form method="POST" action="?/cancel" use:enhance>
+                  <input type="hidden" name="session_id" value={s.id} />
+                  <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
+                    Cancelar
+                  </button>
+                </form>
+              </div>
             </div>
-            <div class="flex flex-col items-end gap-2">
-              <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
-              <form method="POST" action="?/cancel" use:enhance>
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
-                  Cancelar
-                </button>
-              </form>
-            </div>
+            {#if s.workout}
+              <a
+                href="/today?date={s.workout.date}"
+                class="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-md px-3 py-2 hover:bg-primary/15 transition-colors"
+              >
+                <span class="text-lg">🏋️</span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium truncate">{s.workout.title ?? 'Tu entreno'}</div>
+                  <div class="text-xs text-text-mute">Entreno preparado para esta cita</div>
+                </div>
+                <span class="text-xs text-primary font-medium whitespace-nowrap">Ver →</span>
+              </a>
+            {/if}
           </div>
         {/each}
       {/if}

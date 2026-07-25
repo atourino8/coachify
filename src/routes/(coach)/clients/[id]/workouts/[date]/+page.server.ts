@@ -52,13 +52,15 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 };
 
 export const actions: Actions = {
-  save: async ({ request, params, locals: { supabase, user } }) => {
+  save: async ({ request, params, url, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const formData = await request.formData();
     const rawItems = formData.get('items') as string;
     const title = ((formData.get('title') as string) || '').trim() || null;
     const notes = ((formData.get('notes') as string) || '').trim() || null;
+    // Si venimos de una cita (?session=), ligaremos el workout a esa sesión.
+    const sessionId = url.searchParams.get('session');
 
     let items: Array<{
       exercise_id: string;
@@ -118,6 +120,21 @@ export const actions: Actions = {
       }));
       const { error: insertError } = await supabase.from('workout_items').insert(rows);
       if (insertError) return fail(500, { error: insertError.message });
+    }
+
+    // Si veníamos de una cita, ligamos el workout recién guardado a esa sesión.
+    if (sessionId) {
+      const { error: linkError } = await supabase
+        .from('sessions')
+        .update({ workout_id: workoutId } as never)
+        .eq('id', sessionId)
+        .eq('coach_id', user.id);
+      if (linkError) {
+        // No es fatal: el workout se guardó. Avisamos pero no bloqueamos.
+        console.error('[save] No se pudo ligar el workout a la cita:', linkError);
+      }
+      // Volver a la agenda tras preparar el entreno de la cita.
+      redirect(303, '/agenda');
     }
 
     return { success: true };

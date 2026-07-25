@@ -32,11 +32,67 @@
       minute: '2-digit'
     });
   }
+
+  // Fecha local (YYYY-MM-DD) de una cita, para enlazar al constructor de ese día.
+  function sessionDate(iso: string): string {
+    const d = new Date(iso);
+    const p = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
 </script>
 
 <svelte:head>
   <title>Agenda · Coachify</title>
 </svelte:head>
+
+{#snippet workoutBlock(s: (typeof data.pending)[number])}
+  {@const clientWorkouts = data.workoutsByClient[s.client_id] ?? []}
+  <div class="border-t border-text-mute/10 pt-3 mt-1">
+    {#if s.workout}
+      <!-- Ya tiene entreno ligado -->
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-sm min-w-0">
+          <span class="text-primary">🏋️</span>
+          <span class="font-medium truncate">{s.workout.title ?? 'Entreno'}</span>
+          <span class="text-xs text-text-mute">({s.workout.date})</span>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
+            Editar
+          </a>
+          <form method="POST" action="?/unassignWorkout" use:enhance>
+            <input type="hidden" name="session_id" value={s.id} />
+            <button type="submit" class="text-xs text-text-mute hover:text-danger">Quitar</button>
+          </form>
+        </div>
+      </div>
+    {:else}
+      <!-- Sin entreno: asignar existente o crear desde la cita -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+        <span class="text-xs uppercase tracking-wider text-text-mute">Entreno</span>
+        {#if clientWorkouts.length > 0}
+          <form method="POST" action="?/assignWorkout" use:enhance class="flex items-center gap-2 flex-1">
+            <input type="hidden" name="session_id" value={s.id} />
+            <select name="workout_id" required
+              class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+              <option value="" disabled selected>Asignar uno existente…</option>
+              {#each clientWorkouts as w (w.id)}
+                <option value={w.id}>{w.date} · {w.title ?? 'Entreno'}</option>
+              {/each}
+            </select>
+            <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
+          </form>
+        {/if}
+        <a
+          href="/clients/{s.client_id}/workouts/{sessionDate(s.starts_at)}?session={s.id}"
+          class="text-xs text-primary hover:underline whitespace-nowrap"
+        >
+          + Crear desde esta cita
+        </a>
+      </div>
+    {/if}
+  </div>
+{/snippet}
 
 <div class="space-y-8 max-w-2xl">
   <div>
@@ -48,7 +104,7 @@
     <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
 
-  <!-- Pendientes de confirmar -->
+  <!-- Pendientes -->
   <section class="space-y-3">
     <h2 class="text-lg font-semibold flex items-center gap-2">
       Pendientes
@@ -82,6 +138,7 @@
               </button>
             </form>
           </div>
+          {@render workoutBlock(s)}
         </div>
       {/each}
     {/if}
@@ -94,22 +151,25 @@
       <p class="text-sm text-text-mute">No hay citas confirmadas próximas.</p>
     {:else}
       {#each data.confirmed as s (s.id)}
-        <div class="card flex items-center justify-between gap-4">
-          <div>
-            <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
-            <div class="text-sm text-text-mute capitalize mt-0.5">{fmt(s.starts_at)}</div>
-            <div class="text-xs text-text-mute mt-1">{modalityLabel[s.modality] ?? s.modality}</div>
+        <div class="card space-y-3">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
+              <div class="text-sm text-text-mute capitalize mt-0.5">{fmt(s.starts_at)}</div>
+              <div class="text-xs text-text-mute mt-1">{modalityLabel[s.modality] ?? s.modality}</div>
+            </div>
+            <div class="flex flex-col gap-1.5 items-end">
+              <form method="POST" action="?/complete" use:enhance>
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="text-xs text-primary hover:underline">Marcar hecha</button>
+              </form>
+              <form method="POST" action="?/cancel" use:enhance>
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar</button>
+              </form>
+            </div>
           </div>
-          <div class="flex flex-col gap-1.5">
-            <form method="POST" action="?/complete" use:enhance>
-              <input type="hidden" name="session_id" value={s.id} />
-              <button type="submit" class="text-xs text-primary hover:underline">Marcar hecha</button>
-            </form>
-            <form method="POST" action="?/cancel" use:enhance>
-              <input type="hidden" name="session_id" value={s.id} />
-              <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar</button>
-            </form>
-          </div>
+          {@render workoutBlock(s)}
         </div>
       {/each}
     {/if}

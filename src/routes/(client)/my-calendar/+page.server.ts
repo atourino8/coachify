@@ -25,6 +25,7 @@ type SessionRow = {
   location: string | null;
   notes: string | null;
   requested_by: string | null;
+  workout: { id: string; title: string | null; date: string } | null;
 };
 
 const DAYS_AHEAD = 14;
@@ -92,10 +93,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
   const { profile } = await parent();
   const coachId = profile?.coach_id ?? null;
 
-  // Sesiones del cliente (futuras y recientes)
+  // Sesiones del cliente (futuras y recientes), con el entreno ligado si lo hay.
   const { data: sessionsRaw } = await supabase
     .from('sessions')
-    .select('id, starts_at, ends_at, status, modality, location, notes, requested_by')
+    .select(
+      `id, starts_at, ends_at, status, modality, location, notes, requested_by,
+       workout:workouts(id, title, date)`
+    )
     .eq('client_id', user.id)
     .order('starts_at', { ascending: true });
 
