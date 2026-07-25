@@ -51,6 +51,23 @@ export function todayISOLocal(): string {
   return `${y}-${m}-${day}`;
 }
 
+// Fecha de hoy en formato ISO EN UNA ZONA HORARIA concreta. Necesario en SSR:
+// el servidor de Vercel corre en UTC, así que new Date() da la fecha UTC, que
+// puede diferir de la fecha real del usuario (p. ej. de noche en España).
+// Usamos 'en-CA' porque formatea como YYYY-MM-DD.
+export function todayISOInTZ(tz: string): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: tz,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  } catch {
+    return todayISOLocal();
+  }
+}
+
 // Cuadrícula de un mes completo (6 semanas Lun-Dom = 42 celdas), con
 // metadatos para la UI. `monthISO` es "YYYY-MM".
 export function monthGrid(monthISO: string): {

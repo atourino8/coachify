@@ -1,18 +1,31 @@
-// Carga el workout del día (si existe) para el cliente autenticado.
+// Home del cliente: el entreno de HOY (o de la fecha ?date) + próximos entrenos.
+//
+// "Hoy" se computa en la zona horaria del cliente (profile.timezone, por
+// defecto Europe/Madrid). En SSR, new Date() da la fecha UTC del servidor de
+// Vercel, que de noche en España va un día por detrás -> el entreno de hoy no
+// aparecía. Con la zona horaria correcta se soluciona.
 
 import { redirect } from '@sveltejs/kit';
-import { formatDateISO } from '$lib/week';
+import { todayISOInTZ } from '$lib/week';
 import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) => {
+const DEFAULT_TZ = 'Europe/Madrid';
+
+export const load: PageServerLoad = async ({ url, locals: { supabase, user }, parent }) => {
   if (!user) redirect(303, '/login');
 
-  // ¿Qué día? ?date=YYYY-MM-DD opcional, por defecto hoy
-  const dateParam = url.searchParams.get('date');
-  const today = dateParam ?? formatDateISO(new Date());
+  const { profile } = await parent();
+  const tz = profile?.timezone || DEFAULT_TZ;
+  const today = todayISOInTZ(tz);
+  const viewDate = url.searchParams.get('date') ?? today;
 
-  const { data: workoutRaw } = await supabase
+  // Cargamos una ventana amplia de entrenos publicados desde hoy (o desde la
+  // fecha vista si es anterior) para 30 días. Así "hoy" + "próximos" salen de
+  // una sola consulta y evitamos el problema de mirar solo la fecha exacta.
+  const fromDate = viewDate < today ? viewDate : today;
+
+  const { data: workoutsRaw } = await supabase
     .from('workouts')
     .select(
       `id, date, title, notes, published,
@@ -23,18 +36,40 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
        )`
     )
     .eq('client_id', user.id)
-    .eq('date', today)
     .eq('published', true)
-    .maybeSingle();
+    .gte('date', fromDate)
+    .order('date', { ascending: true })
+    .limit(30);
 
-  // Cast: joins de Supabase se infieren mal (arrays donde son objetos).
-  const workout = workoutRaw as unknown as WorkoutWithItems | null;
+  const workouts = (workoutsRaw ?? []) as unknown as (WorkoutWithItems & { date: string })[];
 
-  if (workout?.workout_items) {
-    workout.workout_items.sort(
-      (a: WorkoutItemWithRelations, b: WorkoutItemWithRelations) => a.order_index - b.order_index
-    );
+  // Ordenar los items de cada entreno
+  for (const w of workouts) {
+    if (w.workout_items) {
+      w.workout_items.sort(
+        (a: WorkoutItemWithRelations, b: WorkoutItemWithRelations) => a.order_index - b.order_index
+      );
+    }
   }
 
-  return { workout, date: today };
+  // Entreno "héroe": el de la fecha vista (hoy por defecto)
+  const heroWorkout = workouts.find((w) => w.date === viewDate) ?? null;
+
+  // Próximos: los que vienen DESPUÉS de la fecha vista
+  const upcoming = workouts
+    .filter((w) => w.date > viewDate)
+    .map((w) => ({
+      id: w.id,
+      date: w.date,
+      title: w.title,
+      itemCount: w.workout_items?.length ?? 0,
+      done: (w.workout_items ?? []).some((it) => (it.set_logs?.length ?? 0) > 0)
+    }));
+
+  return {
+    workout: heroWorkout,
+    date: viewDate,
+    isToday: viewDate === today,
+    upcoming
+  };
 };
