@@ -39,6 +39,23 @@
     const p = (n: number) => n.toString().padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
+
+  // Fecha corta y legible para el desplegable de entrenos: "sáb 25 jul".
+  function shortDate(iso: string): string {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short'
+    });
+  }
+
+  // Entrenos de un cliente, siempre ordenados por fecha descendente (más
+  // reciente primero) para que el orden del desplegable no varíe.
+  function sortedWorkouts(clientId: string) {
+    return [...(data.workoutsByClient[clientId] ?? [])].sort((a, b) =>
+      b.date.localeCompare(a.date)
+    );
+  }
 </script>
 
 <svelte:head>
@@ -46,15 +63,15 @@
 </svelte:head>
 
 {#snippet workoutBlock(s: (typeof data.pending)[number])}
-  {@const clientWorkouts = data.workoutsByClient[s.client_id] ?? []}
+  {@const clientWorkouts = sortedWorkouts(s.client_id)}
   <div class="border-t border-text-mute/10 pt-3 mt-1">
     {#if s.workout}
       <!-- Ya tiene entreno ligado -->
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-sm min-w-0">
           <span class="text-primary">🏋️</span>
-          <span class="font-medium truncate">{s.workout.title ?? 'Entreno'}</span>
-          <span class="text-xs text-text-mute">({s.workout.date})</span>
+          <span class="font-medium truncate">{s.workout.title || 'Sin título'}</span>
+          <span class="text-xs text-text-mute whitespace-nowrap">· {shortDate(s.workout.date)}</span>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
           <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
@@ -77,7 +94,7 @@
               class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
               <option value="" disabled selected>Asignar uno existente…</option>
               {#each clientWorkouts as w (w.id)}
-                <option value={w.id}>{w.date} · {w.title ?? 'Entreno'}</option>
+                <option value={w.id}>{shortDate(w.date)} · {w.title || 'Sin título'}</option>
               {/each}
             </select>
             <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
