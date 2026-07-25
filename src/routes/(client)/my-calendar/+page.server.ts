@@ -111,9 +111,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
     ...s,
     proposedByCoach: s.status === 'requested' && s.requested_by !== user.id
   }));
-  const upcoming = withMeta.filter(
+  const futureActive = withMeta.filter(
     (s) => new Date(s.starts_at).getTime() >= now && s.status !== 'cancelled' && s.status !== 'rejected'
   );
+  // Propuestas del coach por confirmar: van arriba, separadas.
+  const proposals = futureActive.filter((s) => s.proposedByCoach);
+  // El resto de próximas (ya confirmadas o pedidas por el cliente).
+  const upcoming = futureActive.filter((s) => !s.proposedByCoach);
   const past = withMeta
     .filter((s) => new Date(s.starts_at).getTime() < now || s.status === 'cancelled' || s.status === 'rejected')
     .reverse();
@@ -136,6 +140,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
   }
 
   return {
+    proposals,
     upcoming,
     past,
     bookable,

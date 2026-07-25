@@ -43,6 +43,25 @@
 </svelte:head>
 
 <div class="space-y-6">
+  <!-- Aviso de propuestas de cita pendientes -->
+  {#if data.proposalCount > 0}
+    <a
+      href="/my-calendar"
+      class="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 hover:bg-primary/15 transition-colors"
+    >
+      <span class="text-xl">📅</span>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold">
+          {data.proposalCount === 1
+            ? 'Tu coach te ha propuesto una cita'
+            : `Tu coach te ha propuesto ${data.proposalCount} citas`}
+        </div>
+        <div class="text-xs text-text-mute">Revísala y confírmala en tu calendario</div>
+      </div>
+      <span class="text-xs text-primary font-medium whitespace-nowrap">Ver →</span>
+    </a>
+  {/if}
+
   <!-- Saludo -->
   <div>
     <span class="eyebrow capitalize">{dateLabel}</span>

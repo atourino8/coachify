@@ -71,7 +71,58 @@
       </p>
     </div>
   {:else}
-    <!-- Próximas citas -->
+    <!-- Propuestas del coach por confirmar (arriba del todo) -->
+    {#if data.proposals.length > 0}
+      <section class="space-y-3">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          Propuestas de tu coach
+          <span class="text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary">{data.proposals.length}</span>
+        </h2>
+        {#each data.proposals as s (s.id)}
+          <div class="card space-y-3 border-primary/30 bg-primary/5">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="font-semibold capitalize">{fmt(s.starts_at)}</div>
+                <div class="text-xs text-text-mute mt-1">
+                  {modalityLabel[s.modality] ?? s.modality}{s.location ? ' · ' + s.location : ''}
+                </div>
+                {#if s.notes}<div class="text-xs text-text-mute mt-1 italic">{s.notes}</div>{/if}
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full bg-primary/15 text-primary whitespace-nowrap">Nueva propuesta</span>
+            </div>
+
+            {#if s.workout}
+              <a
+                href="/today?date={s.workout.date}"
+                class="flex items-center gap-3 bg-bg/60 border border-primary/20 rounded-md px-3 py-2 hover:bg-bg transition-colors"
+              >
+                <span class="text-lg">🏋️</span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium truncate">{s.workout.title ?? 'Tu entreno'}</div>
+                  <div class="text-xs text-text-mute">Mira el entreno antes de confirmar</div>
+                </div>
+                <span class="text-xs text-primary font-medium whitespace-nowrap">Ver →</span>
+              </a>
+            {/if}
+
+            <div class="flex gap-2">
+              <form method="POST" action="?/confirm" use:enhance class="flex-1">
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar cita</button>
+              </form>
+              <form method="POST" action="?/reject" use:enhance>
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
+                  Rechazar
+                </button>
+              </form>
+            </div>
+          </div>
+        {/each}
+      </section>
+    {/if}
+
+    <!-- Próximas citas (confirmadas o pedidas por el cliente) -->
     <section class="space-y-3">
       <h2 class="text-lg font-semibold">Próximas citas</h2>
       {#if data.upcoming.length === 0}
@@ -88,34 +139,13 @@
                 {#if s.notes}<div class="text-xs text-text-mute mt-1 italic">{s.notes}</div>{/if}
               </div>
               <div class="flex flex-col items-end gap-2">
-                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">
-                  {s.proposedByCoach ? 'Te la propone tu coach' : statusLabel[s.status]}
-                </span>
-                {#if !s.proposedByCoach}
-                  <form method="POST" action="?/cancel" use:enhance>
-                    <input type="hidden" name="session_id" value={s.id} />
-                    <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
-                      Cancelar
-                    </button>
-                  </form>
-                {/if}
+                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
+                <form method="POST" action="?/cancel" use:enhance>
+                  <input type="hidden" name="session_id" value={s.id} />
+                  <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar</button>
+                </form>
               </div>
             </div>
-
-            {#if s.proposedByCoach}
-              <div class="flex gap-2">
-                <form method="POST" action="?/confirm" use:enhance class="flex-1">
-                  <input type="hidden" name="session_id" value={s.id} />
-                  <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar cita</button>
-                </form>
-                <form method="POST" action="?/reject" use:enhance>
-                  <input type="hidden" name="session_id" value={s.id} />
-                  <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
-                    Rechazar
-                  </button>
-                </form>
-              </div>
-            {/if}
             {#if s.workout}
               <a
                 href="/today?date={s.workout.date}"

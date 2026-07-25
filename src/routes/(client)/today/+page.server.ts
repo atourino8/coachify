@@ -66,10 +66,19 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
       done: (w.workout_items ?? []).some((it) => (it.set_logs?.length ?? 0) > 0)
     }));
 
+  // Propuestas de cita pendientes de confirmar (el coach las propuso).
+  const { count: proposalCount } = await supabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('client_id', user.id)
+    .eq('status', 'requested')
+    .neq('requested_by', user.id);
+
   return {
     workout: heroWorkout,
     date: viewDate,
     isToday: viewDate === today,
-    upcoming
+    upcoming,
+    proposalCount: proposalCount ?? 0
   };
 };
