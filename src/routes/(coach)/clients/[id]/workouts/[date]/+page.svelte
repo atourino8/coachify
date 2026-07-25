@@ -40,6 +40,30 @@
   let saving = $state(false);
   let filterText = $state('');
   let filterMuscle = $state<string>('');
+  let selectedTemplate = $state('');
+
+  // Cargar los ejercicios de una plantilla en el día (reemplaza los actuales).
+  function loadTemplate() {
+    const tpl = data.templates?.find((t) => t.id === selectedTemplate);
+    if (!tpl) return;
+    if (
+      dayItems.length > 0 &&
+      !confirm('Esto reemplazará los ejercicios actuales del día por los de la plantilla. ¿Continuar?')
+    ) {
+      selectedTemplate = '';
+      return;
+    }
+    dayItems = tpl.items.map((it) => ({
+      id: crypto.randomUUID(),
+      exercise: it.exercise as Exercise,
+      sets: it.sets,
+      reps_prescribed: it.reps_prescribed,
+      weight_prescribed: it.weight_prescribed,
+      rest_seconds: it.rest_seconds,
+      notes: it.notes
+    }));
+    selectedTemplate = '';
+  }
 
   // Biblioteca filtrada
   const filteredExercises = $derived(
@@ -165,6 +189,24 @@
       class="w-full bg-transparent border-0 text-sm text-text-mute focus:outline-none resize-none placeholder:text-text-mute/40"
     ></textarea>
   </div>
+
+  <!-- Cargar plantilla -->
+  {#if data.templates && data.templates.length > 0}
+    <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
+      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap">Cargar plantilla</span>
+      <select
+        bind:value={selectedTemplate}
+        onchange={loadTemplate}
+        class="flex-1 px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
+      >
+        <option value="">Elige una plantilla para rellenar el día…</option>
+        {#each data.templates as t (t.id)}
+          <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
+        {/each}
+      </select>
+      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap">Gestionar plantillas →</a>
+    </div>
+  {/if}
 
   <!-- Cuerpo: biblioteca + día -->
   <div class="grid lg:grid-cols-[1fr_1.5fr] gap-6">

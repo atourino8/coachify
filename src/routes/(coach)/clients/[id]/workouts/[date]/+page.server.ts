@@ -43,11 +43,53 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     );
   }
 
+  // Plantillas del coach (para "cargar plantilla" en el día), con sus items.
+  const { data: tplRaw } = await supabase
+    .from('workout_templates')
+    .select(
+      `id, name,
+       workout_template_items(
+         exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
+         exercise:exercises(id, name, muscle_group, description, video_url)
+       )`
+    )
+    .eq('coach_id', user.id)
+    .order('name');
+
+  const templates = ((tplRaw ?? []) as unknown as {
+    id: string;
+    name: string;
+    workout_template_items: {
+      exercise_id: string;
+      order_index: number;
+      sets: number;
+      reps_prescribed: string | null;
+      weight_prescribed: string | null;
+      rest_seconds: number | null;
+      notes: string | null;
+      exercise: unknown;
+    }[];
+  }[]).map((t) => ({
+    id: t.id,
+    name: t.name,
+    items: [...(t.workout_template_items ?? [])]
+      .sort((a, b) => a.order_index - b.order_index)
+      .map((it) => ({
+        exercise: it.exercise,
+        sets: it.sets,
+        reps_prescribed: it.reps_prescribed ?? '',
+        weight_prescribed: it.weight_prescribed ?? '',
+        rest_seconds: it.rest_seconds,
+        notes: it.notes ?? ''
+      }))
+  }));
+
   return {
     client,
     date: params.date,
     exercises: exercises ?? [],
-    workout
+    workout,
+    templates
   };
 };
 

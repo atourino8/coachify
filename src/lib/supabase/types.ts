@@ -65,6 +65,29 @@ export interface WorkoutItem {
   updated_at: string;
 }
 
+export interface WorkoutTemplate {
+  id: string;
+  coach_id: string;
+  name: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkoutTemplateItem {
+  id: string;
+  template_id: string;
+  exercise_id: string;
+  order_index: number;
+  sets: number;
+  reps_prescribed: string | null;
+  weight_prescribed: string | null;
+  rest_seconds: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SetLog {
   id: string;
   workout_item_id: string;
@@ -162,6 +185,16 @@ export interface Database {
         Row: WorkoutItem;
         Insert: Omit<WorkoutItem, 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Omit<WorkoutItem, 'id' | 'created_at'>>;
+      };
+      workout_templates: {
+        Row: WorkoutTemplate;
+        Insert: Omit<WorkoutTemplate, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Update: Partial<Omit<WorkoutTemplate, 'id' | 'coach_id' | 'created_at'>>;
+      };
+      workout_template_items: {
+        Row: WorkoutTemplateItem;
+        Insert: Omit<WorkoutTemplateItem, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Update: Partial<Omit<WorkoutTemplateItem, 'id' | 'created_at'>>;
       };
       set_logs: {
         Row: SetLog;

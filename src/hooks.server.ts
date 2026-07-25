@@ -57,6 +57,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
   const isCoachRoute = event.url.pathname.startsWith('/dashboard') ||
     event.url.pathname.startsWith('/exercises') ||
+    event.url.pathname.startsWith('/templates') ||
     event.url.pathname.startsWith('/clients') ||
     event.url.pathname.startsWith('/calendar') ||
     event.url.pathname.startsWith('/agenda') ||

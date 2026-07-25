@@ -20,6 +20,7 @@
       <a href="/exercises" class="text-text-mute hover:text-primary transition-colors"
         >Ejercicios</a
       >
+      <a href="/templates" class="text-text-mute hover:text-primary transition-colors">Entrenos</a>
       <a href="/clients" class="text-text-mute hover:text-primary transition-colors">Clientes</a>
       <a href="/agenda" class="text-text-mute hover:text-primary transition-colors">Agenda</a>
       <a href="/availability" class="text-text-mute hover:text-primary transition-colors"
