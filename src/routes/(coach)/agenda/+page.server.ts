@@ -2,7 +2,10 @@
 // un entreno a cada cita (o crear uno nuevo desde el constructor).
 
 import { fail, redirect } from '@sveltejs/kit';
+import { isoDateInTZ } from '$lib/week';
 import type { PageServerLoad, Actions } from './$types';
+
+const DEFAULT_TZ = 'Europe/Madrid';
 
 type SessionRow = {
   id: string;
@@ -61,7 +64,17 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     (workoutsByClient[w.client_id] ??= []).push({ id: w.id, date: w.date, title: w.title });
   }
 
-  return { pending, confirmed, history, workoutsByClient };
+  // Plantillas del coach (para asignar directamente a una cita).
+  const { data: tplRaw } = await supabase
+    .from('workout_templates')
+    .select('id, name, workout_template_items(id)')
+    .eq('coach_id', user.id)
+    .order('name');
+  const templates = ((tplRaw ?? []) as unknown as { id: string; name: string; workout_template_items: { id: string }[] | null }[]).map(
+    (t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length })
+  );
+
+  return { pending, confirmed, history, workoutsByClient, templates };
 };
 
 async function setStatus(
@@ -137,5 +150,98 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: error.message });
     return { success: true };
+  },
+
+  // Materializa una PLANTILLA como entreno en la fecha de la cita y lo liga.
+  assignTemplate: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const sessionId = fd.get('session_id') as string;
+    const templateId = fd.get('template_id') as string;
+    if (!sessionId || !templateId) return fail(400, { error: 'Falta la cita o la plantilla.' });
+
+    // Cargar la cita (cliente + fecha).
+    const { data: sess, error: sessErr } = await supabase
+      .from('sessions')
+      .select('id, client_id, starts_at')
+      .eq('id', sessionId)
+      .eq('coach_id', user.id)
+      .single();
+    if (sessErr || !sess) return fail(404, { error: 'Cita no encontrada.' });
+    const session = sess as { client_id: string; starts_at: string };
+    const date = isoDateInTZ(new Date(session.starts_at), DEFAULT_TZ);
+
+    // Cargar los items de la plantilla.
+    const { data: tpl, error: tplErr } = await supabase
+      .from('workout_templates')
+      .select(
+        'id, name, workout_template_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
+      )
+      .eq('id', templateId)
+      .eq('coach_id', user.id)
+      .single();
+    if (tplErr || !tpl) return fail(404, { error: 'Plantilla no encontrada.' });
+    const template = tpl as unknown as {
+      name: string;
+      workout_template_items: {
+        exercise_id: string;
+        order_index: number;
+        sets: number;
+        reps_prescribed: string | null;
+        weight_prescribed: string | null;
+        rest_seconds: number | null;
+        notes: string | null;
+      }[];
+    };
+
+    // Crear o actualizar el workout del cliente en esa fecha.
+    const { data: existing } = await supabase
+      .from('workouts')
+      .select('id')
+      .eq('client_id', session.client_id)
+      .eq('date', date)
+      .maybeSingle();
+
+    let workoutId: string;
+    if (existing) {
+      workoutId = (existing as { id: string }).id;
+      await supabase.from('workouts').update({ title: template.name } as never).eq('id', workoutId);
+      await supabase.from('workout_items').delete().eq('workout_id', workoutId);
+    } else {
+      const { data: created, error: createErr } = await supabase
+        .from('workouts')
+        .insert({ client_id: session.client_id, coach_id: user.id, date, title: template.name } as never)
+        .select('id')
+        .single();
+      if (createErr || !created) return fail(500, { error: createErr?.message ?? 'No se pudo crear el entreno.' });
+      workoutId = (created as { id: string }).id;
+    }
+
+    // Copiar los items de la plantilla al workout.
+    const tplItems = [...(template.workout_template_items ?? [])].sort((a, b) => a.order_index - b.order_index);
+    if (tplItems.length > 0) {
+      const rows = tplItems.map((it, i) => ({
+        workout_id: workoutId,
+        exercise_id: it.exercise_id,
+        order_index: i,
+        sets: it.sets,
+        reps_prescribed: it.reps_prescribed,
+        weight_prescribed: it.weight_prescribed,
+        rest_seconds: it.rest_seconds,
+        notes: it.notes
+      }));
+      const { error: insErr } = await supabase.from('workout_items').insert(rows as never);
+      if (insErr) return fail(500, { error: insErr.message });
+    }
+
+    // Ligar el workout a la cita.
+    const { error: linkErr } = await supabase
+      .from('sessions')
+      .update({ workout_id: workoutId } as never)
+      .eq('id', sessionId)
+      .eq('coach_id', user.id);
+    if (linkErr) return fail(500, { error: linkErr.message });
+
+    return { success: true, fromTemplate: true };
   }
 };

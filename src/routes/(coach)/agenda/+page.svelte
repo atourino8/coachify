@@ -92,15 +92,30 @@
         </div>
       </div>
     {:else}
-      <!-- Sin entreno: asignar existente o crear desde la cita -->
-      <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-        <span class="text-xs uppercase tracking-wider text-text-mute">Entreno</span>
+      <!-- Sin entreno: usar plantilla, asignar existente, o crear desde cero -->
+      <div class="space-y-2">
+        <span class="text-xs uppercase tracking-wider text-text-mute">Entreno de la cita</span>
+
+        {#if data.templates.length > 0}
+          <form method="POST" action="?/assignTemplate" use:enhance class="flex items-center gap-2">
+            <input type="hidden" name="session_id" value={s.id} />
+            <select name="template_id" required
+              class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+              <option value="" disabled selected>📋 Usar una plantilla…</option>
+              {#each data.templates as t (t.id)}
+                <option value={t.id}>{t.name} ({t.itemCount} ej.)</option>
+              {/each}
+            </select>
+            <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Usar</button>
+          </form>
+        {/if}
+
         {#if clientWorkouts.length > 0}
-          <form method="POST" action="?/assignWorkout" use:enhance class="flex items-center gap-2 flex-1">
+          <form method="POST" action="?/assignWorkout" use:enhance class="flex items-center gap-2">
             <input type="hidden" name="session_id" value={s.id} />
             <select name="workout_id" required
               class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
-              <option value="" disabled selected>Asignar uno existente…</option>
+              <option value="" disabled selected>Asignar un entreno existente…</option>
               {#each clientWorkouts as w (w.id)}
                 <option value={w.id}>{workoutLabel(w.date, s.client?.full_name, w.title)}</option>
               {/each}
@@ -108,11 +123,12 @@
             <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
           </form>
         {/if}
+
         <a
           href="/clients/{s.client_id}/workouts/{sessionDate(s.starts_at)}?session={s.id}"
-          class="text-xs text-primary hover:underline whitespace-nowrap"
+          class="inline-block text-xs text-primary hover:underline"
         >
-          + Crear desde esta cita
+          + Crear entreno desde cero
         </a>
       </div>
     {/if}

@@ -56,13 +56,20 @@ export function todayISOLocal(): string {
 // puede diferir de la fecha real del usuario (p. ej. de noche en España).
 // Usamos 'en-CA' porque formatea como YYYY-MM-DD.
 export function todayISOInTZ(tz: string): string {
+  return isoDateInTZ(new Date(), tz);
+}
+
+// Fecha (YYYY-MM-DD) de un instante concreto en una zona horaria. Útil para
+// obtener la fecha-calendario de una cita (starts_at es un timestamp) tal como
+// la ve el coach, sin desfase UTC del servidor.
+export function isoDateInTZ(date: Date, tz: string): string {
   try {
     return new Intl.DateTimeFormat('en-CA', {
       timeZone: tz,
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    }).format(new Date());
+    }).format(date);
   } catch {
     return todayISOLocal();
   }
