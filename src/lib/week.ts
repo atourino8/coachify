@@ -51,6 +51,62 @@ export function todayISOLocal(): string {
   return `${y}-${m}-${day}`;
 }
 
+// Cuadrícula de un mes completo (6 semanas Lun-Dom = 42 celdas), con
+// metadatos para la UI. `monthISO` es "YYYY-MM".
+export function monthGrid(monthISO: string): {
+  iso: string;
+  dayNum: number;
+  inMonth: boolean;
+  isToday: boolean;
+  isPast: boolean;
+}[] {
+  const today = todayISOLocal();
+  const [y, m] = monthISO.split('-').map(Number);
+  const firstOfMonth = new Date(y, m - 1, 1);
+  // Retroceder hasta el lunes de esa semana
+  const dow = firstOfMonth.getDay(); // 0=domingo
+  const back = dow === 0 ? 6 : dow - 1;
+  const gridStart = new Date(firstOfMonth);
+  gridStart.setDate(gridStart.getDate() - back);
+
+  const out = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart);
+    d.setDate(d.getDate() + i);
+    const yy = d.getFullYear();
+    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+    const dd = d.getDate().toString().padStart(2, '0');
+    const iso = `${yy}-${mm}-${dd}`;
+    out.push({
+      iso,
+      dayNum: d.getDate(),
+      inMonth: d.getMonth() === m - 1,
+      isToday: iso === today,
+      isPast: iso < today
+    });
+  }
+  return out;
+}
+
+// Devuelve "YYYY-MM" del mes actual (local).
+export function currentMonthISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+}
+
+// Suma/resta meses a un "YYYY-MM" y devuelve el nuevo "YYYY-MM".
+export function shiftMonth(monthISO: string, delta: number): string {
+  const [y, m] = monthISO.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+}
+
+// Etiqueta legible de un mes: "julio 2026".
+export function monthLabel(monthISO: string): string {
+  const [y, m] = monthISO.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+}
+
 // Genera una ventana móvil de `count` días a partir de `startIso`, con
 // metadatos para la UI (día de la semana, número, si es hoy/pasado).
 export function rollingDays(
