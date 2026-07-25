@@ -271,20 +271,35 @@
               <div class="text-xs text-text-mute mt-1">{modalityLabel[s.modality] ?? s.modality}</div>
               {#if s.notes}<div class="text-sm mt-2 bg-bg rounded-md p-2 italic">{s.notes}</div>{/if}
             </div>
-            <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
+            <span class="text-xs px-2 py-1 rounded-full {s.proposedByCoach ? 'bg-primary/15 text-primary' : statusClass[s.status]}">
+              {s.proposedByCoach ? 'Esperando al cliente' : statusLabel[s.status]}
+            </span>
           </div>
-          <div class="flex gap-2">
-            <form method="POST" action="?/confirm" use:enhance class="flex-1">
-              <input type="hidden" name="session_id" value={s.id} />
-              <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar</button>
-            </form>
-            <form method="POST" action="?/reject" use:enhance>
-              <input type="hidden" name="session_id" value={s.id} />
-              <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
-                Rechazar
-              </button>
-            </form>
-          </div>
+
+          {#if s.proposedByCoach}
+            <!-- La propuso el coach: no la confirma él, solo puede cancelarla. -->
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs text-text-mute">Tu cliente debe confirmarla o rechazarla.</p>
+              <form method="POST" action="?/cancel" use:enhance>
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar propuesta</button>
+              </form>
+            </div>
+          {:else}
+            <!-- La pidió el cliente: el coach confirma o rechaza. -->
+            <div class="flex gap-2">
+              <form method="POST" action="?/confirm" use:enhance class="flex-1">
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar</button>
+              </form>
+              <form method="POST" action="?/reject" use:enhance>
+                <input type="hidden" name="session_id" value={s.id} />
+                <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
+                  Rechazar
+                </button>
+              </form>
+            </div>
+          {/if}
           {@render workoutBlock(s)}
         </div>
       {/each}

@@ -11,6 +11,7 @@ type SessionRow = {
   id: string;
   client_id: string;
   workout_id: string | null;
+  requested_by: string | null;
   starts_at: string;
   ends_at: string;
   status: string;
@@ -27,14 +28,19 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   const { data: sessionsRaw } = await supabase
     .from('sessions')
     .select(
-      `id, client_id, workout_id, starts_at, ends_at, status, modality, location, notes,
+      `id, client_id, workout_id, requested_by, starts_at, ends_at, status, modality, location, notes,
        client:profiles!sessions_client_id_fkey(id, full_name),
        workout:workouts(id, title, date)`
     )
     .eq('coach_id', user.id)
     .order('starts_at', { ascending: true });
 
-  const all = (sessionsRaw ?? []) as unknown as SessionRow[];
+  // Marcamos si la cita la propuso el propio coach (espera al cliente) o la
+  // pidió el cliente (espera al coach).
+  const all = ((sessionsRaw ?? []) as unknown as SessionRow[]).map((s) => ({
+    ...s,
+    proposedByCoach: s.requested_by === user.id
+  }));
   const now = Date.now();
 
   const pending = all.filter((s) => s.status === 'requested');
