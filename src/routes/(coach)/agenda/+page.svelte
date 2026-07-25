@@ -163,11 +163,14 @@
       <span class="eyebrow">Citas</span>
       <h1 class="text-4xl font-bold tracking-tight mt-2">Agenda</h1>
     </div>
-    {#if data.clients.length > 0}
-      <button onclick={() => (showPropose = !showPropose)} class="btn-primary py-2 px-4 whitespace-nowrap">
-        + Proponer cita
-      </button>
-    {/if}
+    <div class="flex items-center gap-3">
+      <a href="/availability" class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap">⚙ Mis huecos</a>
+      {#if data.clients.length > 0}
+        <button onclick={() => (showPropose = !showPropose)} class="btn-primary py-2 px-4 whitespace-nowrap">
+          + Proponer cita
+        </button>
+      {/if}
+    </div>
   </div>
 
   {#if form?.error}

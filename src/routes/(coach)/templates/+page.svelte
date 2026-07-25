@@ -13,13 +13,18 @@
 </svelte:head>
 
 <div class="space-y-8">
+  <!-- Pestañas Biblioteca -->
+  <div class="flex gap-1 border-b border-text-mute/10">
+    <a href="/exercises" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text">Ejercicios</a>
+    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">Plantillas</a>
+  </div>
+
   <div class="flex items-center justify-between gap-4">
     <div>
-      <span class="eyebrow">Plantillas</span>
-      <h1 class="text-4xl font-bold tracking-tight mt-2">Entrenos</h1>
+      <h1 class="text-3xl font-bold tracking-tight">Plantillas de entreno</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
-        Crea entrenos predefinidos (hipertrofia principiante, cardio avanzado…) y
-        reutilízalos al programar los días de tus clientes.
+        Entrenos predefinidos (hipertrofia principiante, cardio avanzado…) que
+        reutilizas al programar los días de tus clientes.
       </p>
     </div>
     <button onclick={() => (showForm = !showForm)} class="btn-primary py-2 px-5 whitespace-nowrap">

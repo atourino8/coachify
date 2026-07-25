@@ -44,13 +44,13 @@
 </script>
 
 <svelte:head>
-  <title>Calendario · Coachify</title>
+  <title>Citas · Coachify</title>
 </svelte:head>
 
 <div class="space-y-8">
   <div>
-    <span class="eyebrow">Tus citas</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">Calendario</h1>
+    <span class="eyebrow">Tu agenda</span>
+    <h1 class="text-4xl font-bold tracking-tight mt-2">Citas</h1>
   </div>
 
   {#if form?.error}

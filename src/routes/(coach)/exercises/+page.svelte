@@ -20,10 +20,15 @@
 </svelte:head>
 
 <div class="space-y-8">
+  <!-- Pestañas Biblioteca -->
+  <div class="flex gap-1 border-b border-text-mute/10">
+    <a href="/exercises" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">Ejercicios</a>
+    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text">Plantillas</a>
+  </div>
+
   <div class="flex items-center justify-between">
     <div>
-      <span class="eyebrow">tu biblioteca</span>
-      <h1 class="text-3xl font-bold tracking-tight mt-2">Ejercicios</h1>
+      <h1 class="text-3xl font-bold tracking-tight">Ejercicios</h1>
       <p class="text-text-mute mt-1">
         {data.exercises.length} {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
       </p>

@@ -59,8 +59,8 @@
 
 <div class="space-y-8 max-w-2xl">
   <div>
-    <span class="eyebrow">Tu agenda</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">Disponibilidad</h1>
+    <a href="/agenda" class="text-sm text-text-mute hover:text-text">← Agenda</a>
+    <h1 class="text-4xl font-bold tracking-tight mt-3">Mis huecos disponibles</h1>
     <p class="text-text-mute mt-2 text-sm">
       Define tus huecos semanales. Tus clientes verán estas franjas al pedir cita.
     </p>

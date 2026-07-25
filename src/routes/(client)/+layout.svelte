@@ -16,9 +16,7 @@
 
     <nav class="flex items-center gap-6 text-sm">
       <a href="/today" class="hover:text-primary transition-colors">Hoy</a>
-      <a href="/my-calendar" class="text-text-mute hover:text-primary transition-colors"
-        >Calendario</a
-      >
+      <a href="/my-calendar" class="text-text-mute hover:text-primary transition-colors">Citas</a>
       <a href="/progress" class="text-text-mute hover:text-primary transition-colors">Progreso</a>
       <span class="text-text-mute/40">|</span>
       <span class="text-text-mute hidden sm:inline">

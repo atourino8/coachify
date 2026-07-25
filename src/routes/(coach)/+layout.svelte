@@ -16,16 +16,10 @@
     </a>
 
     <nav class="flex items-center gap-6 text-sm">
-      <a href="/dashboard" class="hover:text-primary transition-colors">Dashboard</a>
-      <a href="/exercises" class="text-text-mute hover:text-primary transition-colors"
-        >Ejercicios</a
-      >
-      <a href="/templates" class="text-text-mute hover:text-primary transition-colors">Entrenos</a>
+      <a href="/dashboard" class="hover:text-primary transition-colors">Inicio</a>
+      <a href="/exercises" class="text-text-mute hover:text-primary transition-colors">Biblioteca</a>
       <a href="/clients" class="text-text-mute hover:text-primary transition-colors">Clientes</a>
       <a href="/agenda" class="text-text-mute hover:text-primary transition-colors">Agenda</a>
-      <a href="/availability" class="text-text-mute hover:text-primary transition-colors"
-        >Disponibilidad</a
-      >
       <span class="text-text-mute/40">|</span>
       <span class="text-text-mute hidden sm:inline">
         {data.profile.full_name ?? 'Coach'}

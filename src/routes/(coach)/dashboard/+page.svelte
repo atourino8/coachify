@@ -1,60 +1,121 @@
 <script lang="ts">
-  import { page } from '$app/state';
-  const profile = $derived(page.data.profile);
   let { data } = $props();
+
+  function fmtTime(iso: string) {
+    return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDay(iso: string) {
+    return new Date(iso).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+  const modalityLabel: Record<string, string> = {
+    presencial: 'Presencial',
+    online: 'Online',
+    remoto: 'Remoto'
+  };
 </script>
 
 <svelte:head>
-  <title>Dashboard · Coachify</title>
+  <title>Inicio · Coachify</title>
 </svelte:head>
 
 <div class="space-y-8">
   <div>
-    <span class="eyebrow">tu panel</span>
+    <span class="eyebrow">Tu día</span>
     <h1 class="text-4xl font-bold tracking-tight mt-2">
-      Hola, {profile?.full_name ?? 'coach'} 👋
+      Hola{data.firstName ? ', ' + data.firstName : ''} 👋
     </h1>
-    <p class="text-text-mute mt-1">
-      Bienvenido a Coachify. Estás en la versión inicial (Fase B.2).
-    </p>
   </div>
 
-  <div class="grid sm:grid-cols-3 gap-4">
-    <a href="/exercises" class="card hover:border-primary/50 hover:shadow-glow group transition-all">
-      <div class="flex items-start justify-between mb-3">
-        <div class="text-3xl">📚</div>
-        <div class="text-3xl font-bold text-primary">{data.counts.exercises}</div>
-      </div>
-      <h3 class="font-semibold mb-1">Ejercicios</h3>
-      <p class="text-sm text-text-mute">Tu biblioteca personal de ejercicios con vídeos.</p>
-    </a>
-
-    <a href="/clients" class="card hover:border-primary/50 group transition-all">
-      <div class="flex items-start justify-between mb-3">
-        <div class="text-3xl">👥</div>
-        <div class="text-3xl font-bold text-primary">{data.counts.clients}</div>
-      </div>
-      <h3 class="font-semibold mb-1">Clientes</h3>
-      <p class="text-sm text-text-mute">Personas que entrenas con Coachify.</p>
-    </a>
-
-    <a href="/calendar" class="card hover:border-primary/50 group transition-all opacity-60">
-      <div class="flex items-start justify-between mb-3">
-        <div class="text-3xl">📅</div>
-        <div class="text-xs uppercase tracking-wider text-text-mute mt-2">Pronto</div>
-      </div>
-      <h3 class="font-semibold mb-1">Calendario</h3>
-      <p class="text-sm text-text-mute">Tus sesiones presenciales y online.</p>
-    </a>
-  </div>
-
-  {#if data.counts.exercises === 0}
-    <div class="card text-center bg-primary/5 border-primary/20">
-      <h2 class="text-xl font-semibold mb-2">🚀 Empieza creando tu primer ejercicio</h2>
-      <p class="text-sm text-text-mute mb-4">
-        Crea tu biblioteca de ejercicios con vídeos. Luego podrás armar entrenos con ellos para cada cliente.
+  {#if !data.hasClients}
+    <!-- Onboarding: aún no hay clientes -->
+    <div class="card text-center py-16 bg-primary/5 border-primary/20">
+      <div class="text-6xl mb-4">🚀</div>
+      <h2 class="text-xl font-semibold mb-2">Empieza por aquí</h2>
+      <p class="text-sm text-text-mute max-w-md mx-auto mb-6">
+        Crea tu biblioteca de ejercicios, arma alguna plantilla y luego invita a tus clientes.
       </p>
-      <a href="/exercises/new" class="btn-primary">Crear primer ejercicio</a>
+      <div class="flex gap-3 justify-center flex-wrap">
+        <a href="/exercises/new" class="btn-primary">Crear ejercicio</a>
+        <a href="/clients" class="btn-ghost">Invitar cliente</a>
+      </div>
     </div>
+  {:else}
+    <!-- Citas de hoy -->
+    <section class="space-y-3">
+      <h2 class="text-lg font-semibold">Hoy</h2>
+      {#if data.todaySessions.length === 0}
+        <p class="text-sm text-text-mute">No tienes citas confirmadas para hoy.</p>
+      {:else}
+        {#each data.todaySessions as s (s.id)}
+          <div class="card flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="text-lg font-bold text-primary w-14">{fmtTime(s.starts_at)}</div>
+              <div>
+                <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
+                <div class="text-xs text-text-mute">{modalityLabel[s.modality] ?? s.modality}</div>
+              </div>
+            </div>
+            {#if s.workout}
+              <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
+                Ver entreno →
+              </a>
+            {:else}
+              <span class="text-xs text-warning">Sin entreno</span>
+            {/if}
+          </div>
+        {/each}
+      {/if}
+    </section>
+
+    <!-- Solicitudes de cliente por confirmar -->
+    {#if data.pendingRequests.length > 0}
+      <section class="space-y-3">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          Solicitudes por confirmar
+          <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning">{data.pendingRequests.length}</span>
+        </h2>
+        {#each data.pendingRequests as s (s.id)}
+          <a href="/agenda" class="card flex items-center justify-between gap-4 hover:border-primary/40 transition-all">
+            <div>
+              <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
+              <div class="text-xs text-text-mute capitalize">{fmtDay(s.starts_at)} · {fmtTime(s.starts_at)}</div>
+            </div>
+            <span class="text-xs text-primary">Responder →</span>
+          </a>
+        {/each}
+      </section>
+    {/if}
+
+    <!-- Propuestas tuyas esperando al cliente -->
+    {#if data.pendingProposals.length > 0}
+      <section class="space-y-3">
+        <h2 class="text-lg font-semibold">Esperando a que confirmen</h2>
+        {#each data.pendingProposals as s (s.id)}
+          <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-text-mute/10">
+            <span>{s.client?.full_name ?? 'Cliente'} · <span class="text-text-mute capitalize">{fmtDay(s.starts_at)}</span></span>
+            <span class="text-xs text-text-mute">Pendiente del cliente</span>
+          </div>
+        {/each}
+      </section>
+    {/if}
+
+    <!-- Clientes sin entreno esta semana -->
+    {#if data.clientsWithoutWorkout.length > 0}
+      <section class="space-y-3">
+        <h2 class="text-lg font-semibold flex items-center gap-2">
+          Sin entreno esta semana
+          <span class="text-xs px-2 py-0.5 rounded-full bg-danger/15 text-danger">{data.clientsWithoutWorkout.length}</span>
+        </h2>
+        <p class="text-xs text-text-mute -mt-1">Clientes a los que no has programado nada en los próximos 7 días.</p>
+        <div class="grid sm:grid-cols-2 gap-2">
+          {#each data.clientsWithoutWorkout as c (c.id)}
+            <a href="/clients/{c.id}" class="card flex items-center justify-between gap-3 py-3 hover:border-primary/40 transition-all">
+              <span class="font-medium truncate">{c.full_name ?? 'Cliente'}</span>
+              <span class="text-xs text-primary whitespace-nowrap">Programar →</span>
+            </a>
+          {/each}
+        </div>
+      </section>
+    {/if}
   {/if}
 </div>
