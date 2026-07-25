@@ -53,6 +53,33 @@ export const actions: Actions = {
       return fail(500, { error: message });
     }
 
+    // FIX DEFENSIVO (belt-and-suspenders): no dependemos solo del trigger
+    // handle_new_user para vincular el cliente al coach. El trigger lee coach_id
+    // de raw_user_meta_data, pero si la migración 0004 no está aplicada en la BD,
+    // o si el metadata no se procesa, el cliente quedaría con coach_id = null.
+    // Aquí forzamos la vinculación explícitamente con el admin client (bypassa RLS).
+    // inviteUserByEmail crea la fila en auth.users de forma síncrona, y el trigger
+    // ya ha insertado el profile, así que este UPDATE encuentra la fila.
+    if (data?.user?.id) {
+      const { error: linkError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          coach_id: user.id,
+          role: 'client',
+          full_name
+        })
+        .eq('id', data.user.id);
+
+      if (linkError) {
+        console.error('[invite] No se pudo vincular el cliente al coach:', linkError);
+        return fail(500, {
+          error:
+            'El email se envió pero no se pudo vincular el cliente a tu cuenta. ' +
+            'Contacta con soporte o reinténtalo.'
+        });
+      }
+    }
+
     return { success: true, invited_email: email };
   }
 };
