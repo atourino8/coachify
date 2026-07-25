@@ -134,9 +134,14 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
 };
 
 export const actions: Actions = {
-  request: async ({ request, locals: { supabase, user }, parent }) => {
+  request: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
-    const { profile } = await parent();
+    // En actions no hay parent(); leemos el coach_id del perfil directamente.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('coach_id')
+      .eq('id', user.id)
+      .single();
     const coachId = profile?.coach_id;
     if (!coachId) return fail(400, { error: 'No tienes un entrenador asignado.' });
 

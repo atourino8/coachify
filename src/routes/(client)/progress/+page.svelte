@@ -2,6 +2,7 @@
   let { data } = $props();
 
   // Ejercicio seleccionado para la gráfica (por defecto, el que más sesiones tiene)
+  // svelte-ignore state_referenced_locally
   let selectedId = $state<string | null>(data.exercises[0]?.id ?? null);
 
   const selected = $derived(
