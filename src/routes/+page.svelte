@@ -1,7 +1,6 @@
 <script lang="ts">
-  // Landing pública de Coachify (Fase A — UI estática, sin lógica de negocio).
-  // Cuando llegue la Fase B (Supabase + auth), los botones "Login" / "Empieza gratis"
-  // pasarán a apuntar a /login y /register respectivamente.
+  // Landing pública de Coachify. Los CTA apuntan a /login (acceso, auto-enruta
+  // por rol) y /register (alta de entrenador; los clientes entran por invitación).
 
   const features = [
     {
@@ -11,8 +10,8 @@
     },
     {
       icon: '📅',
-      title: 'Calendario con reservas',
-      text: 'Tus clientes reservan, tú aceptas. Se sincroniza con tu Google Calendar automáticamente.'
+      title: 'Citas y entrenos ligados',
+      text: 'Propón o acepta citas con tus clientes y adjunta el entreno de cada sesión. Ellos lo ven y confirman.'
     },
     {
       icon: '📈',
@@ -45,8 +44,9 @@
       featured: true,
       features: [
         'Clientes ilimitados',
-        'Sistema de citas con Google Calendar',
-        'Plantillas reutilizables (próximamente)',
+        'Sistema de citas (propuestas y reservas)',
+        'Plantillas de entreno reutilizables',
+        'Sincronización con Google Calendar (próximamente)',
         'Notificaciones push (próximamente)',
         'Soporte por email'
       ]
@@ -82,14 +82,17 @@
       <span class="font-semibold text-lg tracking-tight">Coachify</span>
     </a>
 
-    <nav class="hidden md:flex items-center gap-8 text-sm text-text-mute">
+    <nav class="hidden md:flex items-center gap-6 text-sm text-text-mute">
       <a href="#features" class="hover:text-text transition-colors">Features</a>
       <a href="#pricing" class="hover:text-text transition-colors">Precios</a>
-      <a href="/login" class="hover:text-text transition-colors">Entrar</a>
+      <a href="/login" class="btn-ghost py-2 px-5 text-sm">Entrar</a>
       <a href="/register" class="btn-primary py-2 px-5 text-sm">Empieza gratis</a>
     </nav>
 
-    <a href="/register" class="md:hidden btn-primary py-2 px-4 text-sm">Empezar</a>
+    <div class="md:hidden flex items-center gap-2">
+      <a href="/login" class="btn-ghost py-2 px-3 text-sm">Entrar</a>
+      <a href="/register" class="btn-primary py-2 px-3 text-sm">Empezar</a>
+    </div>
   </div>
 </header>
 
@@ -127,6 +130,43 @@
       <p class="mt-6 text-sm text-text-mute">
         Sin tarjeta · Tu primer cliente en 5 minutos
       </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Acceso por rol ============== -->
+<section class="pb-8 sm:pb-12">
+  <div class="container-narrow">
+    <div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+      <!-- Entrenador -->
+      <div class="card flex flex-col">
+        <div class="text-3xl mb-3">🏋️</div>
+        <h3 class="text-lg font-semibold mb-1">Soy entrenador</h3>
+        <p class="text-sm text-text-mute mb-5 flex-1">
+          Gestiona tus clientes, entrenos, plantillas y citas en un solo sitio.
+        </p>
+        <div class="flex flex-col gap-2">
+          <a href="/register" class="btn-primary w-full text-sm">Empezar gratis</a>
+          <a href="/login" class="text-xs text-text-mute hover:text-text text-center transition-colors">
+            Ya tengo cuenta · Entrar
+          </a>
+        </div>
+      </div>
+
+      <!-- Cliente -->
+      <div class="card flex flex-col">
+        <div class="text-3xl mb-3">💪</div>
+        <h3 class="text-lg font-semibold mb-1">Soy cliente</h3>
+        <p class="text-sm text-text-mute mb-5 flex-1">
+          Tu entrenador te invitó por email. Entra para ver tus entrenos, vídeos y citas.
+        </p>
+        <div class="flex flex-col gap-2">
+          <a href="/login" class="btn-ghost w-full text-sm">Entrar</a>
+          <span class="text-xs text-text-mute/70 text-center">
+            Usa el email con el que te invitaron
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
