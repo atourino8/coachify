@@ -49,6 +49,15 @@
     });
   }
 
+  // Etiqueta autogenerada de un entreno: "sáb 25 jul, Paco Paquez" y, si el
+  // coach le puso título (ej. "día 1"), se añade detrás: "… · día 1".
+  // El título que escribe el coach se guarda tal cual; esto es solo la etiqueta
+  // que se muestra, así que reeditar no duplica el prefijo.
+  function workoutLabel(date: string, clientName: string | null | undefined, title: string | null): string {
+    const base = `${shortDate(date)}, ${clientName ?? 'Cliente'}`;
+    return title && title.trim() ? `${base} · ${title.trim()}` : base;
+  }
+
   // Entrenos de un cliente, siempre ordenados por fecha descendente (más
   // reciente primero) para que el orden del desplegable no varíe.
   function sortedWorkouts(clientId: string) {
@@ -70,8 +79,7 @@
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-2 text-sm min-w-0">
           <span class="text-primary">🏋️</span>
-          <span class="font-medium truncate">{s.workout.title || 'Sin título'}</span>
-          <span class="text-xs text-text-mute whitespace-nowrap">· {shortDate(s.workout.date)}</span>
+          <span class="font-medium truncate">{workoutLabel(s.workout.date, s.client?.full_name, s.workout.title)}</span>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
           <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
@@ -94,7 +102,7 @@
               class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
               <option value="" disabled selected>Asignar uno existente…</option>
               {#each clientWorkouts as w (w.id)}
-                <option value={w.id}>{shortDate(w.date)} · {w.title || 'Sin título'}</option>
+                <option value={w.id}>{workoutLabel(w.date, s.client?.full_name, w.title)}</option>
               {/each}
             </select>
             <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
