@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { navigating } from '$app/state';
   import { enhance } from '$app/forms';
   import {
     formatDateISO,
@@ -128,7 +129,13 @@
     </p>
   {/if}
 
-  {#if view === 'window'}
+  {#if navigating.to}
+    <!-- Estado de carga al cambiar de vista/periodo -->
+    <div class="grid place-items-center py-24 text-text-mute">
+      <div class="h-8 w-8 rounded-full border-2 border-text-mute/25 border-t-primary animate-spin" role="status" aria-label="Cargando calendario"></div>
+      <p class="text-sm mt-3">Cargando…</p>
+    </div>
+  {:else if view === 'window'}
     <!-- ===== VISTA VENTANA (14 días) ===== -->
     <div class="flex items-center justify-between gap-4">
       <button onclick={() => gotoWindow(-1)} class="btn-ghost text-sm py-2 px-4">← Anterior</button>
