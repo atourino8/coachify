@@ -65,12 +65,6 @@
 <div class="min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-md">
     <div class="text-center mb-10">
-      <a
-        href="/"
-        class="inline-flex items-center gap-2 mb-8 text-text-mute hover:text-text transition-colors text-sm"
-      >
-        ← Volver
-      </a>
       <div
         class="w-14 h-14 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary to-accent
                grid place-items-center text-bg font-bold text-2xl shadow-glow"
@@ -145,9 +139,12 @@
           </p>
         {/if}
 
-        <button type="submit" disabled={loading} class="btn-primary w-full">
-          {loading ? 'Creando cuenta…' : 'Crear cuenta gratis'}
-        </button>
+        <div class="flex gap-3">
+          <a href="/" class="btn-ghost px-5" aria-label="Volver al inicio">Atrás</a>
+          <button type="submit" disabled={loading} class="btn-primary flex-1">
+            {loading ? 'Creando cuenta…' : 'Crear cuenta gratis'}
+          </button>
+        </div>
 
         <p class="text-xs text-text-mute text-center pt-2">
           Al continuar aceptas nuestros
