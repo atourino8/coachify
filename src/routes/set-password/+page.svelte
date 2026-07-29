@@ -140,7 +140,7 @@
       </div>
 
       {#if error}
-        <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+        <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
           {error}
         </p>
       {/if}

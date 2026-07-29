@@ -145,12 +145,12 @@
     </div>
 
     {#if form?.error}
-      <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
         {form.error}
       </p>
     {/if}
     {#if form?.success}
-      <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
         ✓ Cambios guardados.
       </p>
     {/if}

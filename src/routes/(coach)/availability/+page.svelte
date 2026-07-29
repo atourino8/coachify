@@ -67,7 +67,7 @@
   </div>
 
   {#if form?.error}
-    <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
 
   <!-- Añadir hueco -->
@@ -131,7 +131,7 @@
                 </div>
                 <form method="POST" action="?/remove" use:enhance>
                   <input type="hidden" name="slot_id" value={s.id} />
-                  <button type="submit" class="text-text-mute hover:text-danger transition-colors text-lg leading-none">×</button>
+                  <button type="submit" aria-label="Borrar hueco de disponibilidad" class="text-text-mute hover:text-danger transition-colors text-lg leading-none">×</button>
                 </form>
               </div>
             {/each}

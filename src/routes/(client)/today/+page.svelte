@@ -92,7 +92,7 @@
       <div class="flex items-center gap-5">
         <!-- Anillo de progreso SVG -->
         <div class="relative w-20 h-20 flex-shrink-0">
-          <svg viewBox="0 0 36 36" class="w-20 h-20 -rotate-90">
+          <svg viewBox="0 0 36 36" class="w-20 h-20 -rotate-90" role="img" aria-label="Progreso del entreno: {pct}% completado">
             <circle cx="18" cy="18" r="15.5" fill="none" class="stroke-text-mute/15" stroke-width="3" />
             <circle
               cx="18" cy="18" r="15.5" fill="none"

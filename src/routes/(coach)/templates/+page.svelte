@@ -52,7 +52,7 @@
   </div>
 
   {#if form?.error}
-    <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
 
   {#if showForm}

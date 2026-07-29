@@ -39,8 +39,10 @@ body {
            focus:outline-none focus-visible:ring-2 focus-visible:ring-accent;
   }
 
+  /* Fondo #2563eb (primary-hover): texto blanco da 4.72:1 → cumple WCAG AA
+     para texto normal. El #3b82f6 original daba 3.36:1 y no pasaba. */
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-hover hover:-translate-y-0.5
+    @apply btn bg-primary-hover text-white hover:bg-[#1d4ed8] hover:-translate-y-0.5
            shadow-md hover:shadow-glow;
   }
 

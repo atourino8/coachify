@@ -115,15 +115,15 @@
   </div>
 
   {#if form?.error}
-    <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
   {#if form?.success && form?.duplicated}
-    <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Entreno duplicado a {formatHumanDate(form.targetDate)}.
     </p>
   {/if}
   {#if form?.success && form?.programmed}
-    <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Programado: {form.created} entreno{form.created === 1 ? '' : 's'} creado{form.created === 1 ? '' : 's'}{form.skipped > 0 ? ` · ${form.skipped} día(s) omitido(s) porque ya tenían entreno` : ''}.
     </p>
   {/if}

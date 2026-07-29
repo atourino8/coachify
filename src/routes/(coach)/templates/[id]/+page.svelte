@@ -116,10 +116,10 @@
   </div>
 
   {#if form?.error}
-    <p class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
   {#if form?.success}
-    <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">Plantilla guardada.</p>
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">Plantilla guardada.</p>
   {/if}
 
   <!-- Cabecera editable -->
@@ -200,14 +200,14 @@
           <div class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3">
             <div class="flex items-start gap-3">
               <div class="flex flex-col gap-0.5 pt-0.5">
-                <button type="button" onclick={() => move(i, -1)} disabled={i === 0} class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none">▲</button>
-                <button type="button" onclick={() => move(i, 1)} disabled={i === items.length - 1} class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none">▼</button>
+                <button type="button" onclick={() => move(i, -1)} disabled={i === 0} aria-label="Subir ejercicio" class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none">▲</button>
+                <button type="button" onclick={() => move(i, 1)} disabled={i === items.length - 1} aria-label="Bajar ejercicio" class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none">▼</button>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-medium truncate">{item.exercise.name}</div>
                 {#if item.exercise.muscle_group}<div class="text-xs text-text-mute">{muscleLabels[item.exercise.muscle_group]}</div>{/if}
               </div>
-              <button type="button" onclick={() => removeItem(item.id)} class="text-text-mute hover:text-danger text-xl leading-none">×</button>
+              <button type="button" onclick={() => removeItem(item.id)} aria-label="Quitar ejercicio" class="text-text-mute hover:text-danger text-xl leading-none">×</button>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>

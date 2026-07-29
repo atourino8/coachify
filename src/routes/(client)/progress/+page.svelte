@@ -128,7 +128,7 @@
         {#if chart}
           <!-- Gráfica de progresión (SVG inline) -->
           <div class="relative">
-            <svg viewBox="0 0 {CHART_W} {CHART_H}" class="w-full" style="height:200px" preserveAspectRatio="none">
+            <svg viewBox="0 0 {CHART_W} {CHART_H}" class="w-full" style="height:200px" preserveAspectRatio="none" role="img" aria-label="Gráfica de progresión de peso en {selected.name}. Mejor marca: {selected.bestWeight ?? 'sin datos'} kg.">
               <!-- área -->
               <path d={chart.area} fill="currentColor" class="text-primary/10" />
               <!-- línea -->
