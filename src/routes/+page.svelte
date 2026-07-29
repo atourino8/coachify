@@ -135,8 +135,14 @@
 </section>
 
 <!-- ============== Acceso por rol ============== -->
-<section class="pb-8 sm:pb-12">
+<section id="acceso" class="py-20 sm:py-24 border-t border-text-mute/10 bg-surface/30">
   <div class="container-narrow">
+    <div class="text-center mb-12 max-w-2xl mx-auto">
+      <span class="eyebrow inline-block mb-4">acceso</span>
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3">¿Ya usas Coachify?</h2>
+      <p class="text-text-mute">Entra según quién seas. Es el mismo acceso, te llevamos a tu sitio.</p>
+    </div>
+
     <div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
       <!-- Entrenador -->
       <div class="card flex flex-col">
