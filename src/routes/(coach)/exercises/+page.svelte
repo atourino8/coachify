@@ -26,7 +26,7 @@
     <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text">Plantillas</a>
   </div>
 
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between gap-4">
     <div>
       <h1 class="text-3xl font-bold tracking-tight">Ejercicios</h1>
       <p class="text-text-mute mt-1">

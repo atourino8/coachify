@@ -55,7 +55,7 @@
         reutilizas al programar los días de tus clientes.
       </p>
     </div>
-    <button onclick={() => (showForm = !showForm)} class="btn-primary py-2 px-5 whitespace-nowrap">
+    <button onclick={() => (showForm = !showForm)} class="btn-primary whitespace-nowrap">
       + Nueva plantilla
     </button>
   </div>
