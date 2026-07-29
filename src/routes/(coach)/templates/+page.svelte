@@ -1,12 +1,15 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
 
   let newName = $state('');
   let creating = $state(false);
-  let showForm = $state(false);
+  // Se abre solo con ?new=1 (atajo desde el home).
+  // svelte-ignore state_referenced_locally
+  let showForm = $state(page.url.searchParams.get('new') === '1');
   let filterCat = $state('');
 
   // Modal de confirmación para borrar plantilla.

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
@@ -45,7 +46,9 @@
   let showWorkout = $state<string | null>(null); // id de la cita con el panel "asignar entreno" abierto
 
   // --- Proponer cita (coach) ---
-  let showPropose = $state(false);
+  // Se abre solo si venimos con ?propose=1 (atajo desde el home).
+  // svelte-ignore state_referenced_locally
+  let showPropose = $state(page.url.searchParams.get('propose') === '1');
   let npClient = $state('');
   let npDate = $state('');
   let npTime = $state('');

@@ -7,6 +7,7 @@
 
 import { redirect } from '@sveltejs/kit';
 import { todayISOInTZ } from '$lib/week';
+import { supabaseAdmin } from '$lib/supabase/admin';
 import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
 import type { PageServerLoad } from './$types';
 
@@ -74,11 +75,23 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
     .eq('status', 'requested')
     .neq('requested_by', user.id);
 
+  // Email del coach (para el atajo "Contactar a mi coach"). Vive en auth.users.
+  let coachEmail: string | null = null;
+  if (profile?.coach_id) {
+    try {
+      const { data: au } = await supabaseAdmin.auth.admin.getUserById(profile.coach_id);
+      coachEmail = au?.user?.email ?? null;
+    } catch {
+      // Si no se puede leer, el atajo se ocultará.
+    }
+  }
+
   return {
     workout: heroWorkout,
     date: viewDate,
     isToday: viewDate === today,
     upcoming,
-    proposalCount: proposalCount ?? 0
+    proposalCount: proposalCount ?? 0,
+    coachEmail
   };
 };

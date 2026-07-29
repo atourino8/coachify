@@ -74,6 +74,36 @@
     </h1>
   </div>
 
+  <!-- Acciones rápidas -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <a href="/my-calendar" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" stroke-linecap="round" /></svg>
+      </span>
+      <span class="text-sm font-medium">Pedir cita</span>
+    </a>
+    <a href="/my-calendar" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" /></svg>
+      </span>
+      <span class="text-sm font-medium">Mis citas</span>
+    </a>
+    <a href="/progress" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </span>
+      <span class="text-sm font-medium">Mi progreso</span>
+    </a>
+    {#if data.coachEmail}
+      <a href="mailto:{data.coachEmail}" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+        <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" stroke-linecap="round" /></svg>
+        </span>
+        <span class="text-sm font-medium">Contactar coach</span>
+      </a>
+    {/if}
+  </div>
+
   {#if !data.workout}
     <div class="card text-center py-14 bg-gradient-to-br from-surface to-surface-2/40">
       <div class="text-6xl mb-4">🏖️</div>

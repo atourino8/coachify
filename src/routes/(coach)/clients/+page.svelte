@@ -1,11 +1,14 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
 
   let tab = $state<'active' | 'pending'>('active');
-  let showInvite = $state(false);
+  // Se abre solo con ?invite=1 (atajo desde el home).
+  // svelte-ignore state_referenced_locally
+  let showInvite = $state(page.url.searchParams.get('invite') === '1');
   let inviting = $state(false);
 
   // Modal de cancelar invitación.
