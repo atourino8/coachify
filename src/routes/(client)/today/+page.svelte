@@ -76,7 +76,7 @@
 
   <!-- Acciones rápidas -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    <a href="/my-calendar" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+    <a href="/my-calendar?request=1" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
       <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" stroke-linecap="round" /></svg>
       </span>

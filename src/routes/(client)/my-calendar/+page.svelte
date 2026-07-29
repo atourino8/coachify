@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { page } from '$app/state';
 
   let { data, form } = $props();
 
@@ -7,6 +8,12 @@
   let modality = $state('presencial');
   let notes = $state('');
   let submitting = $state(false);
+
+  // Modal "Pedir cita" (se abre solo con ?request=1 desde el home).
+  // svelte-ignore state_referenced_locally
+  let showRequest = $state(page.url.searchParams.get('request') === '1');
+  // Historial colapsado por defecto (menos prominente).
+  let showHistory = $state(false);
 
   const selected = $derived(
     data.bookable.find((s) => s.startsAt === selectedSlot) ?? null
@@ -48,9 +55,14 @@
 </svelte:head>
 
 <div class="space-y-8">
-  <div>
-    <span class="eyebrow">Tu agenda</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">Citas</h1>
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      <span class="eyebrow">Tu agenda</span>
+      <h1 class="text-3xl font-bold tracking-tight mt-2">Citas</h1>
+    </div>
+    {#if data.hasCoach}
+      <button onclick={() => (showRequest = true)} class="btn-primary whitespace-nowrap">+ Pedir cita</button>
+    {/if}
   </div>
 
   {#if form?.error}
@@ -164,26 +176,76 @@
       {/if}
     </section>
 
-    <!-- Solicitar cita -->
-    <section class="space-y-3">
-      <h2 class="text-lg font-semibold">Solicitar una cita</h2>
+    <!-- Historial (colapsado, menos prominente) -->
+    {#if data.past.length > 0}
+      <section>
+        <button
+          type="button"
+          onclick={() => (showHistory = !showHistory)}
+          class="text-sm text-text-mute hover:text-text transition-colors flex items-center gap-1.5"
+          aria-expanded={showHistory}
+        >
+          <svg class="h-4 w-4 transition-transform {showHistory ? 'rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          {showHistory ? 'Ocultar' : 'Ver'} historial ({data.past.length})
+        </button>
+        {#if showHistory}
+          <div class="mt-3 space-y-0">
+            {#each data.past as s (s.id)}
+              <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-text-mute/10">
+                <span class="text-text-mute capitalize">{fmt(s.starts_at)}</span>
+                <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </section>
+    {/if}
+  {/if}
+</div>
+
+<!-- Modal: pedir cita -->
+<svelte:window onkeydown={(e) => { if (showRequest && e.key === 'Escape') showRequest = false; }} />
+{#if showRequest}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div
+    class="fixed inset-0 z-[200] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+    role="presentation"
+    onclick={() => (showRequest = false)}
+  >
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div
+      class="card w-full max-w-lg max-h-[85vh] overflow-y-auto space-y-4"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="req-title"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <div class="flex items-center justify-between gap-4">
+        <h3 id="req-title" class="text-lg font-semibold">Pedir cita</h3>
+        <button type="button" class="action-neutral" onclick={() => (showRequest = false)}>Cerrar</button>
+      </div>
+
       {#if data.bookable.length === 0}
         <p class="text-sm text-text-mute">
           Tu entrenador no tiene huecos publicados por ahora. Vuelve más tarde.
         </p>
       {:else}
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {#each data.bookable as slot (slot.startsAt)}
-            <button
-              type="button"
-              onclick={() => (selectedSlot = slot.startsAt)}
-              class="card text-left text-sm capitalize transition-all {selectedSlot === slot.startsAt
-                ? 'border-primary ring-2 ring-primary/20'
-                : 'hover:border-primary/40'}"
-            >
-              {slot.label}
-            </button>
-          {/each}
+        <div>
+          <p class="text-xs uppercase tracking-wider text-text-mute mb-2">Elige un hueco</p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {#each data.bookable as slot (slot.startsAt)}
+              <button
+                type="button"
+                onclick={() => (selectedSlot = slot.startsAt)}
+                class="card p-3 text-left text-sm capitalize transition-all {selectedSlot === slot.startsAt
+                  ? 'border-primary ring-2 ring-primary/20'
+                  : 'hover:border-primary/40'}"
+              >
+                {slot.label}
+              </button>
+            {/each}
+          </div>
         </div>
 
         {#if selected}
@@ -194,8 +256,9 @@
               submitting = false;
               selectedSlot = null;
               notes = '';
+              showRequest = false;
             };
-          }} class="card space-y-4 mt-2">
+          }} class="space-y-4 border-t border-text-mute/10 pt-4">
             <div class="font-semibold capitalize">{selected.label}</div>
 
             <div>
@@ -236,19 +299,6 @@
           </form>
         {/if}
       {/if}
-    </section>
-
-    <!-- Historial -->
-    {#if data.past.length > 0}
-      <section class="space-y-3">
-        <h2 class="text-lg font-semibold">Historial</h2>
-        {#each data.past as s (s.id)}
-          <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-text-mute/10">
-            <span class="text-text-mute capitalize">{fmt(s.starts_at)}</span>
-            <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
-          </div>
-        {/each}
-      </section>
-    {/if}
-  {/if}
-</div>
+    </div>
+  </div>
+{/if}
