@@ -303,8 +303,8 @@
     <div class="card space-y-4">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h2 class="font-semibold">Programar con plantilla</h2>
-          <p class="text-xs text-text-mute mt-0.5">Aplica una plantilla a varios días de golpe (ej. L/X/V de dos semanas).</p>
+          <h2 class="font-semibold">Programar con un entrenamiento</h2>
+          <p class="text-xs text-text-mute mt-0.5">Aplica un entrenamiento a varios días de golpe (ej. L/X/V de dos semanas).</p>
         </div>
         <button onclick={() => (showProgram = !showProgram)} class="text-sm text-primary hover:underline whitespace-nowrap">
           {showProgram ? 'Cerrar' : 'Programar →'}
@@ -322,10 +322,10 @@
           class="space-y-4 border-t border-text-mute/10 pt-4"
         >
           <div>
-            <label for="pg-tpl" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Plantilla</label>
+            <label for="pg-tpl" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Entrenamiento</label>
             <select id="pg-tpl" name="template_id" bind:value={pgTemplate} required
               class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
-              <option value="" disabled>Elige una plantilla…</option>
+              <option value="" disabled>Elige un entrenamiento…</option>
               {#each data.templates as t (t.id)}<option value={t.id}>{t.name} ({t.itemCount} ej.)</option>{/each}
             </select>
           </div>

@@ -91,12 +91,12 @@
 </script>
 
 <svelte:head>
-  <title>{name || 'Plantilla'} · Coachify</title>
+  <title>{name || 'Entrenamiento'} · Coachify</title>
 </svelte:head>
 
 <div class="space-y-6">
   <div class="flex items-center justify-between gap-4">
-    <a href="/templates" class="text-sm text-text-mute hover:text-text">← Entrenos</a>
+    <a href="/templates" class="text-sm text-text-mute hover:text-text">← Entrenamientos</a>
     <form
       method="POST"
       action="?/save"
@@ -110,7 +110,7 @@
       <input type="hidden" name="category" value={category} />
       <input type="hidden" name="items" value={itemsJSON()} />
       <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
-        {saving ? 'Guardando…' : 'Guardar plantilla'}
+        {saving ? 'Guardando…' : 'Guardar entrenamiento'}
       </button>
     </form>
   </div>
@@ -119,14 +119,14 @@
     <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
   {/if}
   {#if form?.success}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">Plantilla guardada.</p>
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">Entrenamiento guardado.</p>
   {/if}
 
   <!-- Cabecera editable -->
   <div class="card space-y-4">
     <div>
       <label for="tpl-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-        Nombre de la plantilla
+        Nombre del entrenamiento
       </label>
       <input
         id="tpl-name"

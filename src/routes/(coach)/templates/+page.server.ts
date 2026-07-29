@@ -36,7 +36,7 @@ export const actions: Actions = {
   create: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const name = ((await request.formData()).get('name') as string)?.trim();
-    if (!name) return fail(400, { error: 'Ponle un nombre a la plantilla.' });
+    if (!name) return fail(400, { error: 'Ponle un nombre al entrenamiento.' });
 
     const { data, error } = await supabase
       .from('workout_templates')

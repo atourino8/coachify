@@ -32,7 +32,7 @@
       <div class="text-6xl mb-4">🚀</div>
       <h2 class="text-xl font-semibold mb-2">Empieza por aquí</h2>
       <p class="text-sm text-text-mute max-w-md mx-auto mb-6">
-        Crea tu biblioteca de ejercicios, arma alguna plantilla y luego invita a tus clientes.
+        Crea tu biblioteca de ejercicios, arma algún entrenamiento y luego invita a tus clientes.
       </p>
       <div class="flex gap-3 justify-center flex-wrap">
         <a href="/exercises/new" class="btn-primary">Crear ejercicio</a>

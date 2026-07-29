@@ -45,7 +45,7 @@
       features: [
         'Clientes ilimitados',
         'Sistema de citas (propuestas y reservas)',
-        'Plantillas de entreno reutilizables',
+        'Entrenamientos reutilizables',
         'Sincronización con Google Calendar (próximamente)',
         'Notificaciones push (próximamente)',
         'Soporte por email'
@@ -149,7 +149,7 @@
         <div class="text-3xl mb-3">🏋️</div>
         <h3 class="text-lg font-semibold mb-1">Soy entrenador</h3>
         <p class="text-sm text-text-mute mb-5 flex-1">
-          Gestiona tus clientes, entrenos, plantillas y citas en un solo sitio.
+          Gestiona tus clientes, entrenamientos y citas en un solo sitio.
         </p>
         <div class="flex flex-col gap-2">
           <a href="/register" class="btn-primary w-full text-sm">Empezar gratis</a>

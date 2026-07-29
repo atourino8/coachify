@@ -109,7 +109,7 @@ async function materializeTemplate(
     .eq('id', templateId)
     .eq('coach_id', coachId)
     .single();
-  if (tplErr || !tpl) return { error: 'Plantilla no encontrada.' };
+  if (tplErr || !tpl) return { error: 'Entrenamiento no encontrado.' };
   const template = tpl as unknown as {
     name: string;
     workout_template_items: {
@@ -245,7 +245,7 @@ export const actions: Actions = {
     const fd = await request.formData();
     const sessionId = fd.get('session_id') as string;
     const templateId = fd.get('template_id') as string;
-    if (!sessionId || !templateId) return fail(400, { error: 'Falta la cita o la plantilla.' });
+    if (!sessionId || !templateId) return fail(400, { error: 'Falta la cita o el entrenamiento.' });
 
     const { data: sess, error: sessErr } = await supabase
       .from('sessions')

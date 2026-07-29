@@ -33,7 +33,7 @@ export async function materializeTemplateWorkout(
     .eq('id', templateId)
     .eq('coach_id', coachId)
     .single();
-  if (tplErr || !tpl) return { error: 'Plantilla no encontrada.' };
+  if (tplErr || !tpl) return { error: 'Entrenamiento no encontrado.' };
   const template = tpl as unknown as { name: string; workout_template_items: TemplateItem[] };
 
   // ¿Ya hay entreno ese día?

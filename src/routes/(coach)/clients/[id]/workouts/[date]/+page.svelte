@@ -217,18 +217,18 @@
   <!-- Cargar plantilla -->
   {#if data.templates && data.templates.length > 0}
     <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
-      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap">Cargar plantilla</span>
+      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap">Cargar entrenamiento</span>
       <select
         bind:value={selectedTemplate}
         onchange={loadTemplate}
         class="flex-1 px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
       >
-        <option value="">Elige una plantilla para rellenar el día…</option>
+        <option value="">Elige un entrenamiento para rellenar el día…</option>
         {#each data.templates as t (t.id)}
           <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
         {/each}
       </select>
-      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap">Gestionar plantillas →</a>
+      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap">Gestionar entrenamientos →</a>
     </div>
   {/if}
 
@@ -413,8 +413,8 @@
 
 <ConfirmModal
   bind:open={confirmTpl}
-  title="Cargar plantilla"
-  message="Esto reemplazará los ejercicios actuales del día por los de la plantilla."
+  title="Cargar entrenamiento"
+  message="Esto reemplazará los ejercicios actuales del día por los del entrenamiento."
   confirmLabel="Reemplazar"
   danger={false}
   onconfirm={applyTemplate}

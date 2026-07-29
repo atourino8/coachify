@@ -309,7 +309,7 @@ export const actions: Actions = {
     const overwrite = fd.get('overwrite') === '1';
 
     if (!templateId || !startDate || !endDate) {
-      return fail(400, { error: 'Elige plantilla, fecha de inicio y fin.' });
+      return fail(400, { error: 'Elige un entrenamiento, fecha de inicio y fin.' });
     }
     if (weekdays.length === 0) return fail(400, { error: 'Marca al menos un día de la semana.' });
     if (endDate < startDate) return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });

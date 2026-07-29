@@ -40,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     .eq('coach_id', user.id)
     .single();
 
-  if (tplErr || !tplRaw) error(404, 'Plantilla no encontrada');
+  if (tplErr || !tplRaw) error(404, 'Entrenamiento no encontrado');
   const tpl = tplRaw as unknown as TemplateWithItems;
   (tpl.workout_template_items ?? []).sort((a, b) => a.order_index - b.order_index);
 
@@ -64,7 +64,7 @@ export const actions: Actions = {
     const notes = ((fd.get('notes') as string) || '').trim() || null;
     const category = ((fd.get('category') as string) || '').trim() || null;
     const rawItems = fd.get('items') as string;
-    if (!name) return fail(400, { error: 'La plantilla necesita un nombre.' });
+    if (!name) return fail(400, { error: 'El entrenamiento necesita un nombre.' });
 
     let items: Array<{
       exercise_id: string;

@@ -37,26 +37,26 @@
 </script>
 
 <svelte:head>
-  <title>Entrenos · Coachify</title>
+  <title>Entrenamientos · Coachify</title>
 </svelte:head>
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
   <div class="flex gap-1 border-b border-text-mute/10">
     <a href="/exercises" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text">Ejercicios</a>
-    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">Plantillas</a>
+    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">Entrenamientos</a>
   </div>
 
   <div class="flex items-center justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Plantillas de entreno</h1>
+      <h1 class="text-3xl font-bold tracking-tight">Entrenamientos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
-        Entrenos predefinidos (hipertrofia principiante, cardio avanzado…) que
+        Entrenamientos predefinidos (hipertrofia principiante, cardio avanzado…) que
         reutilizas al programar los días de tus clientes.
       </p>
     </div>
     <button onclick={() => (showForm = !showForm)} class="btn-primary whitespace-nowrap">
-      + Nueva plantilla
+      + Nuevo entrenamiento
     </button>
   </div>
 
@@ -80,7 +80,7 @@
     >
       <div class="flex-1">
         <label for="tpl-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-          Nombre de la plantilla
+          Nombre del entrenamiento
         </label>
         <input
           id="tpl-name"
@@ -101,9 +101,9 @@
   {#if data.templates.length === 0}
     <div class="card text-center py-16">
       <div class="text-6xl mb-4">📋</div>
-      <h2 class="text-xl font-semibold mb-2">Sin plantillas todavía</h2>
+      <h2 class="text-xl font-semibold mb-2">Sin entrenamientos todavía</h2>
       <p class="text-sm text-text-mute max-w-md mx-auto">
-        Crea tu primera plantilla para tener entrenos listos que aplicar a cualquier cliente en segundos.
+        Crea tu primer entrenamiento reutilizable para aplicarlo a cualquier cliente en segundos.
       </p>
     </div>
   {:else}
@@ -150,7 +150,7 @@
             <button
               type="button"
               class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
-              aria-label="Borrar plantilla {t.name}"
+              aria-label="Borrar entrenamiento {t.name}"
               onclick={() => askDelete(t.id, t.name)}
             >
               ×
@@ -166,7 +166,7 @@
   bind:open={confirmOpen}
   action="?/delete"
   fields={{ template_id: toDelete.id }}
-  title="Borrar plantilla"
-  message={`Se borrará la plantilla "${toDelete.name}". No afecta a los entrenos ya asignados.`}
-  confirmLabel="Borrar plantilla"
+  title="Borrar entrenamiento"
+  message={`Se borrará el entrenamiento "${toDelete.name}". No afecta a los entrenos ya asignados.`}
+  confirmLabel="Borrar entrenamiento"
 />

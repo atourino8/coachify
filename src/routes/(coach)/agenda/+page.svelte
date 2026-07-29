@@ -186,7 +186,7 @@
         <input type="hidden" name="session_id" value={s.id} />
         <select name="template_id" required
           class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
-          <option value="" disabled selected>Usar una plantilla…</option>
+          <option value="" disabled selected>Usar un entrenamiento…</option>
           {#each data.templates as t (t.id)}
             <option value={t.id}>{t.name} ({t.itemCount} ej.)</option>
           {/each}
