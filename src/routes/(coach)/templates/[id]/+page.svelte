@@ -123,20 +123,36 @@
   {/if}
 
   <!-- Cabecera editable -->
-  <div class="card space-y-3">
-    <input
-      bind:value={name}
-      maxlength="80"
-      placeholder="Nombre de la plantilla"
-      class="w-full bg-transparent text-2xl font-bold focus:outline-none placeholder:text-text-mute/40"
-    />
-    <textarea
-      bind:value={notes}
-      rows="2"
-      maxlength="300"
-      placeholder="Notas de la plantilla (opcional)"
-      class="w-full bg-transparent text-sm text-text-mute focus:outline-none resize-none placeholder:text-text-mute/40"
-    ></textarea>
+  <div class="card space-y-4">
+    <div>
+      <label for="tpl-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        Nombre de la plantilla
+      </label>
+      <input
+        id="tpl-name"
+        bind:value={name}
+        maxlength="80"
+        placeholder="ej: Full body principiante"
+        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-2xl font-bold
+               focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all
+               placeholder:font-normal placeholder:text-text-mute/40"
+      />
+    </div>
+    <div>
+      <label for="tpl-notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        Notas <span class="normal-case tracking-normal">(opcional)</span>
+      </label>
+      <textarea
+        id="tpl-notes"
+        bind:value={notes}
+        rows="2"
+        maxlength="300"
+        placeholder="ej: descanso 90s entre series, progresar carga cada semana"
+        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+               focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none
+               placeholder:text-text-mute/40"
+      ></textarea>
+    </div>
     <div class="flex items-center gap-2 pt-1">
       <label for="tpl-cat" class="text-xs uppercase tracking-wider text-text-mute">Categoría</label>
       <select id="tpl-cat" bind:value={category}
