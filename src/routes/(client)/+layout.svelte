@@ -1,5 +1,18 @@
 <script lang="ts">
+  import { page } from '$app/state';
+
   let { data, children } = $props();
+
+  const links = [
+    { href: '/today', label: 'Hoy', match: ['/today', '/workout'] },
+    { href: '/my-calendar', label: 'Citas', match: ['/my-calendar'] },
+    { href: '/progress', label: 'Progreso', match: ['/progress'] }
+  ];
+
+  function isActive(match: string[]): boolean {
+    const path = page.url.pathname;
+    return match.some((m) => path === m || path.startsWith(m + '/'));
+  }
 </script>
 
 <header class="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-text-mute/10">
@@ -15,9 +28,15 @@
     </a>
 
     <nav class="flex items-center gap-6 text-sm">
-      <a href="/today" class="hover:text-primary transition-colors">Hoy</a>
-      <a href="/my-calendar" class="text-text-mute hover:text-primary transition-colors">Citas</a>
-      <a href="/progress" class="text-text-mute hover:text-primary transition-colors">Progreso</a>
+      {#each links as link (link.href)}
+        <a
+          href={link.href}
+          aria-current={isActive(link.match) ? 'page' : undefined}
+          class="transition-colors {isActive(link.match) ? 'text-primary font-medium' : 'text-text-mute hover:text-primary'}"
+        >
+          {link.label}
+        </a>
+      {/each}
       <span class="text-text-mute/40">|</span>
       <span class="text-text-mute hidden sm:inline">
         {data.profile.full_name ?? 'Cliente'}

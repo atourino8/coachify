@@ -1,5 +1,20 @@
 <script lang="ts">
+  import { page } from '$app/state';
+
   let { data, children } = $props();
+
+  // Enlaces de navegación con los prefijos de ruta que marcan cada uno como activo.
+  const links = [
+    { href: '/dashboard', label: 'Inicio', match: ['/dashboard'] },
+    { href: '/exercises', label: 'Biblioteca', match: ['/exercises', '/templates'] },
+    { href: '/clients', label: 'Clientes', match: ['/clients'] },
+    { href: '/agenda', label: 'Agenda', match: ['/agenda', '/availability'] }
+  ];
+
+  function isActive(match: string[]): boolean {
+    const path = page.url.pathname;
+    return match.some((m) => path === m || path.startsWith(m + '/'));
+  }
 </script>
 
 <!-- Header coach -->
@@ -16,10 +31,15 @@
     </a>
 
     <nav class="flex items-center gap-6 text-sm">
-      <a href="/dashboard" class="hover:text-primary transition-colors">Inicio</a>
-      <a href="/exercises" class="text-text-mute hover:text-primary transition-colors">Biblioteca</a>
-      <a href="/clients" class="text-text-mute hover:text-primary transition-colors">Clientes</a>
-      <a href="/agenda" class="text-text-mute hover:text-primary transition-colors">Agenda</a>
+      {#each links as link (link.href)}
+        <a
+          href={link.href}
+          aria-current={isActive(link.match) ? 'page' : undefined}
+          class="transition-colors {isActive(link.match) ? 'text-primary font-medium' : 'text-text-mute hover:text-primary'}"
+        >
+          {link.label}
+        </a>
+      {/each}
       <span class="text-text-mute/40">|</span>
       <span class="text-text-mute hidden sm:inline">
         {data.profile.full_name ?? 'Coach'}
