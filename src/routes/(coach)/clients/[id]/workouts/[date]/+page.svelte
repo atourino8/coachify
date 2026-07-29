@@ -175,19 +175,35 @@
   {/if}
 
   <!-- Datos generales del workout -->
-  <div class="card space-y-3">
-    <input
-      type="text"
-      bind:value={title}
-      placeholder="Título del día (ej: PIERNA — Bloque hipertrofia)"
-      class="w-full bg-transparent border-0 text-lg font-semibold focus:outline-none placeholder:text-text-mute/40"
-    />
-    <textarea
-      bind:value={notes}
-      placeholder="Notas para tu cliente (calienta bien, ojo al hombro derecho...)"
-      rows="2"
-      class="w-full bg-transparent border-0 text-sm text-text-mute focus:outline-none resize-none placeholder:text-text-mute/40"
-    ></textarea>
+  <div class="card space-y-4">
+    <div>
+      <label for="w-title" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        Título del día
+      </label>
+      <input
+        id="w-title"
+        type="text"
+        bind:value={title}
+        placeholder="ej: PIERNA — Bloque hipertrofia"
+        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-lg font-semibold
+               focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all
+               placeholder:font-normal placeholder:text-text-mute/40"
+      />
+    </div>
+    <div>
+      <label for="w-notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        Notas para tu cliente
+      </label>
+      <textarea
+        id="w-notes"
+        bind:value={notes}
+        placeholder="ej: calienta bien, ojo al hombro derecho..."
+        rows="2"
+        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+               focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none
+               placeholder:text-text-mute/40"
+      ></textarea>
+    </div>
   </div>
 
   <!-- Cargar plantilla -->
