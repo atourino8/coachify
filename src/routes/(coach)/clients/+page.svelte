@@ -1,50 +1,194 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+
   let { data, form } = $props();
+
+  let tab = $state<'active' | 'pending'>('active');
   let showInvite = $state(false);
-  let loading = $state(false);
+  let inviting = $state(false);
+
+  // Modal de cancelar invitación.
+  let cancelOpen = $state(false);
+  let toCancel = $state<{ id: string; name: string }>({ id: '', name: '' });
+  function askCancel(id: string, name: string) {
+    toCancel = { id, name };
+    cancelOpen = true;
+  }
+
+  function fmtDate(iso: string | null) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
 </script>
 
 <svelte:head>
   <title>Clientes · Coachify</title>
 </svelte:head>
 
-<div class="space-y-8">
-  <div class="flex items-center justify-between">
+<svelte:window
+  onkeydown={(e) => {
+    if (showInvite && e.key === 'Escape') showInvite = false;
+  }}
+/>
+
+<div class="space-y-6">
+  <div class="flex items-center justify-between gap-4">
     <div>
       <span class="eyebrow">tu cartera</span>
       <h1 class="text-3xl font-bold tracking-tight mt-2">Clientes</h1>
-      <p class="text-text-mute mt-1">
-        {data.clients.length}
-        {data.clients.length === 1 ? 'cliente activo' : 'clientes activos'}
-      </p>
     </div>
-    <button class="btn-primary" onclick={() => (showInvite = !showInvite)}>
-      {showInvite ? 'Cancelar' : '+ Invitar cliente'}
+    <button class="btn-primary" onclick={() => (showInvite = true)}>+ Invitar cliente</button>
+  </div>
+
+  {#if form?.success && form?.invited_email}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Invitación enviada a {form.invited_email}. Aparecerá en “Pendientes” hasta que la acepte.
+    </p>
+  {/if}
+  {#if form?.success && form?.resent_email}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Invitación reenviada a {form.resent_email}.
+    </p>
+  {/if}
+  {#if form?.success && form?.cancelled}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Invitación cancelada.
+    </p>
+  {/if}
+
+  <!-- Pestañas -->
+  <div class="flex gap-1 border-b border-text-mute/10">
+    <button
+      onclick={() => (tab = 'active')}
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+        {tab === 'active' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+    >
+      Activos ({data.active.length})
+    </button>
+    <button
+      onclick={() => (tab = 'pending')}
+      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
+        {tab === 'pending' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+    >
+      Pendientes
+      {#if data.pending.length > 0}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning">{data.pending.length}</span>
+      {/if}
     </button>
   </div>
 
-  {#if showInvite}
-    <form
-      method="POST"
-      action="?/invite"
-      use:enhance={() => {
-        loading = true;
-        return async ({ update }) => {
-          await update();
-          loading = false;
-          if (form?.success) showInvite = false;
-        };
-      }}
-      class="card space-y-4 border-primary/30"
-    >
-      <h3 class="font-semibold">Invitar nuevo cliente</h3>
-      <p class="text-sm text-text-mute">
-        Le mandamos un email con un link mágico. Cuando lo acepte, queda
-        vinculado a ti automáticamente.
-      </p>
+  {#if tab === 'active'}
+    {#if data.active.length === 0}
+      <div class="card text-center py-16">
+        <div class="text-6xl mb-4" aria-hidden="true">👥</div>
+        <h2 class="text-xl font-semibold mb-2">Aún no tienes clientes activos</h2>
+        <p class="text-sm text-text-mute max-w-md mx-auto">
+          Invita a tu primer cliente por email. Cuando acepte la invitación, aparecerá aquí.
+        </p>
+      </div>
+    {:else}
+      <div class="space-y-2">
+        {#each data.active as client (client.id)}
+          <a
+            href="/clients/{client.id}"
+            class="card flex items-center gap-4 hover:border-primary/50 transition-all"
+          >
+            <div class="w-12 h-12 rounded-full bg-surface-2 grid place-items-center text-lg font-semibold text-text-mute">
+              {client.full_name?.charAt(0).toUpperCase() ?? '?'}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
+              <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
+            </div>
+            <span class="text-text-mute hover:text-text text-sm flex-shrink-0">Ver →</span>
+          </a>
+        {/each}
+      </div>
+    {/if}
+  {:else}
+    {#if data.pending.length === 0}
+      <div class="card text-center py-16">
+        <div class="text-5xl mb-4" aria-hidden="true">📭</div>
+        <h2 class="text-xl font-semibold mb-2">No hay invitaciones pendientes</h2>
+        <p class="text-sm text-text-mute max-w-md mx-auto">
+          Cuando invites a alguien, aparecerá aquí hasta que acepte y ponga su contraseña.
+        </p>
+      </div>
+    {:else}
+      <div class="space-y-2">
+        {#each data.pending as client (client.id)}
+          <div class="card p-4 flex items-center gap-4">
+            <div class="w-11 h-11 rounded-full bg-warning/10 grid place-items-center text-warning flex-shrink-0" aria-hidden="true">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" stroke-linecap="round" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
+              <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
+              <div class="text-[11px] text-text-mute mt-0.5">Invitado el {fmtDate(client.invited_at)}</div>
+            </div>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0">
+              Pendiente de aceptar
+            </span>
+            <div class="flex flex-col gap-1.5 flex-shrink-0">
+              <form method="POST" action="?/resendInvite" use:enhance>
+                <input type="hidden" name="email" value={client.email ?? ''} />
+                <input type="hidden" name="full_name" value={client.full_name ?? ''} />
+                <button type="submit" class="action-neutral w-full">Reenviar</button>
+              </form>
+              <button
+                type="button"
+                class="action-danger"
+                onclick={() => askCancel(client.id, client.full_name ?? client.email ?? 'este cliente')}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
+  {/if}
+</div>
 
-      <div class="grid sm:grid-cols-2 gap-4">
+<!-- Modal: invitar cliente -->
+{#if showInvite}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div
+    class="fixed inset-0 z-[200] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+    role="presentation"
+    onclick={() => (showInvite = false)}
+  >
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div
+      class="card w-full max-w-md space-y-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="invite-title"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <div>
+        <h3 id="invite-title" class="text-lg font-semibold">Invitar nuevo cliente</h3>
+        <p class="text-sm text-text-mute mt-1">
+          Le mandamos un email con un enlace. Cuando lo acepte, queda vinculado a ti automáticamente.
+        </p>
+      </div>
+
+      <form
+        method="POST"
+        action="?/invite"
+        use:enhance={() => {
+          inviting = true;
+          return async ({ update }) => {
+            await update();
+            inviting = false;
+            if (form?.success) showInvite = false;
+          };
+        }}
+        class="space-y-4"
+      >
         <div>
           <label for="full_name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
             Nombre completo
@@ -60,9 +204,7 @@
           />
         </div>
         <div>
-          <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-            Email
-          </label>
+          <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Email</label>
           <input
             id="email"
             name="email"
@@ -73,58 +215,29 @@
             class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
-      </div>
 
-      {#if form?.error}
-        <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
-          {form.error}
-        </p>
-      {/if}
+        {#if form?.error}
+          <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+            {form.error}
+          </p>
+        {/if}
 
-      <button type="submit" disabled={loading} class="btn-primary w-full">
-        {loading ? 'Enviando invitación…' : 'Enviar invitación'}
-      </button>
-    </form>
-  {/if}
-
-  {#if form?.success}
-    <div class="card bg-success/10 border-success/30 text-success text-center">
-      <p class="font-medium">✓ Invitación enviada a {form.invited_email}</p>
-      <p class="text-sm mt-2 opacity-80">
-        Recibirá un email con un link mágico. Cuando lo acepte aparecerá aquí.
-      </p>
+        <div class="flex gap-3 justify-end pt-1">
+          <button type="button" class="action-neutral" onclick={() => (showInvite = false)}>Cancelar</button>
+          <button type="submit" disabled={inviting} class="btn-primary py-2 px-5">
+            {inviting ? 'Enviando…' : 'Enviar invitación'}
+          </button>
+        </div>
+      </form>
     </div>
-  {/if}
+  </div>
+{/if}
 
-  {#if data.clients.length === 0}
-    <div class="card text-center py-16">
-      <div class="text-6xl mb-4">👥</div>
-      <h2 class="text-xl font-semibold mb-2">Aún no tienes clientes</h2>
-      <p class="text-sm text-text-mute max-w-md mx-auto">
-        Invita a tu primer cliente por email para empezar a armarle entrenos.
-      </p>
-    </div>
-  {:else}
-    <div class="space-y-2">
-      {#each data.clients as client (client.id)}
-        <a
-          href="/clients/{client.id}"
-          class="card flex items-center gap-4 hover:border-primary/50 transition-all"
-        >
-          <div
-            class="w-12 h-12 rounded-full bg-surface-2 grid place-items-center text-lg font-semibold text-text-mute"
-          >
-            {client.full_name?.charAt(0).toUpperCase() ?? '?'}
-          </div>
-          <div class="flex-1">
-            <div class="font-semibold">{client.full_name ?? 'Sin nombre'}</div>
-            <div class="text-xs text-text-mute">
-              Cliente desde {new Date(client.created_at).toLocaleDateString('es-ES')}
-            </div>
-          </div>
-          <span class="text-text-mute hover:text-text text-sm">Ver →</span>
-        </a>
-      {/each}
-    </div>
-  {/if}
-</div>
+<ConfirmModal
+  bind:open={cancelOpen}
+  action="?/cancelInvite"
+  fields={{ client_id: toCancel.id }}
+  title="Cancelar invitación"
+  message={`Se cancelará la invitación de ${toCancel.name} y se eliminará su acceso pendiente. Podrás volver a invitarle cuando quieras.`}
+  confirmLabel="Cancelar invitación"
+/>
