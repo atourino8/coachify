@@ -68,4 +68,23 @@ body {
            transition-all duration-200
            hover:bg-surface-2 hover:border-text-mute/30;
   }
+
+  /* ---- Botones de acción compactos y consistentes (agenda, biblioteca) ---- */
+  .action-btn {
+    @apply inline-flex items-center justify-center gap-1.5 text-xs font-medium
+           py-1.5 px-3 rounded-md transition-colors
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+  .action-primary {
+    @apply action-btn bg-primary-hover text-white hover:bg-[#1d4ed8];
+  }
+  .action-neutral {
+    @apply action-btn text-text-mute hover:text-text hover:bg-surface-2;
+  }
+  .action-danger {
+    @apply action-btn border border-danger/30 text-danger hover:bg-danger/10;
+  }
+  .action-danger-solid {
+    @apply action-btn bg-danger text-white hover:bg-danger/85;
+  }
 }

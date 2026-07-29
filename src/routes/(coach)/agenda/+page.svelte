@@ -1,7 +1,44 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
+
+  // Timeline único: pendientes + confirmadas próximas, ordenadas cronológicamente.
+  const upcoming = $derived(
+    [...data.pending, ...data.confirmed].sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+  );
+
+  // Etiqueta de estado para cada fila del timeline.
+  function badge(s: { status: string; proposedByCoach: boolean }) {
+    if (s.status === 'confirmed') return { label: 'Confirmada', cls: 'bg-success/15 text-success' };
+    if (s.proposedByCoach) return { label: 'Esperando al cliente', cls: 'bg-primary/15 text-primary' };
+    return { label: 'Pendiente', cls: 'bg-warning/15 text-warning' };
+  }
+
+  function clientName(s: { client: { full_name: string | null } | null }) {
+    return s.client?.full_name ?? 'el cliente';
+  }
+
+  // --- Modal de confirmación reutilizable ---
+  type ConfirmData = {
+    action: string;
+    fields: Record<string, string>;
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger: boolean;
+  };
+  let confirmOpen = $state(false);
+  let confirmData = $state<ConfirmData>({
+    action: '', fields: {}, title: '', message: '', confirmLabel: 'Confirmar', danger: true
+  });
+  function ask(d: Partial<ConfirmData> & { action: string }) {
+    confirmData = {
+      fields: {}, title: '', message: '', confirmLabel: 'Confirmar', danger: true, ...d
+    };
+    confirmOpen = true;
+  }
 
   // --- Proponer cita (coach) ---
   let showPropose = $state(false);
@@ -167,10 +204,20 @@
           <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
             Editar
           </a>
-          <form method="POST" action="?/unassignWorkout" use:enhance>
-            <input type="hidden" name="session_id" value={s.id} />
-            <button type="submit" class="text-xs text-text-mute hover:text-danger">Quitar</button>
-          </form>
+          <button
+            type="button"
+            class="text-xs text-text-mute hover:text-danger transition-colors"
+            onclick={() => ask({
+              action: '?/unassignWorkout',
+              fields: { session_id: s.id },
+              title: 'Quitar entreno',
+              message: 'Se desligará el entreno de esta cita. Podrás volver a asignarlo cuando quieras.',
+              confirmLabel: 'Quitar entreno',
+              danger: true
+            })}
+          >
+            Quitar
+          </button>
         </div>
       </div>
     {:else}
@@ -314,87 +361,91 @@
     </form>
   {/if}
 
-  <!-- Pendientes -->
+  <!-- Timeline de próximas citas (pendientes + confirmadas, cronológico) -->
   <section class="space-y-3">
     <h2 class="text-lg font-semibold flex items-center gap-2">
-      Pendientes
-      {#if data.pending.length > 0}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning">{data.pending.length}</span>
+      Próximas citas
+      {#if upcoming.length > 0}
+        <span class="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-text-mute">{upcoming.length}</span>
       {/if}
     </h2>
-    {#if data.pending.length === 0}
-      <p class="text-sm text-text-mute">No hay solicitudes pendientes.</p>
+    {#if upcoming.length === 0}
+      <p class="text-sm text-text-mute">No hay citas próximas. Propón una a un cliente.</p>
     {:else}
-      {#each data.pending as s (s.id)}
-        <div class="card space-y-3">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
-              <div class="text-sm text-text-mute capitalize mt-0.5">{fmt(s.starts_at)}</div>
-              <div class="text-xs text-text-mute mt-1">{modalityLabel[s.modality] ?? s.modality}</div>
-              {#if s.notes}<div class="text-sm mt-2 bg-bg rounded-md p-2 italic">{s.notes}</div>{/if}
+      {#each upcoming as s (s.id)}
+        {@const b = badge(s)}
+        <div class="card p-4 space-y-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[11px] px-2 py-0.5 rounded-full {b.cls}">{b.label}</span>
+                <span class="font-semibold truncate">{s.client?.full_name ?? 'Cliente'}</span>
+              </div>
+              <div class="text-xs text-text-mute capitalize mt-1">
+                {fmt(s.starts_at)} · {modalityLabel[s.modality] ?? s.modality}
+              </div>
             </div>
-            <span class="text-xs px-2 py-1 rounded-full {s.proposedByCoach ? 'bg-primary/15 text-primary' : statusClass[s.status]}">
-              {s.proposedByCoach ? 'Esperando al cliente' : statusLabel[s.status]}
-            </span>
-          </div>
-
-          {#if s.proposedByCoach}
-            <!-- La propuso el coach: no la confirma él, solo puede cancelarla. -->
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-xs text-text-mute">Tu cliente debe confirmarla o rechazarla.</p>
-              <form method="POST" action="?/cancel" use:enhance>
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar propuesta</button>
-              </form>
-            </div>
-          {:else}
-            <!-- La pidió el cliente: el coach confirma o rechaza. -->
-            <div class="flex gap-2">
-              <form method="POST" action="?/confirm" use:enhance class="flex-1">
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="btn-primary w-full text-sm py-2">Confirmar</button>
-              </form>
-              <form method="POST" action="?/reject" use:enhance>
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="px-4 py-2 text-sm rounded-md border border-danger/30 text-danger hover:bg-danger/10 transition-colors">
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              {#if s.status === 'requested' && s.proposedByCoach}
+                <button
+                  type="button"
+                  class="action-danger"
+                  onclick={() => ask({
+                    action: '?/cancel', fields: { session_id: s.id },
+                    title: 'Cancelar propuesta',
+                    message: `Se retirará la propuesta de cita enviada a ${clientName(s)}.`,
+                    confirmLabel: 'Cancelar propuesta'
+                  })}
+                >
+                  Cancelar
+                </button>
+              {:else if s.status === 'requested'}
+                <form method="POST" action="?/confirm" use:enhance>
+                  <input type="hidden" name="session_id" value={s.id} />
+                  <button type="submit" class="action-primary">Confirmar</button>
+                </form>
+                <button
+                  type="button"
+                  class="action-danger"
+                  onclick={() => ask({
+                    action: '?/reject', fields: { session_id: s.id },
+                    title: 'Rechazar solicitud',
+                    message: `Vas a rechazar la solicitud de cita de ${clientName(s)}. Se le notificará.`,
+                    confirmLabel: 'Rechazar'
+                  })}
+                >
                   Rechazar
                 </button>
-              </form>
-            </div>
-          {/if}
-          {@render workoutBlock(s)}
-          {@render rescheduleBlock(s)}
-        </div>
-      {/each}
-    {/if}
-  </section>
-
-  <!-- Confirmadas próximas -->
-  <section class="space-y-3">
-    <h2 class="text-lg font-semibold">Próximas confirmadas</h2>
-    {#if data.confirmed.length === 0}
-      <p class="text-sm text-text-mute">No hay citas confirmadas próximas.</p>
-    {:else}
-      {#each data.confirmed as s (s.id)}
-        <div class="card space-y-3">
-          <div class="flex items-center justify-between gap-4">
-            <div>
-              <div class="font-semibold">{s.client?.full_name ?? 'Cliente'}</div>
-              <div class="text-sm text-text-mute capitalize mt-0.5">{fmt(s.starts_at)}</div>
-              <div class="text-xs text-text-mute mt-1">{modalityLabel[s.modality] ?? s.modality}</div>
-            </div>
-            <div class="flex flex-col gap-1.5 items-end">
-              <form method="POST" action="?/complete" use:enhance>
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="text-xs text-primary hover:underline">Marcar hecha</button>
-              </form>
-              <form method="POST" action="?/cancel" use:enhance>
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">Cancelar</button>
-              </form>
+              {:else}
+                <button
+                  type="button"
+                  class="action-neutral"
+                  onclick={() => ask({
+                    action: '?/complete', fields: { session_id: s.id },
+                    title: 'Marcar como hecha',
+                    message: `¿Marcar la cita con ${clientName(s)} como completada?`,
+                    confirmLabel: 'Marcar hecha', danger: false
+                  })}
+                >
+                  Marcar hecha
+                </button>
+                <button
+                  type="button"
+                  class="action-danger"
+                  onclick={() => ask({
+                    action: '?/cancel', fields: { session_id: s.id },
+                    title: 'Cancelar cita',
+                    message: `Se cancelará la cita con ${clientName(s)}. Se le notificará.`,
+                    confirmLabel: 'Sí, cancelar'
+                  })}
+                >
+                  Cancelar
+                </button>
+              {/if}
             </div>
           </div>
+
+          {#if s.notes}<div class="text-sm bg-bg rounded-md p-2 italic">{s.notes}</div>{/if}
           {@render workoutBlock(s)}
           {@render rescheduleBlock(s)}
         </div>
@@ -415,3 +466,13 @@
     </section>
   {/if}
 </div>
+
+<ConfirmModal
+  bind:open={confirmOpen}
+  action={confirmData.action}
+  fields={confirmData.fields}
+  title={confirmData.title}
+  message={confirmData.message}
+  confirmLabel={confirmData.confirmLabel}
+  danger={confirmData.danger}
+/>
