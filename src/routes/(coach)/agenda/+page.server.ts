@@ -270,6 +270,25 @@ export const actions: Actions = {
     return { success: true, fromTemplate: true };
   },
 
+  // Reprograma una cita (nueva fecha/hora). starts_at/ends_at llegan ya en ISO
+  // calculados en el navegador (zona local del coach).
+  reschedule: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const id = fd.get('session_id') as string;
+    const startsAt = fd.get('starts_at') as string;
+    const endsAt = fd.get('ends_at') as string;
+    if (!id || !startsAt || !endsAt) return fail(400, { error: 'Falta fecha u hora.' });
+
+    const { error } = await supabase
+      .from('sessions')
+      .update({ starts_at: startsAt, ends_at: endsAt } as never)
+      .eq('id', id)
+      .eq('coach_id', user.id);
+    if (error) return fail(500, { error: error.message });
+    return { success: true, rescheduled: true };
+  },
+
   // El coach PROPONE una cita a un cliente. Queda 'requested' (requested_by =
   // coach) para que el cliente la confirme. Opcionalmente asigna una plantilla.
   createSession: async ({ request, locals: { supabase, user } }) => {

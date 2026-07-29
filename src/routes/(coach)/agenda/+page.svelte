@@ -62,6 +62,30 @@
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   }
 
+  // --- Reprogramar cita ---
+  let editingId = $state<string | null>(null);
+  let edDate = $state('');
+  let edTime = $state('');
+  let edDur = $state('60');
+
+  const edStartsAt = $derived(edDate && edTime ? new Date(`${edDate}T${edTime}`).toISOString() : '');
+  const edEndsAt = $derived.by(() => {
+    if (!edStartsAt) return '';
+    const d = new Date(edStartsAt);
+    d.setMinutes(d.getMinutes() + Number(edDur || 60));
+    return d.toISOString();
+  });
+
+  function openEdit(s: { id: string; starts_at: string; ends_at: string }) {
+    const d = new Date(s.starts_at);
+    const p = (n: number) => n.toString().padStart(2, '0');
+    edDate = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+    edTime = `${p(d.getHours())}:${p(d.getMinutes())}`;
+    const dur = Math.round((new Date(s.ends_at).getTime() - d.getTime()) / 60000);
+    edDur = String(dur > 0 ? dur : 60);
+    editingId = s.id;
+  }
+
   // Fecha corta y legible para el desplegable de entrenos: "sáb 25 jul".
   function shortDate(iso: string): string {
     return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
@@ -92,6 +116,42 @@
 <svelte:head>
   <title>Agenda · Coachify</title>
 </svelte:head>
+
+{#snippet rescheduleBlock(s: (typeof data.pending)[number])}
+  {#if editingId === s.id}
+    <form method="POST" action="?/reschedule" use:enhance={() => {
+      return async ({ update }) => { await update(); editingId = null; };
+    }} class="border-t border-text-mute/10 pt-3 mt-1 flex flex-wrap items-end gap-2">
+      <div>
+        <label for="ed-date-{s.id}" class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Fecha</label>
+        <input id="ed-date-{s.id}" type="date" bind:value={edDate} required
+          class="px-2 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+      </div>
+      <div>
+        <label for="ed-time-{s.id}" class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Hora</label>
+        <input id="ed-time-{s.id}" type="time" bind:value={edTime} required
+          class="px-2 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+      </div>
+      <div>
+        <label for="ed-dur-{s.id}" class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Duración</label>
+        <select id="ed-dur-{s.id}" bind:value={edDur}
+          class="px-2 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+          <option value="30">30</option><option value="45">45</option>
+          <option value="60">60</option><option value="90">90</option>
+        </select>
+      </div>
+      <input type="hidden" name="session_id" value={s.id} />
+      <input type="hidden" name="starts_at" value={edStartsAt} />
+      <input type="hidden" name="ends_at" value={edEndsAt} />
+      <button type="submit" disabled={!edStartsAt} class="btn-primary text-sm py-1.5 px-3">Guardar</button>
+      <button type="button" onclick={() => (editingId = null)} class="text-xs text-text-mute hover:text-text">Cancelar</button>
+    </form>
+  {:else}
+    <button type="button" onclick={() => openEdit(s)} class="text-xs text-text-mute hover:text-primary transition-colors">
+      ✎ Cambiar fecha/hora
+    </button>
+  {/if}
+{/snippet}
 
 {#snippet workoutBlock(s: (typeof data.pending)[number])}
   {@const clientWorkouts = sortedWorkouts(s.client_id)}
@@ -304,6 +364,7 @@
             </div>
           {/if}
           {@render workoutBlock(s)}
+          {@render rescheduleBlock(s)}
         </div>
       {/each}
     {/if}
@@ -335,6 +396,7 @@
             </div>
           </div>
           {@render workoutBlock(s)}
+          {@render rescheduleBlock(s)}
         </div>
       {/each}
     {/if}

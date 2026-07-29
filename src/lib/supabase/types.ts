@@ -65,11 +65,21 @@ export interface WorkoutItem {
   updated_at: string;
 }
 
+export type TemplateCategory =
+  | 'hipertrofia'
+  | 'fuerza'
+  | 'resistencia'
+  | 'movilidad'
+  | 'perdida_grasa'
+  | 'rehabilitacion'
+  | 'otro';
+
 export interface WorkoutTemplate {
   id: string;
   coach_id: string;
   name: string;
   notes: string | null;
+  category: TemplateCategory | null;
   created_at: string;
   updated_at: string;
 }

@@ -64,6 +64,23 @@
   let dupSource = $state<string>('');
   let dupTarget = $state<string>('');
   let dupSubmitting = $state(false);
+
+  // --- Programar plantilla en varios días ---
+  let showProgram = $state(false);
+  let pgTemplate = $state('');
+  let pgStart = $state('');
+  let pgEnd = $state('');
+  let pgDays = $state<number[]>([1, 3, 5]); // L, X, V por defecto
+  let pgOverwrite = $state(false);
+  let pgSubmitting = $state(false);
+
+  const WEEKDAYS = [
+    { v: 1, label: 'L' }, { v: 2, label: 'M' }, { v: 3, label: 'X' },
+    { v: 4, label: 'J' }, { v: 5, label: 'V' }, { v: 6, label: 'S' }, { v: 0, label: 'D' }
+  ];
+  function toggleDay(d: number) {
+    pgDays = pgDays.includes(d) ? pgDays.filter((x) => x !== d) : [...pgDays, d];
+  }
 </script>
 
 <svelte:head>
@@ -103,6 +120,11 @@
   {#if form?.success && form?.duplicated}
     <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Entreno duplicado a {formatHumanDate(form.targetDate)}.
+    </p>
+  {/if}
+  {#if form?.success && form?.programmed}
+    <p class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Programado: {form.created} entreno{form.created === 1 ? '' : 's'} creado{form.created === 1 ? '' : 's'}{form.skipped > 0 ? ` · ${form.skipped} día(s) omitido(s) porque ya tenían entreno` : ''}.
     </p>
   {/if}
 
@@ -195,6 +217,79 @@
           {/if}
         </a>
       {/each}
+    </div>
+  {/if}
+
+  <!-- ===== PANEL PROGRAMAR CON PLANTILLA ===== -->
+  {#if data.templates.length > 0}
+    <div class="card space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h2 class="font-semibold">Programar con plantilla</h2>
+          <p class="text-xs text-text-mute mt-0.5">Aplica una plantilla a varios días de golpe (ej. L/X/V de dos semanas).</p>
+        </div>
+        <button onclick={() => (showProgram = !showProgram)} class="text-sm text-primary hover:underline whitespace-nowrap">
+          {showProgram ? 'Cerrar' : 'Programar →'}
+        </button>
+      </div>
+
+      {#if showProgram}
+        <form
+          method="POST"
+          action="?/programTemplate"
+          use:enhance={() => {
+            pgSubmitting = true;
+            return async ({ update }) => { await update(); pgSubmitting = false; };
+          }}
+          class="space-y-4 border-t border-text-mute/10 pt-4"
+        >
+          <div>
+            <label for="pg-tpl" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Plantilla</label>
+            <select id="pg-tpl" name="template_id" bind:value={pgTemplate} required
+              class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+              <option value="" disabled>Elige una plantilla…</option>
+              {#each data.templates as t (t.id)}<option value={t.id}>{t.name} ({t.itemCount} ej.)</option>{/each}
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="pg-start" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Desde</label>
+              <input id="pg-start" type="date" name="start_date" bind:value={pgStart} required
+                class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+            </div>
+            <div>
+              <label for="pg-end" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Hasta</label>
+              <input id="pg-end" type="date" name="end_date" bind:value={pgEnd} required
+                class="w-full px-3 py-2.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary" />
+            </div>
+          </div>
+
+          <div>
+            <span class="block text-xs uppercase tracking-wider text-text-mute mb-2">Días de la semana</span>
+            <div class="flex gap-2">
+              {#each WEEKDAYS as d}
+                <button type="button" onclick={() => toggleDay(d.v)}
+                  class="w-9 h-9 rounded-full text-sm font-medium border transition-colors {pgDays.includes(d.v)
+                    ? 'bg-primary text-bg border-primary'
+                    : 'border-text-mute/20 text-text-mute hover:text-text'}">
+                  {d.label}
+                </button>
+              {/each}
+            </div>
+            {#each pgDays as d}<input type="hidden" name="weekdays" value={d} />{/each}
+          </div>
+
+          <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" bind:checked={pgOverwrite} name="overwrite" value="1" />
+            Sobrescribir días que ya tengan entreno
+          </label>
+
+          <button type="submit" disabled={pgSubmitting || !pgTemplate || pgDays.length === 0} class="btn-primary w-full">
+            {pgSubmitting ? 'Programando…' : 'Programar'}
+          </button>
+        </form>
+      {/if}
     </div>
   {/if}
 

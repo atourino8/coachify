@@ -3,6 +3,7 @@
 
 import { error, fail, redirect } from '@sveltejs/kit';
 import { addDays, formatDateISO, todayISOLocal, currentMonthISO } from '$lib/week';
+import { materializeTemplateWorkout } from '$lib/workouts';
 import type { PageServerLoad, Actions } from './$types';
 
 const WINDOW_DAYS = 14;
@@ -88,13 +89,24 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     };
   }
 
+  // Plantillas del coach (para el panel "Programar con plantilla").
+  const { data: tplRaw } = await supabase
+    .from('workout_templates')
+    .select('id, name, category, workout_template_items(id)')
+    .eq('coach_id', user.id)
+    .order('name');
+  const templates = ((tplRaw ?? []) as unknown as { id: string; name: string; category: string | null; workout_template_items: { id: string }[] | null }[]).map(
+    (t) => ({ id: t.id, name: t.name, category: t.category, itemCount: (t.workout_template_items ?? []).length })
+  );
+
   return {
     client,
     view,
     windowStart,
     windowDays: WINDOW_DAYS,
     monthISO,
-    workoutsByDate
+    workoutsByDate,
+    templates
   };
 };
 
@@ -175,5 +187,46 @@ export const actions: Actions = {
     }
 
     return { success: true, duplicated: true, targetDate };
+  },
+
+  // Programa una plantilla en varios días: rango de fechas + días de la semana.
+  programTemplate: async ({ request, params, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const templateId = fd.get('template_id') as string;
+    const startDate = fd.get('start_date') as string;
+    const endDate = fd.get('end_date') as string;
+    const weekdays = fd.getAll('weekdays').map((d) => Number(d)); // 0=domingo … 6=sábado
+    const overwrite = fd.get('overwrite') === '1';
+
+    if (!templateId || !startDate || !endDate) {
+      return fail(400, { error: 'Elige plantilla, fecha de inicio y fin.' });
+    }
+    if (weekdays.length === 0) return fail(400, { error: 'Marca al menos un día de la semana.' });
+    if (endDate < startDate) return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
+
+    // Recorrer el rango y quedarnos con los días cuyo weekday esté marcado.
+    const dates: string[] = [];
+    const cur = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+    let guard = 0;
+    while (cur <= end && guard < 400) {
+      if (weekdays.includes(cur.getDay())) dates.push(formatDateISO(cur));
+      cur.setDate(cur.getDate() + 1);
+      guard++;
+    }
+
+    let created = 0;
+    let skipped = 0;
+    for (const date of dates) {
+      const res = await materializeTemplateWorkout(supabase, user.id, params.id, date, templateId, {
+        overwrite
+      });
+      if ('workoutId' in res) created++;
+      else if ('skipped' in res) skipped++;
+      else return fail(500, { error: res.error });
+    }
+
+    return { success: true, programmed: true, created, skipped };
   }
 };

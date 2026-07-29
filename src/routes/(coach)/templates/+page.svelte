@@ -6,6 +6,25 @@
   let newName = $state('');
   let creating = $state(false);
   let showForm = $state(false);
+  let filterCat = $state('');
+
+  const catLabels: Record<string, string> = {
+    hipertrofia: 'Hipertrofia',
+    fuerza: 'Fuerza',
+    resistencia: 'Resistencia',
+    movilidad: 'Movilidad',
+    perdida_grasa: 'Pérdida de grasa',
+    rehabilitacion: 'Rehabilitación',
+    otro: 'Otro'
+  };
+
+  // Categorías presentes en las plantillas actuales (para el filtro)
+  const presentCats = $derived(
+    [...new Set(data.templates.map((t) => t.category).filter(Boolean) as string[])].sort()
+  );
+  const filtered = $derived(
+    filterCat ? data.templates.filter((t) => t.category === filterCat) : data.templates
+  );
 </script>
 
 <svelte:head>
@@ -79,11 +98,42 @@
       </p>
     </div>
   {:else}
+    <!-- Filtro por categoría (solo si hay categorías en uso) -->
+    {#if presentCats.length > 0}
+      <div class="flex flex-wrap gap-2">
+        <button
+          onclick={() => (filterCat = '')}
+          class="px-3 py-1.5 rounded-full text-sm border transition-colors {filterCat === ''
+            ? 'bg-primary text-bg border-primary'
+            : 'border-text-mute/20 text-text-mute hover:text-text'}"
+        >
+          Todas ({data.templates.length})
+        </button>
+        {#each presentCats as cat}
+          <button
+            onclick={() => (filterCat = cat)}
+            class="px-3 py-1.5 rounded-full text-sm border transition-colors {filterCat === cat
+              ? 'bg-primary text-bg border-primary'
+              : 'border-text-mute/20 text-text-mute hover:text-text'}"
+          >
+            {catLabels[cat] ?? cat}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
     <div class="grid sm:grid-cols-2 gap-4">
-      {#each data.templates as t (t.id)}
+      {#each filtered as t (t.id)}
         <div class="card flex items-center justify-between gap-4 hover:border-primary/40 transition-all">
           <a href="/templates/{t.id}" class="flex-1 min-w-0">
-            <div class="font-semibold truncate">{t.name}</div>
+            <div class="font-semibold truncate flex items-center gap-2">
+              {t.name}
+              {#if t.category}
+                <span class="text-[10px] uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded whitespace-nowrap">
+                  {catLabels[t.category] ?? t.category}
+                </span>
+              {/if}
+            </div>
             <div class="text-xs text-text-mute mt-1">{t.itemCount} ejercicios</div>
           </a>
           <div class="flex items-center gap-3 flex-shrink-0">

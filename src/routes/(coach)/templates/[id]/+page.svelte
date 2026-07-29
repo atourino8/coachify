@@ -14,10 +14,22 @@
     notes: string;
   };
 
+  const CATEGORIES: { value: string; label: string }[] = [
+    { value: 'hipertrofia', label: 'Hipertrofia' },
+    { value: 'fuerza', label: 'Fuerza' },
+    { value: 'resistencia', label: 'Resistencia' },
+    { value: 'movilidad', label: 'Movilidad' },
+    { value: 'perdida_grasa', label: 'Pérdida de grasa' },
+    { value: 'rehabilitacion', label: 'Rehabilitación' },
+    { value: 'otro', label: 'Otro' }
+  ];
+
   // svelte-ignore state_referenced_locally
   let name = $state(data.template.name);
   // svelte-ignore state_referenced_locally
   let notes = $state(data.template.notes ?? '');
+  // svelte-ignore state_referenced_locally
+  let category = $state(data.template.category ?? '');
   // svelte-ignore state_referenced_locally
   let items = $state<TplItem[]>(
     (data.template.workout_template_items ?? []).map((it) => ({
@@ -95,6 +107,7 @@
     >
       <input type="hidden" name="name" value={name} />
       <input type="hidden" name="notes" value={notes} />
+      <input type="hidden" name="category" value={category} />
       <input type="hidden" name="items" value={itemsJSON()} />
       <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
         {saving ? 'Guardando…' : 'Guardar plantilla'}
@@ -124,6 +137,14 @@
       placeholder="Notas de la plantilla (opcional)"
       class="w-full bg-transparent text-sm text-text-mute focus:outline-none resize-none placeholder:text-text-mute/40"
     ></textarea>
+    <div class="flex items-center gap-2 pt-1">
+      <label for="tpl-cat" class="text-xs uppercase tracking-wider text-text-mute">Categoría</label>
+      <select id="tpl-cat" bind:value={category}
+        class="px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+        <option value="">Sin categoría</option>
+        {#each CATEGORIES as c}<option value={c.value}>{c.label}</option>{/each}
+      </select>
+    </div>
   </div>
 
   <div class="grid md:grid-cols-2 gap-6">
