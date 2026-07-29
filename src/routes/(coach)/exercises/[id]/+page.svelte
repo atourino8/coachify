@@ -1,7 +1,9 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   let { data, form } = $props();
   let saving = $state(false);
+  let confirmArchive = $state(false);
 
   const muscleGroups = [
     { value: 'chest', label: 'Pecho' },
@@ -162,16 +164,21 @@
     </div>
   </form>
 
-  <form method="POST" action="?/archive" class="text-center">
+  <div class="text-center">
     <button
-      type="submit"
-      onclick={(e) => {
-        if (!confirm('¿Archivar este ejercicio? No aparecerá más en la biblioteca, pero quedará en los workouts antiguos.'))
-          e.preventDefault();
-      }}
+      type="button"
+      onclick={() => (confirmArchive = true)}
       class="text-sm text-danger hover:text-danger/80 transition-colors"
     >
       Archivar ejercicio
     </button>
-  </form>
+  </div>
 </div>
+
+<ConfirmModal
+  bind:open={confirmArchive}
+  action="?/archive"
+  title="Archivar ejercicio"
+  message="No aparecerá más en la biblioteca, pero quedará en los entrenos antiguos donde ya se usó."
+  confirmLabel="Archivar ejercicio"
+/>

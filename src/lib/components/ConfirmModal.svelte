@@ -4,28 +4,36 @@
   // funciona con progressive enhancement (use:enhance).
   import { enhance } from '$app/forms';
 
+  // Dos modos: POST (pasa `action`) o callback JS local (pasa `onconfirm`).
   let {
     open = $bindable(false),
-    action,
+    action = '',
     fields = {},
     title,
     message,
     confirmLabel = 'Confirmar',
     cancelLabel = 'Cancelar',
-    danger = true
+    danger = true,
+    onconfirm
   }: {
     open?: boolean;
-    action: string;
+    action?: string;
     fields?: Record<string, string>;
     title: string;
     message: string;
     confirmLabel?: string;
     cancelLabel?: string;
     danger?: boolean;
+    onconfirm?: () => void;
   } = $props();
 
   function close() {
     open = false;
+  }
+
+  function runCallback() {
+    onconfirm?.();
+    close();
   }
 </script>
 
@@ -57,23 +65,29 @@
       <p id="confirm-msg" class="text-sm text-text-mute">{message}</p>
       <div class="flex justify-end gap-3 pt-1">
         <button type="button" class="action-neutral" onclick={close}>{cancelLabel}</button>
-        <form
-          method="POST"
-          {action}
-          use:enhance={() => {
-            return async ({ update }) => {
-              await update();
-              close();
-            };
-          }}
-        >
-          {#each Object.entries(fields) as [k, v] (k)}
-            <input type="hidden" name={k} value={v} />
-          {/each}
-          <button type="submit" class={danger ? 'action-danger-solid' : 'action-primary'}>
+        {#if action}
+          <form
+            method="POST"
+            {action}
+            use:enhance={() => {
+              return async ({ update }) => {
+                await update();
+                close();
+              };
+            }}
+          >
+            {#each Object.entries(fields) as [k, v] (k)}
+              <input type="hidden" name={k} value={v} />
+            {/each}
+            <button type="submit" class={danger ? 'action-danger-solid' : 'action-primary'}>
+              {confirmLabel}
+            </button>
+          </form>
+        {:else}
+          <button type="button" class={danger ? 'action-danger-solid' : 'action-primary'} onclick={runCallback}>
             {confirmLabel}
           </button>
-        </form>
+        {/if}
       </div>
     </div>
   </div>

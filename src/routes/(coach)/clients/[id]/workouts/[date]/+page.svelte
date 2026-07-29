@@ -3,9 +3,14 @@
   import { flip } from 'svelte/animate';
   import { enhance } from '$app/forms';
   import { formatHumanDate } from '$lib/week';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import type { Exercise, WorkoutItemWithRelations } from '$lib/supabase/types';
 
   let { data, form } = $props();
+
+  // Modales de confirmación (cargar plantilla local / borrar entreno POST).
+  let confirmTpl = $state(false);
+  let confirmDelete = $state(false);
 
   // Tipo del item del día: copia del exercise + parámetros prescritos.
   type DayItem = {
@@ -43,16 +48,19 @@
   let selectedTemplate = $state('');
 
   // Cargar los ejercicios de una plantilla en el día (reemplaza los actuales).
+  // Si ya hay ejercicios, pide confirmación en modal antes de reemplazar.
   function loadTemplate() {
     const tpl = data.templates?.find((t) => t.id === selectedTemplate);
     if (!tpl) return;
-    if (
-      dayItems.length > 0 &&
-      !confirm('Esto reemplazará los ejercicios actuales del día por los de la plantilla. ¿Continuar?')
-    ) {
-      selectedTemplate = '';
+    if (dayItems.length > 0) {
+      confirmTpl = true;
       return;
     }
+    applyTemplate();
+  }
+  function applyTemplate() {
+    const tpl = data.templates?.find((t) => t.id === selectedTemplate);
+    if (!tpl) return;
     dayItems = tpl.items.map((it) => ({
       id: crypto.randomUUID(),
       exercise: it.exercise as Exercise,
@@ -391,17 +399,34 @@
   </div>
 
   {#if data.workout}
-    <form method="POST" action="?/delete" class="text-center pt-4">
+    <div class="text-center pt-4">
       <button
-        type="submit"
-        onclick={(e) => !confirm('¿Borrar este entreno entero? No se puede deshacer.') && e.preventDefault()}
+        type="button"
+        onclick={() => (confirmDelete = true)}
         class="text-sm text-danger hover:text-danger/80"
       >
         Borrar entreno del día
       </button>
-    </form>
+    </div>
   {/if}
 </div>
+
+<ConfirmModal
+  bind:open={confirmTpl}
+  title="Cargar plantilla"
+  message="Esto reemplazará los ejercicios actuales del día por los de la plantilla."
+  confirmLabel="Reemplazar"
+  danger={false}
+  onconfirm={applyTemplate}
+/>
+
+<ConfirmModal
+  bind:open={confirmDelete}
+  action="?/delete"
+  title="Borrar entreno del día"
+  message="Se borrará el entreno completo de este día. No se puede deshacer."
+  confirmLabel="Borrar entreno"
+/>
 
 <style>
   /* Estilos sutiles para el drag */

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
 
@@ -7,6 +8,14 @@
   let creating = $state(false);
   let showForm = $state(false);
   let filterCat = $state('');
+
+  // Modal de confirmación para borrar plantilla.
+  let confirmOpen = $state(false);
+  let toDelete = $state<{ id: string; name: string }>({ id: '', name: '' });
+  function askDelete(id: string, name: string) {
+    toDelete = { id, name };
+    confirmOpen = true;
+  }
 
   const catLabels: Record<string, string> = {
     hipertrofia: 'Hipertrofia',
@@ -138,22 +147,26 @@
           </a>
           <div class="flex items-center gap-3 flex-shrink-0">
             <a href="/templates/{t.id}" class="text-xs text-primary hover:underline">Editar</a>
-            <form method="POST" action="?/delete" use:enhance>
-              <input type="hidden" name="template_id" value={t.id} />
-              <button
-                type="submit"
-                class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
-                title="Borrar plantilla"
-                onclick={(e) => {
-                  if (!confirm('¿Borrar esta plantilla? No afecta a los entrenos ya asignados.')) e.preventDefault();
-                }}
-              >
-                ×
-              </button>
-            </form>
+            <button
+              type="button"
+              class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
+              aria-label="Borrar plantilla {t.name}"
+              onclick={() => askDelete(t.id, t.name)}
+            >
+              ×
+            </button>
           </div>
         </div>
       {/each}
     </div>
   {/if}
 </div>
+
+<ConfirmModal
+  bind:open={confirmOpen}
+  action="?/delete"
+  fields={{ template_id: toDelete.id }}
+  title="Borrar plantilla"
+  message={`Se borrará la plantilla "${toDelete.name}". No afecta a los entrenos ya asignados.`}
+  confirmLabel="Borrar plantilla"
+/>
