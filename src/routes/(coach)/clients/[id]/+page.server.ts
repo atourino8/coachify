@@ -6,14 +6,14 @@ import { addDays, formatDateISO, todayISOLocal, currentMonthISO } from '$lib/wee
 import { materializeTemplateWorkout } from '$lib/workouts';
 import type { PageServerLoad, Actions } from './$types';
 
-const WINDOW_DAYS = 14;
+const WINDOW_DAYS = 7;
 
 type WorkoutRow = {
   id: string;
   date: string;
   title: string | null;
   notes: string | null;
-  workout_items: { id: string }[] | null;
+  workout_items: { id: string; order_index: number; exercise: { name: string } | null }[] | null;
 };
 
 export const load: PageServerLoad = async ({ params, url, locals: { supabase, user } }) => {
@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   const { data: workoutsRaw } = await supabase
     .from('workouts')
-    .select('id, date, title, notes, workout_items(id)')
+    .select('id, date, title, notes, workout_items(id, order_index, exercise:exercises(name))')
     .eq('client_id', params.id)
     .gte('date', rangeStart)
     .lte('date', rangeEnd);
@@ -75,17 +75,20 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     }
   }
 
-  // Indexar por fecha, añadiendo el flag done y el número de ejercicios.
+  // Indexar por fecha, añadiendo el flag done, el número de ejercicios y la
+  // lista de nombres (ordenada) para la vista semana.
   const workoutsByDate: Record<
     string,
-    { id: string; title: string | null; itemCount: number; done: boolean }
+    { id: string; title: string | null; itemCount: number; done: boolean; exercises: string[] }
   > = {};
   for (const w of workouts) {
+    const items = [...(w.workout_items ?? [])].sort((a, b) => a.order_index - b.order_index);
     workoutsByDate[w.date] = {
       id: w.id,
       title: w.title,
-      itemCount: (w.workout_items ?? []).length,
-      done: doneWorkoutIds.has(w.id)
+      itemCount: items.length,
+      done: doneWorkoutIds.has(w.id),
+      exercises: items.map((it) => it.exercise?.name).filter((n): n is string => !!n)
     };
   }
 

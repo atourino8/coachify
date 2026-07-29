@@ -104,7 +104,7 @@
         onclick={() => setView('window')}
         class="px-3 py-1.5 rounded-md transition-colors {view === 'window' ? 'bg-primary text-bg font-medium' : 'text-text-mute hover:text-text'}"
       >
-        Próximos días
+        Semana
       </button>
       <button
         onclick={() => setView('month')}
@@ -136,52 +136,64 @@
       <p class="text-sm mt-3">Cargando…</p>
     </div>
   {:else if view === 'window'}
-    <!-- ===== VISTA VENTANA (14 días) ===== -->
+    <!-- ===== VISTA SEMANA (7 días, con detalle de ejercicios) ===== -->
     <div class="flex items-center justify-between gap-4">
-      <button onclick={() => gotoWindow(-1)} class="btn-ghost text-sm py-2 px-4">← Anterior</button>
+      <button onclick={() => gotoWindow(-1)} class="btn-ghost text-sm py-2 px-4">← Semana anterior</button>
       <div class="text-center">
         <div class="text-xs uppercase tracking-wider text-text-mute">
-          {isTodayWindow ? 'Próximas 2 semanas' : 'Periodo'}
+          {isTodayWindow ? 'Próximos 7 días' : 'Semana'}
         </div>
         <div class="font-semibold">{windowRangeLabel()}</div>
         {#if !isTodayWindow}
           <button onclick={gotoToday} class="text-xs text-primary hover:underline mt-0.5">← Volver a hoy</button>
         {/if}
       </div>
-      <button onclick={() => gotoWindow(1)} class="btn-ghost text-sm py-2 px-4">Siguiente →</button>
+      <button onclick={() => gotoWindow(1)} class="btn-ghost text-sm py-2 px-4">Semana siguiente →</button>
     </div>
 
-    <div class="grid grid-cols-7 gap-2">
+    <div class="space-y-2">
       {#each windowCells as day (day.iso)}
         {@const workout = data.workoutsByDate[day.iso]}
         <a
           href="/clients/{data.client.id}/workouts/{day.iso}"
-          class="card transition-all min-h-[150px] flex flex-col relative
+          class="card flex items-stretch gap-4 py-3 transition-all
             {day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
-            {day.isPast ? 'opacity-45 hover:opacity-80' : 'hover:border-primary/50'}
+            {day.isPast ? 'opacity-55 hover:opacity-100' : 'hover:border-primary/50'}
             {workout && !day.isToday ? 'border-primary/30' : ''}"
         >
-          <div class="flex items-center justify-between mb-1">
-            <div class="text-xs uppercase tracking-wider {day.isToday ? 'text-primary font-semibold' : 'text-text-mute'}">{day.weekday}</div>
+          <!-- Columna de fecha -->
+          <div class="w-14 flex-shrink-0 text-center border-r border-text-mute/10 pr-3 flex flex-col justify-center">
+            <div class="text-[11px] uppercase tracking-wider {day.isToday ? 'text-primary font-semibold' : 'text-text-mute'}">{day.weekday}</div>
+            <div class="text-2xl font-bold leading-tight {day.isToday ? 'text-primary' : ''}">{day.dayNum}</div>
             {#if day.isToday}
-              <span class="text-[10px] font-bold uppercase tracking-wide bg-primary text-bg px-1.5 py-0.5 rounded">Hoy</span>
+              <div class="text-[9px] font-bold uppercase tracking-wide text-primary">Hoy</div>
             {/if}
           </div>
-          <div class="text-2xl font-bold {day.isToday ? 'text-primary' : ''}">{day.dayNum}</div>
 
-          {#if workout}
-            <div class="mt-2 flex-1">
-              <div class="text-sm font-medium truncate flex items-center gap-1">
+          <!-- Detalle del entreno -->
+          <div class="flex-1 min-w-0 flex flex-col justify-center">
+            {#if workout}
+              <div class="text-sm font-semibold flex items-center gap-1.5">
                 {#if workout.done}<span class="text-success" title="Completado">✓</span>{/if}
-                {workout.title ?? 'Entreno'}
+                <span class="truncate">{workout.title ?? 'Entreno'}</span>
+                <span class="text-xs text-text-mute font-normal flex-shrink-0">· {workout.itemCount} ej.</span>
               </div>
-              <div class="text-xs text-text-mute mt-1">{workout.itemCount} ej.</div>
-            </div>
-            <div class="text-xs text-primary mt-2">Editar →</div>
-          {:else}
-            <div class="flex-1 grid place-items-center text-text-mute/40 text-2xl">+</div>
-            <div class="text-xs text-text-mute mt-1 text-center">Añadir</div>
-          {/if}
+              {#if workout.exercises.length > 0}
+                <div class="text-xs text-text-mute mt-1 line-clamp-2">
+                  {workout.exercises.join(' · ')}
+                </div>
+              {/if}
+            {:else}
+              <div class="text-sm text-text-mute/60 flex items-center gap-1.5">
+                <span class="text-lg leading-none">+</span> Añadir entreno
+              </div>
+            {/if}
+          </div>
+
+          <!-- Acción -->
+          <div class="flex items-center text-xs text-primary flex-shrink-0">
+            {workout ? 'Editar →' : ''}
+          </div>
         </a>
       {/each}
     </div>
@@ -342,10 +354,4 @@
       </form>
     </div>
   {/if}
-
-  <div class="card text-center bg-primary/5 border-primary/20">
-    <p class="text-sm text-text-mute">
-      Click en un día para abrir el constructor y añadir ejercicios de tu biblioteca.
-    </p>
-  </div>
 </div>
