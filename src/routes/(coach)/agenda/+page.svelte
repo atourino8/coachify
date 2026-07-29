@@ -40,6 +40,10 @@
     confirmOpen = true;
   }
 
+  // --- Menú de acciones (⋮) y paneles colapsables por fila ---
+  let openMenu = $state<string | null>(null); // id de la cita con el menú abierto
+  let showWorkout = $state<string | null>(null); // id de la cita con el panel "asignar entreno" abierto
+
   // --- Proponer cita (coach) ---
   let showPropose = $state(false);
   let npClient = $state('');
@@ -66,20 +70,6 @@
     presencial: 'Presencial',
     online: 'Online',
     remoto: 'Remoto'
-  };
-  const statusLabel: Record<string, string> = {
-    requested: 'Pendiente',
-    confirmed: 'Confirmada',
-    rejected: 'Rechazada',
-    cancelled: 'Cancelada',
-    completed: 'Completada'
-  };
-  const statusClass: Record<string, string> = {
-    requested: 'bg-warning/15 text-warning',
-    confirmed: 'bg-success/15 text-success',
-    rejected: 'bg-danger/15 text-danger',
-    cancelled: 'bg-text-mute/15 text-text-mute',
-    completed: 'bg-primary/15 text-primary'
   };
 
   function fmt(iso: string) {
@@ -183,84 +173,48 @@
       <button type="submit" disabled={!edStartsAt} class="btn-primary text-sm py-1.5 px-3">Guardar</button>
       <button type="button" onclick={() => (editingId = null)} class="text-xs text-text-mute hover:text-text">Cancelar</button>
     </form>
-  {:else}
-    <button type="button" onclick={() => openEdit(s)} class="text-xs text-text-mute hover:text-primary transition-colors">
-      ✎ Cambiar fecha/hora
-    </button>
   {/if}
 {/snippet}
 
 {#snippet workoutBlock(s: (typeof data.pending)[number])}
   {@const clientWorkouts = sortedWorkouts(s.client_id)}
-  <div class="border-t border-text-mute/10 pt-3 mt-1">
-    {#if s.workout}
-      <!-- Ya tiene entreno ligado -->
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-sm min-w-0">
-          <span class="text-primary">🏋️</span>
-          <span class="font-medium truncate">{workoutLabel(s.workout.date, s.client?.full_name, s.workout.title)}</span>
-        </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-xs text-primary hover:underline">
-            Editar
-          </a>
-          <button
-            type="button"
-            class="text-xs text-text-mute hover:text-danger transition-colors"
-            onclick={() => ask({
-              action: '?/unassignWorkout',
-              fields: { session_id: s.id },
-              title: 'Quitar entreno',
-              message: 'Se desligará el entreno de esta cita. Podrás volver a asignarlo cuando quieras.',
-              confirmLabel: 'Quitar entreno',
-              danger: true
-            })}
-          >
-            Quitar
-          </button>
-        </div>
-      </div>
-    {:else}
-      <!-- Sin entreno: usar plantilla, asignar existente, o crear desde cero -->
-      <div class="space-y-2">
-        <span class="text-xs uppercase tracking-wider text-text-mute">Entreno de la cita</span>
+  <div class="border-t border-text-mute/10 pt-3 mt-2 space-y-2">
+    <span class="text-xs uppercase tracking-wider text-text-mute">Asignar entreno</span>
 
-        {#if data.templates.length > 0}
-          <form method="POST" action="?/assignTemplate" use:enhance class="flex items-center gap-2">
-            <input type="hidden" name="session_id" value={s.id} />
-            <select name="template_id" required
-              class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
-              <option value="" disabled selected>📋 Usar una plantilla…</option>
-              {#each data.templates as t (t.id)}
-                <option value={t.id}>{t.name} ({t.itemCount} ej.)</option>
-              {/each}
-            </select>
-            <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Usar</button>
-          </form>
-        {/if}
-
-        {#if clientWorkouts.length > 0}
-          <form method="POST" action="?/assignWorkout" use:enhance class="flex items-center gap-2">
-            <input type="hidden" name="session_id" value={s.id} />
-            <select name="workout_id" required
-              class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
-              <option value="" disabled selected>Asignar un entreno existente…</option>
-              {#each clientWorkouts as w (w.id)}
-                <option value={w.id}>{workoutLabel(w.date, s.client?.full_name, w.title)}</option>
-              {/each}
-            </select>
-            <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
-          </form>
-        {/if}
-
-        <a
-          href="/clients/{s.client_id}/workouts/{sessionDate(s.starts_at)}?session={s.id}"
-          class="inline-block text-xs text-primary hover:underline"
-        >
-          + Crear entreno desde cero
-        </a>
-      </div>
+    {#if data.templates.length > 0}
+      <form method="POST" action="?/assignTemplate" use:enhance class="flex items-center gap-2">
+        <input type="hidden" name="session_id" value={s.id} />
+        <select name="template_id" required
+          class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+          <option value="" disabled selected>Usar una plantilla…</option>
+          {#each data.templates as t (t.id)}
+            <option value={t.id}>{t.name} ({t.itemCount} ej.)</option>
+          {/each}
+        </select>
+        <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Usar</button>
+      </form>
     {/if}
+
+    {#if clientWorkouts.length > 0}
+      <form method="POST" action="?/assignWorkout" use:enhance class="flex items-center gap-2">
+        <input type="hidden" name="session_id" value={s.id} />
+        <select name="workout_id" required
+          class="flex-1 px-3 py-1.5 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+          <option value="" disabled selected>Asignar un entreno existente…</option>
+          {#each clientWorkouts as w (w.id)}
+            <option value={w.id}>{workoutLabel(w.date, s.client?.full_name, w.title)}</option>
+          {/each}
+        </select>
+        <button type="submit" class="text-xs text-primary hover:underline whitespace-nowrap">Asignar</button>
+      </form>
+    {/if}
+
+    <a
+      href="/clients/{s.client_id}/workouts/{sessionDate(s.starts_at)}?session={s.id}"
+      class="inline-block text-xs text-primary hover:underline"
+    >
+      + Crear entreno desde cero
+    </a>
   </div>
 {/snippet}
 
@@ -374,97 +328,110 @@
     {:else}
       {#each upcoming as s (s.id)}
         {@const b = badge(s)}
-        <div class="card p-4 space-y-3">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[11px] px-2 py-0.5 rounded-full {b.cls}">{b.label}</span>
+        <div class="card p-3">
+          <div class="flex items-center justify-between gap-3">
+            <!-- Info compacta de la cita -->
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {b.cls}">{b.label}</span>
                 <span class="font-semibold truncate">{s.client?.full_name ?? 'Cliente'}</span>
               </div>
-              <div class="text-xs text-text-mute capitalize mt-1">
+              <div class="text-xs text-text-mute capitalize mt-0.5">
                 {fmt(s.starts_at)} · {modalityLabel[s.modality] ?? s.modality}
               </div>
+              <div class="text-xs mt-1 flex items-center gap-1.5 min-w-0">
+                {#if s.workout}
+                  <span class="text-primary flex-shrink-0" aria-hidden="true">🏋️</span>
+                  <a href="/clients/{s.client_id}/workouts/{s.workout.date}" class="text-primary hover:underline truncate">
+                    {s.workout.title ?? 'Entreno'}
+                  </a>
+                {:else}
+                  <span class="text-text-mute/60">Sin entreno</span>
+                  <button type="button" onclick={() => (showWorkout = showWorkout === s.id ? null : s.id)} class="text-primary hover:underline">asignar</button>
+                {/if}
+              </div>
             </div>
+
+            <!-- Acciones: Confirmar (si lo pidió el cliente) + menú ⋮ -->
             <div class="flex items-center gap-1.5 flex-shrink-0">
-              {#if s.status === 'requested' && s.proposedByCoach}
-                <button
-                  type="button"
-                  class="action-danger"
-                  onclick={() => ask({
-                    action: '?/cancel', fields: { session_id: s.id },
-                    title: 'Cancelar propuesta',
-                    message: `Se retirará la propuesta de cita enviada a ${clientName(s)}.`,
-                    confirmLabel: 'Cancelar propuesta'
-                  })}
-                >
-                  Cancelar
-                </button>
-              {:else if s.status === 'requested'}
+              {#if s.status === 'requested' && !s.proposedByCoach}
                 <form method="POST" action="?/confirm" use:enhance>
                   <input type="hidden" name="session_id" value={s.id} />
                   <button type="submit" class="action-primary">Confirmar</button>
                 </form>
-                <button
-                  type="button"
-                  class="action-danger"
-                  onclick={() => ask({
-                    action: '?/reject', fields: { session_id: s.id },
-                    title: 'Rechazar solicitud',
-                    message: `Vas a rechazar la solicitud de cita de ${clientName(s)}. Se le notificará.`,
-                    confirmLabel: 'Rechazar'
-                  })}
-                >
-                  Rechazar
-                </button>
-              {:else}
-                <button
-                  type="button"
-                  class="action-neutral"
-                  onclick={() => ask({
-                    action: '?/complete', fields: { session_id: s.id },
-                    title: 'Marcar como hecha',
-                    message: `¿Marcar la cita con ${clientName(s)} como completada?`,
-                    confirmLabel: 'Marcar hecha', danger: false
-                  })}
-                >
-                  Marcar hecha
-                </button>
-                <button
-                  type="button"
-                  class="action-danger"
-                  onclick={() => ask({
-                    action: '?/cancel', fields: { session_id: s.id },
-                    title: 'Cancelar cita',
-                    message: `Se cancelará la cita con ${clientName(s)}. Se le notificará.`,
-                    confirmLabel: 'Sí, cancelar'
-                  })}
-                >
-                  Cancelar
-                </button>
               {/if}
+
+              <div class="relative">
+                <button
+                  type="button"
+                  aria-label="Más acciones"
+                  aria-haspopup="menu"
+                  aria-expanded={openMenu === s.id}
+                  onclick={() => (openMenu = openMenu === s.id ? null : s.id)}
+                  class="h-8 w-8 grid place-items-center rounded-md text-text-mute hover:text-text hover:bg-surface-2 transition-colors"
+                >
+                  <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" />
+                  </svg>
+                </button>
+
+                {#if openMenu === s.id}
+                  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+                  <div class="fixed inset-0 z-10" role="presentation" onclick={() => (openMenu = null)}></div>
+                  <div class="absolute right-0 top-full mt-1 z-20 w-52 bg-surface-2 border border-text-mute/20 rounded-md shadow-lg py-1 text-sm" role="menu">
+                    <button type="button" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-bg transition-colors"
+                      onclick={() => { openEdit(s); openMenu = null; }}>
+                      Reprogramar
+                    </button>
+                    {#if s.workout}
+                      <a href="/clients/{s.client_id}/workouts/{s.workout.date}" role="menuitem" class="block px-3 py-2 hover:bg-bg transition-colors">
+                        Editar entreno
+                      </a>
+                      <button type="button" role="menuitem" class="w-full text-left px-3 py-2 text-danger hover:bg-danger/10 transition-colors"
+                        onclick={() => { openMenu = null; ask({ action: '?/unassignWorkout', fields: { session_id: s.id }, title: 'Quitar entreno', message: 'Se desligará el entreno de esta cita. Podrás volver a asignarlo cuando quieras.', confirmLabel: 'Quitar entreno' }); }}>
+                        Quitar entreno
+                      </button>
+                    {:else}
+                      <button type="button" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-bg transition-colors"
+                        onclick={() => { showWorkout = s.id; openMenu = null; }}>
+                        Asignar entreno
+                      </button>
+                    {/if}
+
+                    <div class="my-1 border-t border-text-mute/10"></div>
+
+                    {#if s.status === 'confirmed'}
+                      <button type="button" role="menuitem" class="w-full text-left px-3 py-2 hover:bg-bg transition-colors"
+                        onclick={() => { openMenu = null; ask({ action: '?/complete', fields: { session_id: s.id }, title: 'Marcar como hecha', message: `¿Marcar la cita con ${clientName(s)} como completada?`, confirmLabel: 'Marcar hecha', danger: false }); }}>
+                        Marcar hecha
+                      </button>
+                    {/if}
+                    {#if s.status === 'requested' && !s.proposedByCoach}
+                      <button type="button" role="menuitem" class="w-full text-left px-3 py-2 text-danger hover:bg-danger/10 transition-colors"
+                        onclick={() => { openMenu = null; ask({ action: '?/reject', fields: { session_id: s.id }, title: 'Rechazar solicitud', message: `Vas a rechazar la solicitud de cita de ${clientName(s)}. Se le notificará.`, confirmLabel: 'Rechazar' }); }}>
+                        Rechazar
+                      </button>
+                    {/if}
+                    <button type="button" role="menuitem" class="w-full text-left px-3 py-2 text-danger hover:bg-danger/10 transition-colors"
+                      onclick={() => { openMenu = null; ask(s.proposedByCoach
+                        ? { action: '?/cancel', fields: { session_id: s.id }, title: 'Cancelar propuesta', message: `Se retirará la propuesta de cita enviada a ${clientName(s)}.`, confirmLabel: 'Cancelar propuesta' }
+                        : { action: '?/cancel', fields: { session_id: s.id }, title: 'Cancelar cita', message: `Se cancelará la cita con ${clientName(s)}. Se le notificará.`, confirmLabel: 'Sí, cancelar' }); }}>
+                      {s.proposedByCoach ? 'Cancelar propuesta' : 'Cancelar cita'}
+                    </button>
+                  </div>
+                {/if}
+              </div>
             </div>
           </div>
 
-          {#if s.notes}<div class="text-sm bg-bg rounded-md p-2 italic">{s.notes}</div>{/if}
-          {@render workoutBlock(s)}
+          {#if s.notes}<div class="text-sm bg-bg rounded-md p-2 italic mt-2">{s.notes}</div>{/if}
+          {#if showWorkout === s.id && !s.workout}{@render workoutBlock(s)}{/if}
           {@render rescheduleBlock(s)}
         </div>
       {/each}
     {/if}
   </section>
 
-  <!-- Historial -->
-  {#if data.history.length > 0}
-    <section class="space-y-3">
-      <h2 class="text-lg font-semibold">Historial</h2>
-      {#each data.history as s (s.id)}
-        <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-text-mute/10">
-          <span class="capitalize">{s.client?.full_name ?? 'Cliente'} · <span class="text-text-mute">{fmt(s.starts_at)}</span></span>
-          <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
-        </div>
-      {/each}
-    </section>
-  {/if}
 </div>
 
 <ConfirmModal
