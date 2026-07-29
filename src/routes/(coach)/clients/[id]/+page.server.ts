@@ -102,6 +102,62 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     (t) => ({ id: t.id, name: t.name, category: t.category, itemCount: (t.workout_template_items ?? []).length })
   );
 
+  // Ficha del cliente (tabla client_info, solo-coach vía RLS).
+  const { data: infoRaw } = await supabase
+    .from('client_info')
+    .select('*')
+    .eq('client_id', params.id)
+    .maybeSingle();
+  const info = infoRaw ?? null;
+
+  // ---- Historial: entrenos pasados (con flag done) + citas pasadas ----
+  const today = todayISOLocal();
+
+  const { data: pastWorkoutsRaw } = await supabase
+    .from('workouts')
+    .select('id, date, title, workout_items(id)')
+    .eq('client_id', params.id)
+    .lt('date', today)
+    .order('date', { ascending: false })
+    .limit(40);
+  const pastWorkouts = (pastWorkoutsRaw ?? []) as unknown as {
+    id: string; date: string; title: string | null; workout_items: { id: string }[] | null;
+  }[];
+
+  const pastItemIds = pastWorkouts.flatMap((w) => (w.workout_items ?? []).map((it) => it.id));
+  const pastDone = new Set<string>();
+  if (pastItemIds.length > 0) {
+    const { data: logs } = await supabase
+      .from('set_logs')
+      .select('workout_item_id')
+      .eq('client_id', params.id)
+      .in('workout_item_id', pastItemIds);
+    const logged = new Set((logs ?? []).map((l) => (l as { workout_item_id: string }).workout_item_id));
+    for (const w of pastWorkouts) {
+      if ((w.workout_items ?? []).some((it) => logged.has(it.id))) pastDone.add(w.id);
+    }
+  }
+  const historyWorkouts = pastWorkouts.map((w) => ({
+    id: w.id,
+    date: w.date,
+    title: w.title,
+    itemCount: (w.workout_items ?? []).length,
+    done: pastDone.has(w.id)
+  }));
+
+  const nowISO = new Date().toISOString();
+  const { data: pastSessionsRaw } = await supabase
+    .from('sessions')
+    .select('id, starts_at, status, modality')
+    .eq('client_id', params.id)
+    .eq('coach_id', user.id)
+    .lt('starts_at', nowISO)
+    .order('starts_at', { ascending: false })
+    .limit(40);
+  const historySessions = (pastSessionsRaw ?? []) as {
+    id: string; starts_at: string; status: string; modality: string;
+  }[];
+
   return {
     client,
     view,
@@ -109,11 +165,61 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     windowDays: WINDOW_DAYS,
     monthISO,
     workoutsByDate,
-    templates
+    templates,
+    info,
+    historyWorkouts,
+    historySessions
   };
 };
 
 export const actions: Actions = {
+  // Guarda (upsert) la ficha del cliente.
+  saveInfo: async ({ request, params, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+
+    // Verificar que el cliente es de este coach.
+    const { data: owned } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', params.id)
+      .eq('coach_id', user.id)
+      .maybeSingle();
+    if (!owned) return fail(403, { error: 'Ese cliente no es tuyo.' });
+
+    const fd = await request.formData();
+    const str = (k: string) => {
+      const v = (fd.get(k) as string | null)?.trim();
+      return v ? v : null;
+    };
+    const num = (k: string) => {
+      const v = str(k);
+      if (v === null) return null;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    const level = str('level');
+    const validLevel = level && ['principiante', 'intermedio', 'avanzado'].includes(level) ? level : null;
+
+    const row = {
+      client_id: params.id,
+      coach_id: user.id,
+      goals: str('goals'),
+      injuries: str('injuries'),
+      training_days_per_week: num('training_days_per_week'),
+      level: validLevel,
+      height_cm: num('height_cm'),
+      birth_date: str('birth_date'),
+      coach_notes: str('coach_notes')
+    };
+
+    const { error: upErr } = await supabase
+      .from('client_info')
+      .upsert(row as never, { onConflict: 'client_id' });
+    if (upErr) return fail(500, { error: upErr.message });
+
+    return { success: true, infoSaved: true };
+  },
+
   // Duplica un entreno (workout + sus workout_items) a otra fecha.
   duplicate: async ({ request, params, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');

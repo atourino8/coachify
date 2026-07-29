@@ -31,6 +31,46 @@
 
   const weekdayHeaders = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
+  // --- Pestañas (Entrenos / Ficha / Historial) ---
+  let tab = $state<'entrenos' | 'ficha' | 'historial'>('entrenos');
+
+  // --- Ficha del cliente ---
+  const LEVELS = [
+    { value: 'principiante', label: 'Principiante' },
+    { value: 'intermedio', label: 'Intermedio' },
+    { value: 'avanzado', label: 'Avanzado' }
+  ];
+  let savingInfo = $state(false);
+  // svelte-ignore state_referenced_locally
+  let levelSel = $state(data.info?.level ?? '');
+
+  function ageFrom(birth: string | null | undefined): number | null {
+    if (!birth) return null;
+    const b = new Date(birth);
+    if (isNaN(b.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+    return age;
+  }
+
+  // --- Historial ---
+  const sessionStatusLabel: Record<string, string> = {
+    requested: 'Pendiente', confirmed: 'Confirmada', rejected: 'Rechazada',
+    cancelled: 'Cancelada', completed: 'Completada'
+  };
+  const sessionStatusClass: Record<string, string> = {
+    requested: 'bg-warning/15 text-warning', confirmed: 'bg-success/15 text-success',
+    rejected: 'bg-danger/15 text-danger', cancelled: 'bg-text-mute/15 text-text-mute',
+    completed: 'bg-primary/15 text-primary'
+  };
+  function fmtDateTime(iso: string) {
+    return new Date(iso).toLocaleString('es-ES', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
   function gotoWindow(offset: number) {
     const newStart = addDays(windowStartDate, offset * data.windowDays);
     goto(`?view=window&start=${formatDateISO(newStart)}`, { replaceState: false });
@@ -89,30 +129,25 @@
 </svelte:head>
 
 <div class="space-y-8">
-  <div class="flex items-center justify-between">
-    <div>
-      <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
-      <h1 class="text-3xl font-bold tracking-tight mt-3">{data.client.full_name}</h1>
-      <p class="text-text-mute text-sm mt-1">
-        Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
-      </p>
-    </div>
+  <div>
+    <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
+    <h1 class="text-3xl font-bold tracking-tight mt-3">{data.client.full_name}</h1>
+    <p class="text-text-mute text-sm mt-1">
+      Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
+    </p>
+  </div>
 
-    <!-- Toggle de vista -->
-    <div class="flex bg-bg border border-text-mute/15 rounded-lg p-1 text-sm">
+  <!-- Pestañas -->
+  <div class="flex gap-1 border-b border-text-mute/10">
+    {#each [{ v: 'entrenos', l: 'Entrenos' }, { v: 'ficha', l: 'Ficha' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
-        onclick={() => setView('window')}
-        class="px-3 py-1.5 rounded-md transition-colors {view === 'window' ? 'bg-primary text-bg font-medium' : 'text-text-mute hover:text-text'}"
+        onclick={() => (tab = t.v as typeof tab)}
+        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+          {tab === t.v ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
       >
-        Semana
+        {t.l}
       </button>
-      <button
-        onclick={() => setView('month')}
-        class="px-3 py-1.5 rounded-md transition-colors {view === 'month' ? 'bg-primary text-bg font-medium' : 'text-text-mute hover:text-text'}"
-      >
-        Mes
-      </button>
-    </div>
+    {/each}
   </div>
 
   {#if form?.error}
@@ -128,6 +163,30 @@
       Programado: {form.created} entreno{form.created === 1 ? '' : 's'} creado{form.created === 1 ? '' : 's'}{form.skipped > 0 ? ` · ${form.skipped} día(s) omitido(s) porque ya tenían entreno` : ''}.
     </p>
   {/if}
+  {#if form?.success && form?.infoSaved}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Ficha guardada.
+    </p>
+  {/if}
+
+{#if tab === 'entrenos'}
+  <!-- Toggle de vista (semana / mes) -->
+  <div class="flex justify-end">
+    <div class="flex bg-bg border border-text-mute/15 rounded-lg p-1 text-sm">
+      <button
+        onclick={() => setView('window')}
+        class="px-3 py-1.5 rounded-md transition-colors {view === 'window' ? 'bg-primary text-bg font-medium' : 'text-text-mute hover:text-text'}"
+      >
+        Semana
+      </button>
+      <button
+        onclick={() => setView('month')}
+        class="px-3 py-1.5 rounded-md transition-colors {view === 'month' ? 'bg-primary text-bg font-medium' : 'text-text-mute hover:text-text'}"
+      >
+        Mes
+      </button>
+    </div>
+  </div>
 
   {#if navigating.to}
     <!-- Estado de carga al cambiar de vista/periodo -->
@@ -354,4 +413,115 @@
       </form>
     </div>
   {/if}
+
+{:else if tab === 'ficha'}
+  <!-- ===== FICHA DEL CLIENTE ===== -->
+  <form
+    method="POST"
+    action="?/saveInfo"
+    use:enhance={() => {
+      savingInfo = true;
+      return async ({ update }) => { await update(); savingInfo = false; };
+    }}
+    class="card space-y-5 max-w-2xl"
+  >
+    <div class="grid sm:grid-cols-2 gap-4">
+      <div class="sm:col-span-2">
+        <label for="goals" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Objetivos</label>
+        <textarea id="goals" name="goals" rows="2" maxlength="500"
+          placeholder="ej: ganar masa muscular, preparar una carrera de 10k…"
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none">{data.info?.goals ?? ''}</textarea>
+      </div>
+      <div class="sm:col-span-2">
+        <label for="injuries" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Lesiones / limitaciones</label>
+        <textarea id="injuries" name="injuries" rows="2" maxlength="500"
+          placeholder="ej: hombro derecho delicado, evitar impacto en rodillas…"
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none">{data.info?.injuries ?? ''}</textarea>
+      </div>
+      <div>
+        <label for="freq" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Días de entreno / semana</label>
+        <input id="freq" name="training_days_per_week" type="number" min="0" max="14" value={data.info?.training_days_per_week ?? ''}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20" />
+      </div>
+      <div>
+        <label for="level" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Nivel</label>
+        <select id="level" name="level" bind:value={levelSel}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+          <option value="">Sin especificar</option>
+          {#each LEVELS as l (l.value)}<option value={l.value}>{l.label}</option>{/each}
+        </select>
+      </div>
+      <div>
+        <label for="height" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Altura (cm)</label>
+        <input id="height" name="height_cm" type="number" min="50" max="260" value={data.info?.height_cm ?? ''}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20" />
+      </div>
+      <div>
+        <label for="birth" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Fecha de nacimiento</label>
+        <input id="birth" name="birth_date" type="date" value={data.info?.birth_date ?? ''}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20" />
+        {#if ageFrom(data.info?.birth_date)}
+          <p class="text-xs text-text-mute mt-1">{ageFrom(data.info?.birth_date)} años</p>
+        {/if}
+      </div>
+      <div class="sm:col-span-2">
+        <label for="notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+          Notas privadas <span class="normal-case tracking-normal text-text-mute/70">(solo tú las ves)</span>
+        </label>
+        <textarea id="notes" name="coach_notes" rows="3" maxlength="1000"
+          placeholder="Cualquier apunte para ti: preferencias, contexto, recordatorios…"
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none">{data.info?.coach_notes ?? ''}</textarea>
+      </div>
+    </div>
+    <button type="submit" disabled={savingInfo} class="btn-primary">
+      {savingInfo ? 'Guardando…' : 'Guardar ficha'}
+    </button>
+  </form>
+
+{:else}
+  <!-- ===== HISTORIAL ===== -->
+  <div class="space-y-8">
+    <section class="space-y-3">
+      <h2 class="text-lg font-semibold">Entrenos anteriores</h2>
+      {#if data.historyWorkouts.length === 0}
+        <p class="text-sm text-text-mute">Todavía no hay entrenos pasados.</p>
+      {:else}
+        <div class="space-y-2">
+          {#each data.historyWorkouts as w (w.id)}
+            <a href="/clients/{data.client.id}/workouts/{w.date}" class="card p-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="font-medium text-sm truncate flex items-center gap-1.5">
+                  {#if w.done}<span class="text-success" title="Completado">✓</span>{/if}
+                  {w.title ?? 'Entreno'}
+                </div>
+                <div class="text-xs text-text-mute mt-0.5">{formatHumanDate(w.date)} · {w.itemCount} ej.</div>
+              </div>
+              <span class="text-xs flex-shrink-0 {w.done ? 'text-success' : 'text-text-mute'}">
+                {w.done ? 'Hecho' : 'Sin registrar'}
+              </span>
+            </a>
+          {/each}
+        </div>
+      {/if}
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-lg font-semibold">Citas anteriores</h2>
+      {#if data.historySessions.length === 0}
+        <p class="text-sm text-text-mute">No hay citas pasadas.</p>
+      {:else}
+        <div class="space-y-1.5">
+          {#each data.historySessions as s (s.id)}
+            <div class="flex items-center justify-between gap-3 text-sm py-2 border-b border-text-mute/10">
+              <span class="capitalize text-text-mute">{fmtDateTime(s.starts_at)}</span>
+              <span class="text-xs px-2 py-0.5 rounded-full {sessionStatusClass[s.status] ?? ''}">
+                {sessionStatusLabel[s.status] ?? s.status}
+              </span>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
+  </div>
+{/if}
 </div>

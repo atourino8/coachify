@@ -10,6 +10,20 @@ export type SessionStatus =
   | 'requested' | 'confirmed' | 'rejected' | 'cancelled' | 'completed';
 export type Modality = 'presencial' | 'online' | 'remoto';
 export type Feedback = 'easy' | 'just_right' | 'hard';
+export type ClientLevel = 'principiante' | 'intermedio' | 'avanzado';
+
+export interface ClientInfo {
+  client_id: string;
+  coach_id: string;
+  goals: string | null;
+  injuries: string | null;
+  training_days_per_week: number | null;
+  level: ClientLevel | null;
+  height_cm: number | null;
+  birth_date: string | null;
+  coach_notes: string | null;
+  updated_at: string;
+}
 
 export interface Profile {
   id: string;
@@ -220,6 +234,11 @@ export interface Database {
         Row: AvailabilitySlot;
         Insert: Omit<AvailabilitySlot, 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Omit<AvailabilitySlot, 'id' | 'coach_id' | 'created_at'>>;
+      };
+      client_info: {
+        Row: ClientInfo;
+        Insert: Omit<ClientInfo, 'updated_at'> & { updated_at?: string };
+        Update: Partial<Omit<ClientInfo, 'client_id' | 'coach_id'>>;
       };
     };
     Views: {};
