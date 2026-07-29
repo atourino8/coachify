@@ -165,6 +165,7 @@
     <div
       class="card w-full max-w-md space-y-4"
       role="dialog"
+      tabindex="-1"
       aria-modal="true"
       aria-labelledby="invite-title"
       onclick={(e) => e.stopPropagation()}

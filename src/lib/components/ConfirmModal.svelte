@@ -56,6 +56,7 @@
     <div
       class="card w-full max-w-sm space-y-4"
       role="dialog"
+      tabindex="-1"
       aria-modal="true"
       aria-labelledby="confirm-title"
       aria-describedby="confirm-msg"
