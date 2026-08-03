@@ -7,7 +7,7 @@
   const links = [
     { href: '/dashboard', label: 'Inicio', match: ['/dashboard'] },
     { href: '/exercises', label: 'Biblioteca', match: ['/exercises', '/templates'] },
-    { href: '/clients', label: 'Clientes', match: ['/clients'] },
+    { href: '/clients', label: 'Clientes', match: ['/clients', '/groups'] },
     { href: '/agenda', label: 'Agenda', match: ['/agenda', '/availability'] }
   ];
 

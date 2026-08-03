@@ -13,6 +13,22 @@ export type Feedback = 'easy' | 'just_right' | 'hard';
 export type ClientLevel = 'principiante' | 'intermedio' | 'avanzado';
 export type TechniqueVideoKind = 'first' | 'latest';
 
+export interface ClientGroup {
+  id: string;
+  coach_id: string;
+  name: string;
+  notes: string | null;
+  company: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientGroupMember {
+  group_id: string;
+  client_id: string;
+  added_at: string;
+}
+
 export interface TechniqueVideo {
   id: string;
   client_id: string;
@@ -260,6 +276,16 @@ export interface Database {
         Row: TechniqueVideo;
         Insert: Omit<TechniqueVideo, 'id' | 'created_at' | 'updated_at'> & { id?: string };
         Update: Partial<Omit<TechniqueVideo, 'id' | 'client_id' | 'created_at'>>;
+      };
+      client_groups: {
+        Row: ClientGroup;
+        Insert: Omit<ClientGroup, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Update: Partial<Omit<ClientGroup, 'id' | 'coach_id' | 'created_at'>>;
+      };
+      client_group_members: {
+        Row: ClientGroupMember;
+        Insert: Omit<ClientGroupMember, 'added_at'> & { added_at?: string };
+        Update: Partial<ClientGroupMember>;
       };
     };
     Views: {};

@@ -62,7 +62,15 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   const active = enriched.filter((c) => c.accepted);
   const pending = enriched.filter((c) => !c.accepted);
 
-  return { active, pending };
+  // Grupos del coach (para poder invitar directamente a uno).
+  const { data: groupsRaw } = await supabase
+    .from('client_groups')
+    .select('id, name')
+    .eq('coach_id', user.id)
+    .order('name');
+  const groups = (groupsRaw ?? []) as { id: string; name: string }[];
+
+  return { active, pending, groups };
 };
 
 // Envía (o reenvía) la invitación a un email, vinculando el cliente al coach.
@@ -132,6 +140,64 @@ export const actions: Actions = {
     if ('error' in res) return fail(500, { error: res.error });
 
     return { success: true, resent_email: email };
+  },
+
+  // Invitación MASIVA: una lista de emails de golpe, opcionalmente a un grupo.
+  // Informa de cuáles se enviaron y cuáles fallaron: con el envío por defecto
+  // de Supabase hay límites de tasa bajos y algunos pueden rebotar.
+  inviteBulk: async ({ request, locals: { user }, url }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const raw = ((fd.get('emails') as string) ?? '').trim();
+    const groupId = ((fd.get('group_id') as string) ?? '').trim() || null;
+    if (!raw) return fail(400, { error: 'Pega al menos un email.' });
+
+    // Acepta separación por saltos de línea, comas o punto y coma.
+    const entries = raw
+      .split(/[\n,;]+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const ok: string[] = [];
+    const errors: { email: string; reason: string }[] = [];
+
+    for (const entry of entries) {
+      // Permite "Nombre <email@dominio.com>" o solo el email.
+      const m = entry.match(/^(.*?)[<\s]*([^\s<>]+@[^\s<>]+)>?$/);
+      const email = (m ? m[2] : entry).trim().toLowerCase();
+      const nameGuess = (m && m[1] ? m[1] : '').replace(/["']/g, '').trim();
+
+      if (!re.test(email)) {
+        errors.push({ email: entry, reason: 'Email no válido' });
+        continue;
+      }
+
+      const full_name = nameGuess || email.split('@')[0];
+      const res = await sendInvite(url.origin, user.id, email, full_name);
+      if ('error' in res) {
+        errors.push({ email, reason: res.error });
+        continue;
+      }
+      ok.push(email);
+
+      // Si venía un grupo, meter al cliente recién invitado.
+      if (groupId) {
+        await supabaseAdmin
+          .from('client_group_members')
+          .upsert({ group_id: groupId, client_id: res.userId } as never, {
+            onConflict: 'group_id,client_id'
+          });
+      }
+    }
+
+    return {
+      success: true,
+      bulk: true,
+      sent: ok.length,
+      total: entries.length,
+      errors: errors.slice(0, 10)
+    };
   },
 
   // Cancela una invitación pendiente: borra el usuario auth (y su profile).

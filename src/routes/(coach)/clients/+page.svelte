@@ -6,10 +6,20 @@
   let { data, form } = $props();
 
   let tab = $state<'active' | 'pending'>('active');
-  // Se abre solo con ?invite=1 (atajo desde el home).
+  // Se abre solo con ?invite=1 (atajo desde el home o desde un grupo).
   // svelte-ignore state_referenced_locally
   let showInvite = $state(page.url.searchParams.get('invite') === '1');
   let inviting = $state(false);
+
+  // Modo de invitación: una persona o una lista pegada.
+  let inviteMode = $state<'one' | 'bulk'>('one');
+  // Grupo preseleccionado si venimos de /groups/[id].
+  // svelte-ignore state_referenced_locally
+  let inviteGroup = $state(page.url.searchParams.get('group') ?? '');
+  let bulkEmails = $state('');
+  const bulkCount = $derived(
+    bulkEmails.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean).length
+  );
 
   // Modal de cancelar invitación.
   let cancelOpen = $state(false);
@@ -41,7 +51,12 @@
       <span class="eyebrow">tu cartera</span>
       <h1 class="text-3xl font-bold tracking-tight mt-2">Clientes</h1>
     </div>
-    <button class="btn-primary" onclick={() => (showInvite = true)}>+ Invitar cliente</button>
+    <div class="flex items-center gap-3">
+      <a href="/groups" class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap">
+        Grupos
+      </a>
+      <button class="btn-primary whitespace-nowrap" onclick={() => (showInvite = true)}>+ Invitar cliente</button>
+    </div>
   </div>
 
   {#if form?.success && form?.invited_email}
@@ -53,6 +68,21 @@
     <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Invitación reenviada a {form.resent_email}.
     </p>
+  {/if}
+  {#if form?.success && form?.bulk}
+    <div aria-live="polite" class="text-sm bg-success/10 border border-success/20 rounded-md p-3 space-y-1">
+      <p class="text-success font-medium">
+        {form.sent} de {form.total} invitaciones enviadas.
+      </p>
+      {#if form.errors && form.errors.length > 0}
+        <p class="text-danger text-xs">No se pudieron enviar:</p>
+        <ul class="text-xs text-text-mute list-disc pl-5">
+          {#each form.errors as e}
+            <li>{e.email} — {e.reason}</li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
   {/if}
   {#if form?.success && form?.cancelled}
     <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
@@ -174,12 +204,98 @@
       onclick={(e) => e.stopPropagation()}
     >
       <div>
-        <h3 id="invite-title" class="text-lg font-semibold">Invitar nuevo cliente</h3>
+        <h3 id="invite-title" class="text-lg font-semibold">Invitar clientes</h3>
         <p class="text-sm text-text-mute mt-1">
-          Le mandamos un email con un enlace. Cuando lo acepte, queda vinculado a ti automáticamente.
+          Les mandamos un email con un enlace. Cuando lo acepten, quedan vinculados a ti.
         </p>
       </div>
 
+      <!-- Selector de modo -->
+      <div class="flex gap-1 border-b border-text-mute/10">
+        <button
+          type="button"
+          onclick={() => (inviteMode = 'one')}
+          class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+            {inviteMode === 'one' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        >
+          Una persona
+        </button>
+        <button
+          type="button"
+          onclick={() => (inviteMode = 'bulk')}
+          class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+            {inviteMode === 'bulk' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        >
+          Varias a la vez
+        </button>
+      </div>
+
+      {#if inviteMode === 'bulk'}
+        <form
+          method="POST"
+          action="?/inviteBulk"
+          use:enhance={() => {
+            inviting = true;
+            return async ({ update }) => {
+              await update();
+              inviting = false;
+              if (form?.success) { bulkEmails = ''; showInvite = false; }
+            };
+          }}
+          class="space-y-4"
+        >
+          <div>
+            <label for="bulk-emails" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+              Emails
+            </label>
+            <textarea
+              id="bulk-emails"
+              name="emails"
+              bind:value={bulkEmails}
+              rows="6"
+              required
+              placeholder={'ana@empresa.com\nlucia@empresa.com\nMarta Ruiz <marta@empresa.com>'}
+              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm font-mono
+                     focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+            ></textarea>
+            <p class="text-[11px] text-text-mute mt-1">
+              Uno por línea (o separados por comas). Puedes poner “Nombre &lt;email&gt;”.
+              {#if bulkCount > 0}<span class="text-primary"> · {bulkCount} detectados</span>{/if}
+            </p>
+          </div>
+
+          {#if data.groups.length > 0}
+            <div>
+              <label for="bulk-group" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+                Añadir al grupo <span class="normal-case tracking-normal text-text-mute/70">(opcional)</span>
+              </label>
+              <select id="bulk-group" name="group_id" bind:value={inviteGroup}
+                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+                <option value="">Sin grupo</option>
+                {#each data.groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
+              </select>
+            </div>
+          {/if}
+
+          <p class="text-[11px] text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5">
+            Enviar muchas invitaciones de golpe puede topar con el límite de envío del
+            proveedor de correo. Te diremos cuáles salieron y cuáles no.
+          </p>
+
+          {#if form?.error}
+            <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+              {form.error}
+            </p>
+          {/if}
+
+          <div class="flex gap-3 justify-end pt-1">
+            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}>Cancelar</button>
+            <button type="submit" disabled={inviting || bulkCount === 0} class="btn-primary py-2 px-5">
+              {inviting ? 'Enviando…' : `Invitar ${bulkCount || ''}`}
+            </button>
+          </div>
+        </form>
+      {:else}
       <form
         method="POST"
         action="?/invite"
@@ -233,6 +349,7 @@
           </button>
         </div>
       </form>
+      {/if}
     </div>
   </div>
 {/if}
