@@ -11,8 +11,12 @@
   let showInvite = $state(page.url.searchParams.get('invite') === '1');
   let inviting = $state(false);
 
-  // Modo de invitación: una persona o una lista pegada.
-  let inviteMode = $state<'one' | 'bulk'>('one');
+  // Modo de invitación: una persona o una lista pegada. Si venimos de un grupo
+  // (?group=…), lo natural es abrir directamente en masa.
+  // svelte-ignore state_referenced_locally
+  let inviteMode = $state<'one' | 'bulk'>(
+    page.url.searchParams.get('group') ? 'bulk' : 'one'
+  );
   // Grupo preseleccionado si venimos de /groups/[id].
   // svelte-ignore state_referenced_locally
   let inviteGroup = $state(page.url.searchParams.get('group') ?? '');
