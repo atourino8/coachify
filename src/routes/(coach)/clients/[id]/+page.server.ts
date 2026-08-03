@@ -268,7 +268,9 @@ export const actions: Actions = {
       level: validLevel,
       height_cm: num('height_cm'),
       birth_date: str('birth_date'),
-      coach_notes: str('coach_notes')
+      coach_notes: str('coach_notes'),
+      fee_amount: num('fee_amount'),
+      paid_until: str('paid_until')
     };
 
     const { error: upErr } = await supabase
@@ -277,6 +279,40 @@ export const actions: Actions = {
     if (upErr) return fail(500, { error: upErr.message });
 
     return { success: true, infoSaved: true };
+  },
+
+  // Registra un mes de pago: empuja paid_until un mes hacia delante desde hoy
+  // (o desde la fecha ya pagada, si aún no ha vencido, para no perder días).
+  markPaid: async ({ params, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+
+    const { data: infoRaw } = await supabase
+      .from('client_info')
+      .select('paid_until, fee_amount')
+      .eq('client_id', params.id)
+      .maybeSingle();
+    const info = infoRaw as { paid_until: string | null; fee_amount: number | null } | null;
+
+    const today = todayISOLocal();
+    const base = info?.paid_until && info.paid_until > today ? info.paid_until : today;
+    const next = new Date(base + 'T00:00:00');
+    next.setMonth(next.getMonth() + 1);
+    const nextISO = formatDateISO(next);
+
+    const { error: upErr } = await supabase
+      .from('client_info')
+      .upsert(
+        {
+          client_id: params.id,
+          coach_id: user.id,
+          fee_amount: info?.fee_amount ?? null,
+          paid_until: nextISO
+        } as never,
+        { onConflict: 'client_id' }
+      );
+    if (upErr) return fail(500, { error: upErr.message });
+
+    return { success: true, paidUntil: nextISO };
   },
 
   // Guarda la corrección del coach sobre un vídeo de técnica.

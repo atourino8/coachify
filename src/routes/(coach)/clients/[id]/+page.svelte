@@ -13,6 +13,7 @@
     currentMonthISO,
     formatHumanDate
   } from '$lib/week';
+  import { paymentStatus } from '$lib/supabase/types';
 
   let { data, form } = $props();
 
@@ -36,6 +37,16 @@
 
   // Nº de ejercicios con vídeo pendiente de revisar (para el badge).
   const pendingTechnique = $derived(data.technique.filter((t) => t.pending).length);
+
+  // --- Estado de pago (derivado de la cuota y de "pagado hasta") ---
+  const payStatus = $derived(paymentStatus(data.info, todayISOLocal()));
+  const PAY_LABELS: Record<string, { text: string; cls: string }> = {
+    al_dia: { text: 'Al día', cls: 'bg-success/15 text-success' },
+    vence_pronto: { text: 'Vence pronto', cls: 'bg-warning/15 text-warning' },
+    vencido: { text: 'Pago vencido', cls: 'bg-danger/15 text-danger' },
+    sin_cuota: { text: 'Sin cuota', cls: 'bg-surface-2 text-text-mute' }
+  };
+  const payLabel = $derived(PAY_LABELS[payStatus]);
 
   // --- Ficha del cliente ---
   const LEVELS = [
@@ -132,12 +143,28 @@
 </svelte:head>
 
 <div class="space-y-8">
-  <div>
-    <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
-    <h1 class="text-3xl font-bold tracking-tight mt-3">{data.client.full_name}</h1>
-    <p class="text-text-mute text-sm mt-1">
-      Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
-    </p>
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
+      <h1 class="text-3xl font-bold tracking-tight mt-3">{data.client.full_name}</h1>
+      <p class="text-text-mute text-sm mt-1">
+        Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
+      </p>
+    </div>
+
+    {#if payStatus !== 'sin_cuota'}
+      <div class="text-right flex-shrink-0">
+        <span class="text-[11px] px-2 py-1 rounded-full {payLabel.cls}">{payLabel.text}</span>
+        {#if data.info?.paid_until}
+          <p class="text-[11px] text-text-mute mt-1.5">
+            Pagado hasta {new Date(data.info.paid_until + 'T00:00:00').toLocaleDateString('es-ES')}
+          </p>
+        {/if}
+        <form method="POST" action="?/markPaid" use:enhance class="mt-1.5">
+          <button type="submit" class="action-neutral">Registrar un mes</button>
+        </form>
+      </div>
+    {/if}
   </div>
 
   <!-- Pestañas -->
@@ -172,6 +199,11 @@
   {#if form?.success && form?.infoSaved}
     <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Ficha guardada.
+    </p>
+  {/if}
+  {#if form?.success && form?.paidUntil}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Pago registrado. Ahora está al día hasta el {new Date(form.paidUntil + 'T00:00:00').toLocaleDateString('es-ES')}.
     </p>
   {/if}
   {#if form?.success && form?.commented}
@@ -475,6 +507,27 @@
           <p class="text-xs text-text-mute mt-1">{ageFrom(data.info?.birth_date)} años</p>
         {/if}
       </div>
+      <div class="sm:col-span-2 border-t border-text-mute/10 pt-4">
+        <p class="text-xs uppercase tracking-wider text-text-mute mb-3">Cuota</p>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="fee" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+              Cuota mensual (€)
+            </label>
+            <input id="fee" name="fee_amount" type="number" min="0" step="1"
+              value={data.info?.fee_amount ?? ''} placeholder="ej: 120"
+              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20" />
+          </div>
+          <div>
+            <label for="paid-until" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+              Pagado hasta
+            </label>
+            <input id="paid-until" name="paid_until" type="date" value={data.info?.paid_until ?? ''}
+              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20" />
+          </div>
+        </div>
+      </div>
+
       <div class="sm:col-span-2">
         <label for="notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
           Notas privadas <span class="normal-case tracking-normal text-text-mute/70">(solo tú las ves)</span>

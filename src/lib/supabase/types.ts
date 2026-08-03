@@ -54,7 +54,29 @@ export interface ClientInfo {
   height_cm: number | null;
   birth_date: string | null;
   coach_notes: string | null;
+  // Cuota mensual acordada y hasta cuándo tiene pagado. El estado de pago se
+  // deriva de paid_until para que no quede obsoleto.
+  fee_amount: number | null;
+  fee_currency: string;
+  paid_until: string | null;
   updated_at: string;
+}
+
+export type PaymentStatus = 'sin_cuota' | 'al_dia' | 'vence_pronto' | 'vencido';
+
+/** Estado de pago a partir de la cuota y la fecha pagada hasta. */
+export function paymentStatus(
+  info: { fee_amount: number | null; paid_until: string | null } | null | undefined,
+  todayISO: string
+): PaymentStatus {
+  if (!info || info.fee_amount === null) return 'sin_cuota';
+  if (!info.paid_until) return 'vencido';
+  if (info.paid_until < todayISO) return 'vencido';
+  // Avisar si le quedan 7 días o menos.
+  const limite = new Date(todayISO + 'T00:00:00');
+  limite.setDate(limite.getDate() + 7);
+  const limiteISO = limite.toISOString().slice(0, 10);
+  return info.paid_until <= limiteISO ? 'vence_pronto' : 'al_dia';
 }
 
 export interface Profile {

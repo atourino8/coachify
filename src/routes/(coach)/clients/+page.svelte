@@ -1,6 +1,8 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
+  import { paymentStatus } from '$lib/supabase/types';
+  import { todayISOLocal } from '$lib/week';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
   let { data, form } = $props();
@@ -31,6 +33,16 @@
   function askCancel(id: string, name: string) {
     toCancel = { id, name };
     cancelOpen = true;
+  }
+
+  // Etiqueta de estado de pago. Devuelve null si el cliente no tiene cuota
+  // definida, para no ensuciar la lista con estados vacíos.
+  function payLabelFor(fee: { fee_amount: number | null; paid_until: string | null } | null) {
+    const st = paymentStatus(fee, todayISOLocal());
+    if (st === 'sin_cuota') return null;
+    if (st === 'al_dia') return { text: 'Al día', cls: 'bg-success/15 text-success' };
+    if (st === 'vence_pronto') return { text: 'Vence pronto', cls: 'bg-warning/15 text-warning' };
+    return { text: 'Vencido', cls: 'bg-danger/15 text-danger' };
   }
 
   function fmtDate(iso: string | null) {
@@ -138,6 +150,10 @@
               <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
               <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
             </div>
+            {#if payLabelFor(client.fee)}
+              {@const p = payLabelFor(client.fee)}
+              <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {p.cls}">{p.text}</span>
+            {/if}
             <span class="text-text-mute hover:text-text text-sm flex-shrink-0">Ver →</span>
           </a>
         {/each}
