@@ -75,12 +75,20 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
     .eq('status', 'requested')
     .neq('requested_by', user.id);
 
-  // Email del coach (para el atajo "Contactar a mi coach"). Vive en auth.users.
+  // Datos del coach (para el atajo "Contactar a mi coach"). El email vive en
+  // auth.users, así que se lee con el cliente admin.
   let coachEmail: string | null = null;
+  let coachName: string | null = null;
   if (profile?.coach_id) {
     try {
       const { data: au } = await supabaseAdmin.auth.admin.getUserById(profile.coach_id);
       coachEmail = au?.user?.email ?? null;
+      const { data: cp } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', profile.coach_id)
+        .maybeSingle();
+      coachName = (cp as { full_name: string | null } | null)?.full_name ?? null;
     } catch {
       // Si no se puede leer, el atajo se ocultará.
     }
@@ -92,6 +100,7 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
     isToday: viewDate === today,
     upcoming,
     proposalCount: proposalCount ?? 0,
-    coachEmail
+    coachEmail,
+    coachName
   };
 };

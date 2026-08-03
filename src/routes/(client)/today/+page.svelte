@@ -29,6 +29,21 @@
   );
   const pct = $derived(totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0);
 
+  // --- Modal de contacto con el coach (en vez del diálogo del navegador) ---
+  let showContact = $state(false);
+  let copied = $state(false);
+
+  async function copyEmail() {
+    if (!data.coachEmail) return;
+    try {
+      await navigator.clipboard.writeText(data.coachEmail);
+      copied = true;
+      setTimeout(() => (copied = false), 2000);
+    } catch {
+      copied = false;
+    }
+  }
+
   function upcomingLabel(iso: string) {
     return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
       weekday: 'short',
@@ -95,12 +110,12 @@
       <span class="text-sm font-medium">Mi progreso</span>
     </a>
     {#if data.coachEmail}
-      <a href="mailto:{data.coachEmail}" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
+      <button type="button" onclick={() => (showContact = true)} class="card p-4 flex flex-col gap-2 text-left hover:border-primary/50 transition-all">
         <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" stroke-linecap="round" /></svg>
         </span>
         <span class="text-sm font-medium">Contactar coach</span>
-      </a>
+      </button>
     {/if}
   </div>
 
@@ -217,3 +232,45 @@
     </section>
   {/if}
 </div>
+
+<!-- Modal: contactar con el coach -->
+<svelte:window onkeydown={(e) => { if (showContact && e.key === 'Escape') showContact = false; }} />
+{#if showContact && data.coachEmail}
+  <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+  <div
+    class="fixed inset-0 z-[200] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+    role="presentation"
+    onclick={() => (showContact = false)}
+  >
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div
+      class="card w-full max-w-sm space-y-4"
+      role="dialog"
+      tabindex="-1"
+      aria-modal="true"
+      aria-labelledby="contact-title"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <div>
+        <h3 id="contact-title" class="text-lg font-semibold">
+          Contactar con {data.coachName ?? 'tu entrenador'}
+        </h3>
+        <p class="text-sm text-text-mute mt-1">
+          Escríbele a este correo para cualquier duda sobre tus entrenos o tus citas.
+        </p>
+      </div>
+
+      <div class="bg-bg border border-text-mute/20 rounded-md px-4 py-3 flex items-center justify-between gap-3">
+        <span class="text-sm font-medium truncate">{data.coachEmail}</span>
+        <button type="button" onclick={copyEmail} class="action-neutral flex-shrink-0">
+          {copied ? '✓ Copiado' : 'Copiar'}
+        </button>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" class="action-neutral" onclick={() => (showContact = false)}>Cerrar</button>
+        <a href="mailto:{data.coachEmail}" class="action-primary">Abrir mi correo</a>
+      </div>
+    </div>
+  </div>
+{/if}
