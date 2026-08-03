@@ -139,6 +139,7 @@
     {:else}
       <div class="space-y-2">
         {#each data.active as client (client.id)}
+          {@const pay = payLabelFor(client.fee)}
           <a
             href="/clients/{client.id}"
             class="card flex items-center gap-4 hover:border-primary/50 transition-all"
@@ -150,9 +151,8 @@
               <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
               <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
             </div>
-            {#if payLabelFor(client.fee)}
-              {@const p = payLabelFor(client.fee)}
-              <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {p.cls}">{p.text}</span>
+            {#if pay}
+              <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {pay.cls}">{pay.text}</span>
             {/if}
             <span class="text-text-mute hover:text-text text-sm flex-shrink-0">Ver →</span>
           </a>
