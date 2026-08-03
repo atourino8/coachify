@@ -37,7 +37,24 @@
         {data.exercises.length} {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
       </p>
     </div>
-    <a href="/exercises/new" class="btn-primary">+ Nuevo ejercicio</a>
+    <div class="flex items-center gap-3">
+      <!-- La carga de la biblioteca base está siempre disponible, no solo con
+           la biblioteca vacía: es idempotente y solo añade los que falten. -->
+      <form
+        method="POST"
+        action="?/seedLibrary"
+        use:enhance={() => {
+          seeding = true;
+          return async ({ update }) => { await update(); seeding = false; };
+        }}
+      >
+        <button type="submit" disabled={seeding}
+          class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap">
+          {seeding ? 'Cargando…' : 'Cargar biblioteca base'}
+        </button>
+      </form>
+      <a href="/exercises/new" class="btn-primary whitespace-nowrap">+ Nuevo ejercicio</a>
+    </div>
   </div>
 
   {#if form?.success && form?.seeded}
