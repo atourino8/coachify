@@ -31,8 +31,11 @@
 
   const weekdayHeaders = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-  // --- Pestañas (Entrenos / Ficha / Historial) ---
-  let tab = $state<'entrenos' | 'ficha' | 'historial'>('entrenos');
+  // --- Pestañas (Entrenos / Ficha / Técnica / Historial) ---
+  let tab = $state<'entrenos' | 'ficha' | 'tecnica' | 'historial'>('entrenos');
+
+  // Nº de ejercicios con vídeo pendiente de revisar (para el badge).
+  const pendingTechnique = $derived(data.technique.filter((t) => t.pending).length);
 
   // --- Ficha del cliente ---
   const LEVELS = [
@@ -139,13 +142,16 @@
 
   <!-- Pestañas -->
   <div class="flex gap-1 border-b border-text-mute/10">
-    {#each [{ v: 'entrenos', l: 'Entrenos' }, { v: 'ficha', l: 'Ficha' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
+    {#each [{ v: 'entrenos', l: 'Entrenos' }, { v: 'ficha', l: 'Ficha' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}
-        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
           {tab === t.v ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
       >
         {t.l}
+        {#if t.v === 'tecnica' && pendingTechnique > 0}
+          <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning">{pendingTechnique}</span>
+        {/if}
       </button>
     {/each}
   </div>
@@ -166,6 +172,11 @@
   {#if form?.success && form?.infoSaved}
     <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
       Ficha guardada.
+    </p>
+  {/if}
+  {#if form?.success && form?.commented}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Corrección guardada. Tu cliente la verá junto a su vídeo.
     </p>
   {/if}
 
@@ -477,6 +488,93 @@
       {savingInfo ? 'Guardando…' : 'Guardar ficha'}
     </button>
   </form>
+
+{:else if tab === 'tecnica'}
+  <!-- ===== VÍDEOS DE TÉCNICA ===== -->
+  {#if data.technique.length === 0}
+    <div class="card text-center py-16">
+      <div class="text-5xl mb-4" aria-hidden="true">🎥</div>
+      <h2 class="text-xl font-semibold mb-2">Sin vídeos de técnica</h2>
+      <p class="text-sm text-text-mute max-w-md mx-auto">
+        Cuando {data.client.full_name?.split(' ')[0] ?? 'tu cliente'} suba un vídeo ejecutando
+        un ejercicio, aparecerá aquí para que le corrijas la postura.
+      </p>
+    </div>
+  {:else}
+    <div class="space-y-4">
+      {#each data.technique as g (g.exerciseId)}
+        {@const newest = g.latest ?? g.first}
+        <div class="card space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="font-semibold">{g.exerciseName}</h2>
+            {#if g.pending}
+              <span class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning whitespace-nowrap">
+                Por revisar
+              </span>
+            {:else}
+              <span class="text-[11px] px-2 py-0.5 rounded-full bg-success/15 text-success whitespace-nowrap">
+                Revisado
+              </span>
+            {/if}
+          </div>
+
+          <!-- Antes / después -->
+          <div class="grid {g.latest && g.first ? 'sm:grid-cols-2' : ''} gap-3">
+            {#each [{ v: g.first, label: g.latest ? 'Primer vídeo' : 'Vídeo', k: 'f' }, { v: g.latest, label: 'Más reciente', k: 'l' }] as slot (slot.k)}
+              {#if slot.v}
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs uppercase tracking-wider text-text-mute">{slot.label}</span>
+                    <span class="text-[11px] text-text-mute">
+                      {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
+                    </span>
+                  </div>
+                  {#if slot.v.url}
+                    <!-- svelte-ignore a11y_media_has_caption -->
+                    <video src={slot.v.url} controls playsinline preload="metadata" class="w-full max-h-80 rounded-md bg-black"></video>
+                  {:else}
+                    <p class="text-xs text-text-mute italic">No se pudo cargar el vídeo.</p>
+                  {/if}
+                </div>
+              {/if}
+            {/each}
+          </div>
+
+          <!-- Corrección del coach sobre el vídeo más reciente -->
+          {#if newest}
+            <form
+              method="POST"
+              action="?/commentVideo"
+              use:enhance
+              class="border-t border-text-mute/10 pt-3 space-y-2"
+            >
+              <input type="hidden" name="video_id" value={newest.id} />
+              <label for="cmt-{g.exerciseId}" class="block text-xs uppercase tracking-wider text-text-mute">
+                Corrección para tu cliente
+              </label>
+              <textarea
+                id="cmt-{g.exerciseId}"
+                name="comment"
+                rows="2"
+                maxlength="600"
+                placeholder="ej: baja más la cadera y mantén la espalda neutra…"
+                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+                       focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+              >{newest.coach_comment ?? ''}</textarea>
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-[11px] text-text-mute">
+                  {#if newest.coach_comment_at}
+                    Comentado el {new Date(newest.coach_comment_at).toLocaleDateString('es-ES')}
+                  {/if}
+                </span>
+                <button type="submit" class="action-primary">Guardar corrección</button>
+              </div>
+            </form>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  {/if}
 
 {:else}
   <!-- ===== HISTORIAL ===== -->

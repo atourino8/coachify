@@ -1,11 +1,19 @@
 // Detalle de un workout_item para el cliente: vídeo + form para registrar series.
 
 import { error, fail, redirect } from '@sveltejs/kit';
-import type { WorkoutItemWithWorkout, SetLog, WorkoutItemMinimal } from '$lib/supabase/types';
+import { BUCKET } from '$lib/technique';
+import type {
+  WorkoutItemWithWorkout,
+  SetLog,
+  WorkoutItemMinimal,
+  TechniqueVideo
+} from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
+export const load: PageServerLoad = async ({ params, locals: { supabase, user }, parent }) => {
   if (!user) redirect(303, '/login');
+
+  const { profile } = await parent();
 
   const { data: itemRaw, error: itemError } = await supabase
     .from('workout_items')
@@ -29,7 +37,32 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   // Ordenar set_logs por número
   item.set_logs?.sort((a: SetLog, b: SetLog) => a.set_number - b.set_number);
 
-  return { item };
+  // --- Vídeos de técnica de este ejercicio (máx. 2: 'first' y 'latest') ---
+  const { data: videosRaw } = await supabase
+    .from('technique_videos')
+    .select('*')
+    .eq('client_id', user.id)
+    .eq('exercise_id', item.exercise_id);
+
+  const videos = (videosRaw ?? []) as unknown as TechniqueVideo[];
+
+  // URLs firmadas temporales (el bucket es privado: nunca enlaces públicos).
+  const signed: Record<string, string> = {};
+  for (const v of videos) {
+    const { data: s } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(v.storage_path, 60 * 60); // 1 hora
+    if (s?.signedUrl) signed[v.kind] = s.signedUrl;
+  }
+
+  return {
+    item,
+    clientId: user.id,
+    coachId: profile?.coach_id ?? null,
+    techniqueFirst: videos.find((v) => v.kind === 'first') ?? null,
+    techniqueLatest: videos.find((v) => v.kind === 'latest') ?? null,
+    techniqueUrls: signed
+  };
 };
 
 export const actions: Actions = {
@@ -90,5 +123,28 @@ export const actions: Actions = {
     }
 
     return { success: true, set_number };
+  },
+
+  // Borra un vídeo de técnica del cliente (fila + archivo del bucket).
+  // Importante: borrar la fila NO borra el archivo de Storage, hay que hacerlo
+  // explícitamente para no dejar huérfanos ocupando espacio.
+  deleteVideo: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const videoId = (await request.formData()).get('video_id') as string;
+    if (!videoId) return fail(400, { error: 'Falta el vídeo.' });
+
+    const { data: vid } = await supabase
+      .from('technique_videos')
+      .select('id, client_id, storage_path')
+      .eq('id', videoId)
+      .maybeSingle();
+    const video = vid as { id: string; client_id: string; storage_path: string } | null;
+    if (!video || video.client_id !== user.id) return fail(403, { error: 'No autorizado.' });
+
+    await supabase.storage.from(BUCKET).remove([video.storage_path]);
+    const { error: delErr } = await supabase.from('technique_videos').delete().eq('id', videoId);
+    if (delErr) return fail(500, { error: delErr.message });
+
+    return { success: true, videoDeleted: true };
   }
 };

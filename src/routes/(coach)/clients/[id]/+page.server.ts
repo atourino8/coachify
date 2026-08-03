@@ -4,6 +4,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { addDays, formatDateISO, todayISOLocal, currentMonthISO } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
+import { BUCKET } from '$lib/technique';
+import type { TechniqueVideo } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
 const WINDOW_DAYS = 7;
@@ -158,6 +160,62 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     id: string; starts_at: string; status: string; modality: string;
   }[];
 
+  // ---- Vídeos de técnica del cliente (máx. 2 por ejercicio) ----
+  const { data: tvRaw } = await supabase
+    .from('technique_videos')
+    .select('*, exercise:exercises(id, name)')
+    .eq('client_id', params.id)
+    .eq('coach_id', user.id)
+    .order('created_at', { ascending: false });
+
+  const tvRows = (tvRaw ?? []) as unknown as (TechniqueVideo & {
+    exercise: { id: string; name: string } | null;
+  })[];
+
+  // Agrupar por ejercicio y firmar las URLs (bucket privado).
+  const techniqueByExercise: Record<
+    string,
+    {
+      exerciseId: string;
+      exerciseName: string;
+      first: (TechniqueVideo & { url: string | null }) | null;
+      latest: (TechniqueVideo & { url: string | null }) | null;
+      pending: boolean;
+      lastAt: string;
+    }
+  > = {};
+
+  for (const v of tvRows) {
+    const { data: s } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(v.storage_path, 60 * 60);
+    const withUrl = { ...v, url: s?.signedUrl ?? null };
+    const key = v.exercise_id;
+    techniqueByExercise[key] ??= {
+      exerciseId: v.exercise_id,
+      exerciseName: v.exercise?.name ?? 'Ejercicio',
+      first: null,
+      latest: null,
+      pending: false,
+      lastAt: v.created_at
+    };
+    if (v.kind === 'first') techniqueByExercise[key].first = withUrl;
+    else techniqueByExercise[key].latest = withUrl;
+    if (v.created_at > techniqueByExercise[key].lastAt) {
+      techniqueByExercise[key].lastAt = v.created_at;
+    }
+  }
+
+  // "Pendiente" = el vídeo más reciente del ejercicio aún no tiene comentario.
+  const technique = Object.values(techniqueByExercise).map((g) => {
+    const newest = g.latest ?? g.first;
+    return { ...g, pending: !!newest && !newest.coach_comment };
+  });
+  // Los pendientes de revisar, primero.
+  technique.sort((a, b) =>
+    a.pending === b.pending ? b.lastAt.localeCompare(a.lastAt) : a.pending ? -1 : 1
+  );
+
   return {
     client,
     view,
@@ -168,7 +226,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     templates,
     info,
     historyWorkouts,
-    historySessions
+    historySessions,
+    technique
   };
 };
 
@@ -218,6 +277,27 @@ export const actions: Actions = {
     if (upErr) return fail(500, { error: upErr.message });
 
     return { success: true, infoSaved: true };
+  },
+
+  // Guarda la corrección del coach sobre un vídeo de técnica.
+  commentVideo: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const videoId = fd.get('video_id') as string;
+    const comment = ((fd.get('comment') as string) ?? '').trim();
+    if (!videoId) return fail(400, { error: 'Falta el vídeo.' });
+
+    const { error: upErr } = await supabase
+      .from('technique_videos')
+      .update({
+        coach_comment: comment || null,
+        coach_comment_at: comment ? new Date().toISOString() : null
+      } as never)
+      .eq('id', videoId)
+      .eq('coach_id', user.id);
+    if (upErr) return fail(500, { error: upErr.message });
+
+    return { success: true, commented: true };
   },
 
   // Duplica un entreno (workout + sus workout_items) a otra fecha.

@@ -1,8 +1,82 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { invalidateAll } from '$app/navigation';
+  import { page } from '$app/state';
+  import { BUCKET, validateVideo, videoPath, formatBytes, readDuration } from '$lib/technique';
   import type { SetLog } from '$lib/supabase/types';
 
   let { data, form } = $props();
+
+  // ---- Vídeo de técnica ----
+  let uploading = $state(false);
+  let uploadPct = $state(0);
+  let videoError = $state('');
+  let consent = $state(false);
+  let fileInput = $state<HTMLInputElement | null>(null);
+
+  // Solo hace falta consentir la primera vez (si ya tiene vídeos, ya consintió).
+  const needsConsent = $derived(!data.techniqueFirst && !data.techniqueLatest);
+
+  async function handleFile(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    videoError = '';
+
+    const problem = await validateVideo(file);
+    if (problem) {
+      videoError = problem;
+      input.value = '';
+      return;
+    }
+    if (!data.coachId) {
+      videoError = 'Necesitas tener un entrenador asignado para enviar vídeos.';
+      input.value = '';
+      return;
+    }
+
+    // Primera subida → 'first' (no se pisa nunca). Siguientes → 'latest'.
+    const kind = data.techniqueFirst ? 'latest' : 'first';
+    const path = videoPath(data.clientId, data.item.exercise_id, kind, file.type);
+    const duration = await readDuration(file);
+
+    uploading = true;
+    uploadPct = 10;
+    try {
+      const supabase = page.data.supabase;
+      const { error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      uploadPct = 80;
+
+      const { error: dbErr } = await supabase.from('technique_videos').upsert(
+        {
+          client_id: data.clientId,
+          coach_id: data.coachId,
+          exercise_id: data.item.exercise_id,
+          kind,
+          storage_path: path,
+          duration_seconds: duration ? Math.round(duration) : null,
+          size_bytes: file.size,
+          // Una versión nueva invalida el comentario anterior del coach.
+          coach_comment: null,
+          coach_comment_at: null
+        },
+        { onConflict: 'client_id,exercise_id,kind' }
+      );
+      if (dbErr) throw dbErr;
+
+      uploadPct = 100;
+      await invalidateAll();
+    } catch (err) {
+      videoError = err instanceof Error ? err.message : 'No se pudo subir el vídeo.';
+    } finally {
+      uploading = false;
+      uploadPct = 0;
+      input.value = '';
+    }
+  }
 
   function youtubeId(url: string | null): string | null {
     if (!url) return null;
@@ -223,4 +297,114 @@
       {/if}
     {/each}
   </div>
+
+  <!-- ===== VÍDEO DE TÉCNICA ===== -->
+  <section class="space-y-3">
+    <div>
+      <h2 class="text-sm uppercase tracking-wider text-text-mute">Vídeo de técnica</h2>
+      <p class="text-xs text-text-mute mt-1">
+        Graba una serie (máx. 1 minuto) y tu entrenador te corregirá la postura.
+      </p>
+    </div>
+
+    {#if videoError}
+      <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+        {videoError}
+      </p>
+    {/if}
+    {#if form?.success && form?.videoDeleted}
+      <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+        Vídeo eliminado.
+      </p>
+    {/if}
+
+    <!-- Vídeos existentes: antes / actual -->
+    {#if data.techniqueFirst || data.techniqueLatest}
+      <div class="grid {data.techniqueLatest ? 'sm:grid-cols-2' : ''} gap-3">
+        {#each [{ v: data.techniqueFirst, label: data.techniqueLatest ? 'Primer vídeo' : 'Tu vídeo', k: 'first' }, { v: data.techniqueLatest, label: 'Más reciente', k: 'latest' }] as slot (slot.k)}
+          {#if slot.v}
+            <div class="card p-3 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs uppercase tracking-wider text-text-mute">{slot.label}</span>
+                <span class="text-[11px] text-text-mute">
+                  {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
+                </span>
+              </div>
+              {#if data.techniqueUrls[slot.k]}
+                <!-- svelte-ignore a11y_media_has_caption -->
+                <video src={data.techniqueUrls[slot.k]} controls playsinline class="w-full max-h-72 rounded-md bg-black"></video>
+              {/if}
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] text-text-mute">
+                  {slot.v.duration_seconds ? `${slot.v.duration_seconds}s · ` : ''}{formatBytes(slot.v.size_bytes)}
+                </span>
+                <form method="POST" action="?/deleteVideo" use:enhance>
+                  <input type="hidden" name="video_id" value={slot.v.id} />
+                  <button type="submit" class="text-[11px] text-text-mute hover:text-danger transition-colors">
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+
+              {#if slot.v.coach_comment}
+                <div class="text-sm bg-primary/10 border-l-2 border-primary rounded-r px-3 py-2">
+                  <div class="text-[10px] uppercase tracking-wider text-primary mb-1">Corrección de tu entrenador</div>
+                  {slot.v.coach_comment}
+                </div>
+              {:else}
+                <p class="text-[11px] text-text-mute italic">Pendiente de revisar por tu entrenador.</p>
+              {/if}
+            </div>
+          {/if}
+        {/each}
+      </div>
+    {/if}
+
+    <!-- Subir / reemplazar -->
+    <div class="card space-y-3">
+      {#if needsConsent}
+        <label class="flex items-start gap-2 text-xs text-text-mute cursor-pointer">
+          <input type="checkbox" bind:checked={consent} class="mt-0.5" />
+          <span>
+            Acepto enviar un vídeo mío a mi entrenador para que corrija mi técnica.
+            Solo lo verá él y puedo eliminarlo cuando quiera.
+          </span>
+        </label>
+      {/if}
+
+      {#if uploading}
+        <div class="space-y-2">
+          <div class="h-1.5 bg-surface-2 rounded-full overflow-hidden">
+            <div class="h-full bg-primary transition-all duration-300" style="width: {uploadPct}%"></div>
+          </div>
+          <p class="text-xs text-text-mute">Subiendo vídeo… no cierres la página.</p>
+        </div>
+      {:else}
+        <input
+          bind:this={fileInput}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          capture="environment"
+          onchange={handleFile}
+          class="sr-only"
+          id="tech-video"
+        />
+        <button
+          type="button"
+          onclick={() => fileInput?.click()}
+          disabled={needsConsent && !consent}
+          class="btn-primary w-full disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {data.techniqueFirst ? 'Subir nuevo vídeo' : 'Grabar / subir vídeo'}
+        </button>
+        <p class="text-[11px] text-text-mute text-center">
+          {#if data.techniqueFirst}
+            Se guardará como el más reciente y sustituirá al anterior. Tu primer vídeo se conserva para comparar.
+          {:else}
+            Máx. 1 minuto y 50 MB · MP4, WebM o MOV
+          {/if}
+        </p>
+      {/if}
+    </div>
+  </section>
 </div>

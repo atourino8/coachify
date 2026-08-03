@@ -11,6 +11,22 @@ export type SessionStatus =
 export type Modality = 'presencial' | 'online' | 'remoto';
 export type Feedback = 'easy' | 'just_right' | 'hard';
 export type ClientLevel = 'principiante' | 'intermedio' | 'avanzado';
+export type TechniqueVideoKind = 'first' | 'latest';
+
+export interface TechniqueVideo {
+  id: string;
+  client_id: string;
+  coach_id: string;
+  exercise_id: string;
+  kind: TechniqueVideoKind;
+  storage_path: string;
+  duration_seconds: number | null;
+  size_bytes: number | null;
+  coach_comment: string | null;
+  coach_comment_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface ClientInfo {
   client_id: string;
@@ -239,6 +255,11 @@ export interface Database {
         Row: ClientInfo;
         Insert: Omit<ClientInfo, 'updated_at'> & { updated_at?: string };
         Update: Partial<Omit<ClientInfo, 'client_id' | 'coach_id'>>;
+      };
+      technique_videos: {
+        Row: TechniqueVideo;
+        Insert: Omit<TechniqueVideo, 'id' | 'created_at' | 'updated_at'> & { id?: string };
+        Update: Partial<Omit<TechniqueVideo, 'id' | 'client_id' | 'created_at'>>;
       };
     };
     Views: {};
