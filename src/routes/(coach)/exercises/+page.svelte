@@ -1,6 +1,10 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
+  import { SEED_EXERCISES } from '$lib/seed-exercises';
   import type { Exercise } from '$lib/supabase/types';
-  let { data } = $props();
+  let { data, form } = $props();
+
+  let seeding = $state(false);
 
   // Labels en español de los enums
   const muscleLabels: Record<string, string> = {
@@ -36,14 +40,46 @@
     <a href="/exercises/new" class="btn-primary">+ Nuevo ejercicio</a>
   </div>
 
+  {#if form?.success && form?.seeded}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      {form.seeded} ejercicios añadidos a tu biblioteca. Edítalos o añade los tuyos cuando quieras.
+    </p>
+  {/if}
+  {#if form?.success && form?.alreadyHad}
+    <p aria-live="polite" class="text-sm text-text-mute bg-surface-2 border border-text-mute/20 rounded-md p-3">
+      Ya tenías todos los ejercicios de la biblioteca base.
+    </p>
+  {/if}
+
   {#if data.exercises.length === 0}
-    <div class="card text-center py-16">
-      <div class="text-6xl mb-4">📚</div>
-      <h2 class="text-xl font-semibold mb-2">Tu biblioteca está vacía</h2>
-      <p class="text-sm text-text-mute max-w-md mx-auto mb-6">
-        Crea tu primer ejercicio con un vídeo de técnica para empezar a armar entrenos.
-      </p>
-      <a href="/exercises/new" class="btn-primary">Crear primer ejercicio</a>
+    <!-- Estado vacío útil: explica qué gana y da el atajo, en vez de decorar. -->
+    <div class="card max-w-2xl space-y-5">
+      <div>
+        <h2 class="text-2xl font-bold">Empieza con la biblioteca base</h2>
+        <p class="text-sm text-text-mute mt-2">
+          Sin ejercicios no puedes montar entrenamientos, y sin entrenamientos no puedes
+          programarle nada a un cliente. Cargamos {SEED_EXERCISES.length} ejercicios básicos
+          —con su grupo muscular y material— para que puedas armar el primer entreno en un minuto.
+          Son tuyos: edítalos, bórralos o añádeles tu vídeo.
+        </p>
+      </div>
+
+      <form
+        method="POST"
+        action="?/seedLibrary"
+        use:enhance={() => {
+          seeding = true;
+          return async ({ update }) => { await update(); seeding = false; };
+        }}
+        class="flex flex-wrap items-center gap-3"
+      >
+        <button type="submit" disabled={seeding} class="btn-primary">
+          {seeding ? 'Cargando…' : `Cargar ${SEED_EXERCISES.length} ejercicios`}
+        </button>
+        <a href="/exercises/new" class="text-sm text-text-mute hover:text-text transition-colors">
+          o crear el mío desde cero
+        </a>
+      </form>
     </div>
   {:else}
     <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
