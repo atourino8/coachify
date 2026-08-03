@@ -116,8 +116,7 @@
 <div class="min-h-screen flex items-center justify-center p-6">
   <div class="text-center space-y-6">
     <div
-      class="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-primary to-accent
-             grid place-items-center text-bg font-bold text-2xl shadow-glow animate-pulse"
+      class="w-16 h-16 mx-auto rounded-xl bg-accent grid place-items-center text-white font-display font-bold text-2xl animate-pulse"
     >
       C
     </div>

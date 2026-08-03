@@ -52,7 +52,7 @@
 
   <div class="flex items-center justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Entrenamientos</h1>
+      <h1 class="text-3xl font-display font-semibold tracking-tight">Entrenamientos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
         Entrenamientos predefinidos (hipertrofia principiante, cardio avanzado…) que
         reutilizas al programar los días de tus clientes.

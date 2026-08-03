@@ -19,8 +19,8 @@
   <div class="container-narrow flex items-center justify-between py-4">
     <a href="/today" class="flex items-center gap-2">
       <div
-        class="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-accent grid place-items-center
-               text-bg font-bold text-sm"
+        class="w-8 h-8 rounded-md bg-accent grid place-items-center
+               text-white font-display font-bold text-sm"
       >
         C
       </div>

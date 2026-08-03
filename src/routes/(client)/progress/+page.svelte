@@ -66,21 +66,21 @@
 <div class="space-y-8">
   <div>
     <span class="eyebrow">Tu evolución</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">Progreso</h1>
+    <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">Progreso</h1>
   </div>
 
   <!-- Tarjetas de resumen -->
   <div class="grid grid-cols-3 gap-3">
     <div class="card text-center">
-      <div class="text-2xl font-bold text-primary">{data.stats.totalSets}</div>
+      <div class="text-2xl font-display font-semibold text-primary">{data.stats.totalSets}</div>
       <div class="text-xs text-text-mute mt-1">series registradas</div>
     </div>
     <div class="card text-center">
-      <div class="text-2xl font-bold text-primary">{data.stats.exerciseCount}</div>
+      <div class="text-2xl font-display font-semibold text-primary">{data.stats.exerciseCount}</div>
       <div class="text-xs text-text-mute mt-1">ejercicios</div>
     </div>
     <div class="card text-center">
-      <div class="text-2xl font-bold text-primary">{data.stats.totalVolume.toLocaleString('es-ES')}</div>
+      <div class="text-2xl font-display font-semibold text-primary">{data.stats.totalVolume.toLocaleString('es-ES')}</div>
       <div class="text-xs text-text-mute mt-1">kg · volumen total</div>
     </div>
   </div>
@@ -120,7 +120,7 @@
             {/if}
           </div>
           <div class="text-right">
-            <div class="text-2xl font-bold text-primary">{selected.bestWeight ?? '—'} kg</div>
+            <div class="text-2xl font-display font-semibold text-primary">{selected.bestWeight ?? '—'} kg</div>
             <div class="text-xs text-text-mute">mejor marca</div>
           </div>
         </div>

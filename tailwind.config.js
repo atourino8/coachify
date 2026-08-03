@@ -4,25 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta Coachify — Deep Blue + Electric
-        bg: '#0a1628',
-        surface: '#122340',
-        'surface-2': '#1a2e4a',
+        // Paleta Coachify — "Cuaderno de entrenador".
+        // Fondo papel, tinta casi negra y un único acento terracota.
+        // Deliberadamente fuera del oscuro+neón que usa todo el sector.
+        bg: '#FBFAF7', // papel
+        surface: '#FFFFFF', // fichas y paneles
+        'surface-2': '#F2EFE7', // relleno sutil, hover
         primary: {
-          DEFAULT: '#3b82f6',
-          hover: '#2563eb'
+          DEFAULT: '#1C1A16', // tinta: acciones principales
+          hover: '#37332C'
         },
-        accent: '#38bdf8',
+        accent: '#B3441E', // terracota: identidad, nav activo, enlaces
+        // Líneas: separan sin encajonar. Son la base de las listas densas.
+        line: '#E5E1D6',
+        'line-strong': '#D9D5CA',
         text: {
-          DEFAULT: '#f1f5f9',
-          mute: '#94a3b8'
+          DEFAULT: '#1C1A16',
+          mute: '#6B665C'
         },
-        danger: '#ef4444',
-        warning: '#f59e0b',
-        success: '#22c55e'
+        danger: '#8C1D18',
+        warning: '#8A5A0B',
+        success: '#3F6B2B'
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        // Serif con carácter para titulares: da voz editorial y separa
+        // jerarquía sin recurrir a decoración.
+        display: ['Fraunces', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'monospace']
       },
       borderRadius: {
@@ -32,10 +40,10 @@ export default {
         full: '9999px'
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(0,0,0,.3)',
-        md: '0 8px 24px -8px rgba(0,0,0,.4)',
-        lg: '0 24px 48px -16px rgba(0,0,0,.5)',
-        glow: '0 0 40px -10px rgba(59,130,246,.5)'
+        sm: '0 1px 2px rgba(28,26,22,.06)',
+        md: '0 4px 16px -6px rgba(28,26,22,.10)',
+        lg: '0 16px 40px -12px rgba(28,26,22,.14)',
+        glow: '0 4px 16px -6px rgba(28,26,22,.14)'
       }
     }
   },

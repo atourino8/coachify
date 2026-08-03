@@ -73,12 +73,12 @@
   <div class="w-full max-w-md">
     <div class="text-center mb-10">
       <div
-        class="w-14 h-14 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary to-accent
-               grid place-items-center text-bg font-bold text-2xl shadow-glow"
+        class="w-14 h-14 mx-auto mb-6 rounded-xl bg-accent
+               grid place-items-center text-white font-display font-bold text-2xl"
       >
         C
       </div>
-      <h1 class="text-3xl font-bold mb-2">Bienvenido de nuevo</h1>
+      <h1 class="text-3xl font-display font-semibold mb-2">Bienvenido de nuevo</h1>
       <p class="text-text-mute">Entra a tu cuenta de Coachify</p>
     </div>
 

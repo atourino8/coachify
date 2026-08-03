@@ -32,7 +32,7 @@
 <div class="max-w-2xl mx-auto space-y-8">
   <div>
     <a href="/exercises" class="text-sm text-text-mute hover:text-text">← Volver a ejercicios</a>
-    <h1 class="text-3xl font-bold tracking-tight mt-4">Nuevo ejercicio</h1>
+    <h1 class="text-3xl font-display font-semibold tracking-tight mt-4">Nuevo ejercicio</h1>
     <p class="text-text-mute mt-1">
       Por ahora puedes pegar una URL de YouTube/Vimeo como vídeo. La subida directa llega en Fase C.
     </p>

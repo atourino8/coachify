@@ -32,7 +32,7 @@
 
   <div class="flex items-center justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-bold tracking-tight">Ejercicios</h1>
+      <h1 class="text-3xl font-display font-semibold tracking-tight">Ejercicios</h1>
       <p class="text-text-mute mt-1">
         {data.exercises.length} {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
       </p>
@@ -72,7 +72,7 @@
     <!-- Estado vacío útil: explica qué gana y da el atajo, en vez de decorar. -->
     <div class="card max-w-2xl space-y-5">
       <div>
-        <h2 class="text-2xl font-bold">Empieza con la biblioteca base</h2>
+        <h2 class="text-2xl font-display font-semibold">Empieza con la biblioteca base</h2>
         <p class="text-sm text-text-mute mt-2">
           Sin ejercicios no puedes montar entrenamientos, y sin entrenamientos no puedes
           programarle nada a un cliente. Cargamos {SEED_EXERCISES.length} ejercicios básicos

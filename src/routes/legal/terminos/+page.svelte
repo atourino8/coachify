@@ -9,7 +9,7 @@
   >
     ← Volver
   </a>
-  <h1 class="text-4xl font-bold mb-4">Términos de servicio</h1>
+  <h1 class="text-4xl font-display font-semibold mb-4">Términos de servicio</h1>
   <p class="text-text-mute mb-10">Última actualización: pendiente</p>
 
   <div class="space-y-6 text-text-mute leading-relaxed">

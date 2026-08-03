@@ -34,7 +34,7 @@
 <div class="space-y-8">
   <div>
     <a href="/groups" class="text-sm text-text-mute hover:text-text">← Grupos</a>
-    <h1 class="text-3xl font-bold tracking-tight mt-3">{data.group.name}</h1>
+    <h1 class="text-3xl font-display font-semibold tracking-tight mt-3">{data.group.name}</h1>
     <p class="text-text-mute text-sm mt-1">
       {data.members.length} {data.members.length === 1 ? 'persona' : 'personas'}{data.group.company
         ? ' · ' + data.group.company

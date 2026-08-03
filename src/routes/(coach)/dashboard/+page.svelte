@@ -21,7 +21,7 @@
 <div class="space-y-8">
   <div>
     <span class="eyebrow">Tu día</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">
+    <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">
       Hola{data.firstName ? ', ' + data.firstName : ''} 👋
     </h1>
   </div>

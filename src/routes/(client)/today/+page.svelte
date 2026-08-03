@@ -80,7 +80,7 @@
   <!-- Saludo -->
   <div>
     <span class="eyebrow capitalize">{dateLabel}</span>
-    <h1 class="text-4xl font-bold tracking-tight mt-2">
+    <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">
       {#if data.isToday}
         Hola, {profile?.full_name?.split(' ')[0] ?? 'crack'} 💪
       {:else}
@@ -120,7 +120,7 @@
   </div>
 
   {#if !data.workout}
-    <div class="card text-center py-14 bg-gradient-to-br from-surface to-surface-2/40">
+    <div class="card text-center py-14">
       <div class="text-6xl mb-4">🏖️</div>
       <h2 class="text-xl font-semibold mb-2">
         {data.isToday ? 'Día de descanso' : 'Sin entreno este día'}
@@ -133,7 +133,7 @@
     </div>
   {:else}
     <!-- Hero del entreno con anillo de progreso -->
-    <div class="card bg-gradient-to-br from-primary/10 to-accent/5 border-primary/20">
+    <div class="card bg-accent/5 border-accent/20">
       <div class="flex items-center gap-5">
         <!-- Anillo de progreso SVG -->
         <div class="relative w-20 h-20 flex-shrink-0">

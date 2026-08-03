@@ -74,8 +74,8 @@
   <div class="container-narrow flex items-center justify-between py-4">
     <a href="/" class="flex items-center gap-2">
       <div
-        class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-accent grid place-items-center
-               text-bg font-bold text-lg shadow-md"
+        class="w-9 h-9 rounded-lg bg-accent grid place-items-center
+               text-white font-display font-bold text-lg shadow-md"
       >
         C
       </div>
@@ -98,23 +98,13 @@
 
 <!-- ============== Hero ============== -->
 <section class="relative overflow-hidden py-24 sm:py-32">
-  <!-- Decoración de fondo -->
-  <div
-    class="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-accent/10 pointer-events-none"
-  ></div>
-  <div
-    class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/20 rounded-full blur-[120px] pointer-events-none"
-  ></div>
-
   <div class="container-narrow relative">
     <div class="max-w-3xl mx-auto text-center">
       <span class="eyebrow inline-block mb-6">para entrenadores personales</span>
-      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight mb-6 leading-[1.05]">
         Entrena a tus clientes <br />
         con
-        <span class="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          tus propios vídeos
-        </span>
+        <span class="text-accent">tus propios vídeos</span>
       </h1>
       <p class="text-lg sm:text-xl text-text-mute leading-relaxed mb-10 max-w-2xl mx-auto">
         Sin Excel. Sin WhatsApp. Sin caos. Coachify es la app que reúne tu biblioteca de
@@ -139,7 +129,7 @@
   <div class="container-narrow">
     <div class="text-center mb-12 max-w-2xl mx-auto">
       <span class="eyebrow inline-block mb-4">acceso</span>
-      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-3">¿Ya usas Coachify?</h2>
+      <h2 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mb-3">¿Ya usas Coachify?</h2>
       <p class="text-text-mute">Entra según quién seas. Es el mismo acceso, te llevamos a tu sitio.</p>
     </div>
 
@@ -182,7 +172,7 @@
   <div class="container-narrow">
     <div class="text-center mb-16 max-w-2xl mx-auto">
       <span class="eyebrow inline-block mb-4">cómo funciona</span>
-      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+      <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-4">
         Tres cosas que cambian el día a día
       </h2>
       <p class="text-lg text-text-mute">
@@ -207,7 +197,7 @@
   <div class="container-narrow">
     <div class="text-center mb-16 max-w-2xl mx-auto">
       <span class="eyebrow inline-block mb-4">precios</span>
-      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+      <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-4">
         Simple. Honesto. Sin sorpresas.
       </h2>
       <p class="text-lg text-text-mute">
@@ -218,24 +208,22 @@
     <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       {#each tiers as tier}
         <div
-          class="card relative flex flex-col {tier.featured
-            ? 'border-primary/60 shadow-glow'
-            : ''}"
+          class="card relative flex flex-col {tier.featured ? 'border-accent border-2' : ''}"
         >
           {#if tier.featured}
             <span
-              class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs
+              class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs
                      uppercase tracking-wider font-semibold px-3 py-1 rounded-full"
             >
               Más elegido
             </span>
           {/if}
 
-          <h3 class="text-2xl font-bold mb-2">{tier.name}</h3>
+          <h3 class="text-2xl font-display font-semibold mb-2">{tier.name}</h3>
           <p class="text-sm text-text-mute mb-6">{tier.description}</p>
 
           <div class="mb-6">
-            <span class="text-5xl font-bold">{tier.price}€</span>
+            <span class="text-5xl font-display font-semibold">{tier.price}€</span>
             <span class="text-text-mute text-sm">/{tier.period}</span>
           </div>
 
@@ -267,7 +255,7 @@
 <!-- ============== CTA final ============== -->
 <section class="py-24 sm:py-32 border-t border-text-mute/10">
   <div class="container-text text-center">
-    <h2 class="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+    <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-6">
       ¿Listo para dejar el Excel?
     </h2>
     <p class="text-lg text-text-mute mb-10">
@@ -285,8 +273,8 @@
   <div class="container-narrow flex flex-col sm:flex-row items-center justify-between gap-6">
     <div class="flex items-center gap-2">
       <div
-        class="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent grid place-items-center
-               text-bg font-bold text-sm"
+        class="w-7 h-7 rounded-md bg-accent grid place-items-center
+               text-white font-display font-bold text-sm"
       >
         C
       </div>

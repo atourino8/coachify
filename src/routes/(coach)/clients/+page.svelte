@@ -40,9 +40,9 @@
   function payLabelFor(fee: { fee_amount: number | null; paid_until: string | null } | null) {
     const st = paymentStatus(fee, todayISOLocal());
     if (st === 'sin_cuota') return null;
-    if (st === 'al_dia') return { text: 'Al día', cls: 'bg-success/15 text-success' };
-    if (st === 'vence_pronto') return { text: 'Vence pronto', cls: 'bg-warning/15 text-warning' };
-    return { text: 'Vencido', cls: 'bg-danger/15 text-danger' };
+    if (st === 'al_dia') return { text: 'Al día', cls: 'pill-ok' };
+    if (st === 'vence_pronto') return { text: 'Vence pronto', cls: 'pill-warn' };
+    return { text: 'Vencido', cls: 'pill-danger' };
   }
 
   function fmtDate(iso: string | null) {
@@ -65,7 +65,7 @@
   <div class="flex items-center justify-between gap-4">
     <div>
       <span class="eyebrow">tu cartera</span>
-      <h1 class="text-3xl font-bold tracking-tight mt-2">Clientes</h1>
+      <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
     </div>
     <div class="flex items-center gap-3">
       <a href="/groups" class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap">
@@ -137,24 +137,28 @@
         </p>
       </div>
     {:else}
-      <div class="space-y-2">
+      <!-- Lista densa: filas separadas por línea, no tarjetas. Se ve más
+           gente por pantalla y el estado de pago se lee de un vistazo. -->
+      <div class="border-t border-line">
         {#each data.active as client (client.id)}
           {@const pay = payLabelFor(client.fee)}
-          <a
-            href="/clients/{client.id}"
-            class="card flex items-center gap-4 hover:border-primary/50 transition-all"
-          >
-            <div class="w-12 h-12 rounded-full bg-surface-2 grid place-items-center text-lg font-semibold text-text-mute">
+          <a href="/clients/{client.id}" class="row-link">
+            <div class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0">
               {client.full_name?.charAt(0).toUpperCase() ?? '?'}
             </div>
             <div class="flex-1 min-w-0">
-              <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
+              <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
               <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
             </div>
-            {#if pay}
-              <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {pay.cls}">{pay.text}</span>
+            {#if client.fee?.fee_amount}
+              <span class="text-xs text-text-mute tabular-nums hidden sm:block flex-shrink-0">
+                {client.fee.fee_amount} €/mes
+              </span>
             {/if}
-            <span class="text-text-mute hover:text-text text-sm flex-shrink-0">Ver →</span>
+            {#if pay}
+              <span class="{pay.cls} flex-shrink-0">{pay.text}</span>
+            {/if}
+            <span class="text-text-mute text-sm flex-shrink-0">→</span>
           </a>
         {/each}
       </div>

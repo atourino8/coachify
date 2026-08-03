@@ -147,7 +147,7 @@
       <a href="/clients/{data.client.id}" class="text-sm text-text-mute hover:text-text">
         ← {data.client.full_name}
       </a>
-      <h1 class="text-2xl font-bold tracking-tight mt-2 capitalize">
+      <h1 class="text-2xl font-display font-semibold tracking-tight mt-2 capitalize">
         {formatHumanDate(data.date)}
       </h1>
     </div>

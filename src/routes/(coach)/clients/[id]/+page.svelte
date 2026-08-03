@@ -146,7 +146,7 @@
   <div class="flex items-start justify-between gap-4">
     <div>
       <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
-      <h1 class="text-3xl font-bold tracking-tight mt-3">{data.client.full_name}</h1>
+      <h1 class="text-3xl font-display font-semibold tracking-tight mt-3">{data.client.full_name}</h1>
       <p class="text-text-mute text-sm mt-1">
         Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
       </p>
@@ -266,7 +266,7 @@
           <!-- Columna de fecha -->
           <div class="w-14 flex-shrink-0 text-center border-r border-text-mute/10 pr-3 flex flex-col justify-center">
             <div class="text-[11px] uppercase tracking-wider {day.isToday ? 'text-primary font-semibold' : 'text-text-mute'}">{day.weekday}</div>
-            <div class="text-2xl font-bold leading-tight {day.isToday ? 'text-primary' : ''}">{day.dayNum}</div>
+            <div class="text-2xl font-display font-semibold leading-tight {day.isToday ? 'text-primary' : ''}">{day.dayNum}</div>
             {#if day.isToday}
               <div class="text-[9px] font-bold uppercase tracking-wide text-primary">Hoy</div>
             {/if}
