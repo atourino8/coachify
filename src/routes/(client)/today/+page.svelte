@@ -62,9 +62,9 @@
   {#if data.proposalCount > 0}
     <a
       href="/my-calendar"
-      class="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 hover:bg-primary/15 transition-colors"
+      class="flex items-center gap-3 bg-accent/5 border border-accent/25 rounded-lg px-4 py-3 hover:bg-accent/10 transition-colors"
     >
-      <span class="text-xl">📅</span>
+      <span class="pill-accent flex-shrink-0">Nueva</span>
       <div class="flex-1 min-w-0">
         <div class="text-sm font-semibold">
           {data.proposalCount === 1
@@ -82,50 +82,32 @@
     <span class="eyebrow capitalize">{dateLabel}</span>
     <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">
       {#if data.isToday}
-        Hola, {profile?.full_name?.split(' ')[0] ?? 'crack'} 💪
+        Hola, {profile?.full_name?.split(' ')[0] ?? 'crack'}
       {:else}
         {dateLabel}
       {/if}
     </h1>
   </div>
 
-  <!-- Acciones rápidas -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    <a href="/my-calendar?request=1" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
-      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" stroke-linecap="round" /></svg>
-      </span>
-      <span class="text-sm font-medium">Pedir cita</span>
-    </a>
-    <a href="/my-calendar" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
-      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round" /></svg>
-      </span>
-      <span class="text-sm font-medium">Mis citas</span>
-    </a>
-    <a href="/progress" class="card p-4 flex flex-col gap-2 hover:border-primary/50 transition-all">
-      <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 16l3-4 3 2 4-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-      </span>
-      <span class="text-sm font-medium">Mi progreso</span>
-    </a>
+  <!-- Acciones: tira compacta, sin tarjetas ni iconos decorativos -->
+  <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-line py-3 text-sm">
+    <a href="/my-calendar?request=1" class="font-medium hover:text-accent transition-colors">Pedir cita</a>
+    <a href="/my-calendar" class="font-medium hover:text-accent transition-colors">Mis citas</a>
+    <a href="/progress" class="font-medium hover:text-accent transition-colors">Mi progreso</a>
     {#if data.coachEmail}
-      <button type="button" onclick={() => (showContact = true)} class="card p-4 flex flex-col gap-2 text-left hover:border-primary/50 transition-all">
-        <span class="h-9 w-9 grid place-items-center rounded-lg bg-primary/15 text-primary" aria-hidden="true">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" stroke-linecap="round" /></svg>
-        </span>
-        <span class="text-sm font-medium">Contactar coach</span>
+      <button type="button" onclick={() => (showContact = true)}
+        class="font-medium hover:text-accent transition-colors">
+        Contactar coach
       </button>
     {/if}
-  </div>
+  </nav>
 
   {#if !data.workout}
-    <div class="card text-center py-14">
-      <div class="text-6xl mb-4">🏖️</div>
-      <h2 class="text-xl font-semibold mb-2">
+    <div class="card max-w-xl space-y-2">
+      <h2 class="text-2xl font-display font-semibold">
         {data.isToday ? 'Día de descanso' : 'Sin entreno este día'}
       </h2>
-      <p class="text-sm text-text-mute max-w-md mx-auto">
+      <p class="text-sm text-text-mute">
         {data.isToday
           ? 'Tu coach no ha publicado entreno para hoy. Aprovecha para recuperar, estirar o caminar.'
           : 'No hay nada programado para esta fecha.'}
@@ -159,8 +141,9 @@
         </div>
       </div>
       {#if data.workout.notes}
-        <div class="text-sm bg-bg/60 border-l-2 border-primary rounded-r px-3 py-2 italic mt-4">
-          💬 {data.workout.notes}
+        <div class="text-sm bg-bg border border-line rounded-md px-3 py-2 mt-4">
+          <span class="text-xs uppercase tracking-wider text-text-mute block mb-1">Nota de tu entrenador</span>
+          {data.workout.notes}
         </div>
       {/if}
     </div>
