@@ -70,7 +70,7 @@
 </script>
 
 <!-- ============== Header ============== -->
-<header class="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-text-mute/10">
+<header class="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-line">
   <div class="container-narrow flex items-center justify-between py-4">
     <a href="/" class="flex items-center gap-2">
       <div

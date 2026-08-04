@@ -97,38 +97,34 @@
   {/if}
 
   {#if data.groups.length === 0}
-    <div class="card text-center py-16">
-      <div class="text-5xl mb-4" aria-hidden="true">👥</div>
-      <h2 class="text-xl font-semibold mb-2">Sin grupos todavía</h2>
-      <p class="text-sm text-text-mute max-w-md mx-auto">
-        Crea un grupo cuando lleves a varias personas a la vez — por ejemplo, las
-        empleadas de una empresa que te contrata.
+    <div class="card max-w-2xl space-y-3">
+      <h2 class="text-2xl font-display font-semibold">Aún no tienes grupos</h2>
+      <p class="text-sm text-text-mute">
+        Un grupo te ahorra el trabajo repetido cuando llevas a varias personas a la vez:
+        las invitas de golpe pegando sus correos y les programas el mismo entrenamiento en
+        un clic. Es lo que necesitas si una empresa te contrata para sus empleadas.
       </p>
+      <button onclick={() => (showForm = true)} class="btn-primary">Crear el primero</button>
     </div>
   {:else}
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="border-t border-line">
       {#each data.groups as g (g.id)}
-        <div class="card flex items-center justify-between gap-4 hover:border-primary/40 transition-all">
+        <div class="row">
           <a href="/groups/{g.id}" class="flex-1 min-w-0">
-            <div class="font-semibold truncate">{g.name}</div>
-            {#if g.company}
-              <div class="text-xs text-text-mute mt-0.5 truncate">{g.company}</div>
-            {/if}
-            <div class="text-xs text-text-mute mt-1">
-              {g.memberCount} {g.memberCount === 1 ? 'persona' : 'personas'}
+            <div class="font-medium truncate">{g.name}</div>
+            <div class="text-xs text-text-mute truncate">
+              {g.memberCount} {g.memberCount === 1 ? 'persona' : 'personas'}{g.company ? ' · ' + g.company : ''}
             </div>
           </a>
-          <div class="flex items-center gap-3 flex-shrink-0">
-            <a href="/groups/{g.id}" class="text-xs text-primary hover:underline">Abrir</a>
-            <button
-              type="button"
-              class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
-              aria-label="Eliminar grupo {g.name}"
-              onclick={() => askDelete(g.id, g.name)}
-            >
-              ×
-            </button>
-          </div>
+          <a href="/groups/{g.id}" class="text-xs text-accent hover:underline flex-shrink-0">Abrir</a>
+          <button
+            type="button"
+            class="text-text-mute hover:text-danger transition-colors text-lg leading-none flex-shrink-0"
+            aria-label="Eliminar grupo {g.name}"
+            onclick={() => askDelete(g.id, g.name)}
+          >
+            ×
+          </button>
         </div>
       {/each}
     </div>

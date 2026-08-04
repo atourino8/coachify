@@ -191,7 +191,7 @@
         {#if showHistory}
           <div class="mt-3 space-y-0">
             {#each data.past as s (s.id)}
-              <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-text-mute/10">
+              <div class="flex items-center justify-between gap-4 text-sm py-2 border-b border-line">
                 <span class="text-text-mute capitalize">{fmt(s.starts_at)}</span>
                 <span class="text-xs px-2 py-1 rounded-full {statusClass[s.status]}">{statusLabel[s.status]}</span>
               </div>

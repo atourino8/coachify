@@ -191,24 +191,22 @@
         </p>
       </div>
     {:else}
-      <div class="space-y-2">
+      <div class="border-t border-line">
         {#each data.members as m (m.id)}
-          <div class="card p-3 flex items-center justify-between gap-3">
+          <div class="row">
             <a href="/clients/{m.id}" class="flex items-center gap-3 flex-1 min-w-0">
-              <div class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0">
+              <span class="w-8 h-8 rounded-full bg-surface-2 grid place-items-center text-xs font-semibold text-text-mute flex-shrink-0">
                 {m.name.charAt(0).toUpperCase()}
-              </div>
+              </span>
               <span class="font-medium truncate">{m.name}</span>
             </a>
-            <div class="flex items-center gap-3 flex-shrink-0">
-              <a href="/clients/{m.id}" class="text-xs text-primary hover:underline">Ver ficha</a>
-              <form method="POST" action="?/removeMember" use:enhance>
-                <input type="hidden" name="client_id" value={m.id} />
-                <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
-                  Quitar
-                </button>
-              </form>
-            </div>
+            <a href="/clients/{m.id}" class="text-xs text-accent hover:underline flex-shrink-0">Ver ficha</a>
+            <form method="POST" action="?/removeMember" use:enhance class="flex-shrink-0">
+              <input type="hidden" name="client_id" value={m.id} />
+              <button type="submit" class="text-xs text-text-mute hover:text-danger transition-colors">
+                Quitar
+              </button>
+            </form>
           </div>
         {/each}
       </div>

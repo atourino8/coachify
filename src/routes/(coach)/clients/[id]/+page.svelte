@@ -168,12 +168,12 @@
   </div>
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-text-mute/10">
+  <div class="flex gap-1 border-b border-line">
     {#each [{ v: 'entrenos', l: 'Entrenos' }, { v: 'ficha', l: 'Ficha' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}
         class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
-          {tab === t.v ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+          {tab === t.v ? 'border-accent text-text' : 'border-transparent text-text-mute hover:text-text'}"
       >
         {t.l}
         {#if t.v === 'tecnica' && pendingTechnique > 0}
@@ -663,7 +663,7 @@
       {:else}
         <div class="space-y-1.5">
           {#each data.historySessions as s (s.id)}
-            <div class="flex items-center justify-between gap-3 text-sm py-2 border-b border-text-mute/10">
+            <div class="flex items-center justify-between gap-3 text-sm py-2 border-b border-line">
               <span class="capitalize text-text-mute">{fmtDateTime(s.starts_at)}</span>
               <span class="text-xs px-2 py-0.5 rounded-full {sessionStatusClass[s.status] ?? ''}">
                 {sessionStatusLabel[s.status] ?? s.status}

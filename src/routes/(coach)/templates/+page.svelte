@@ -45,9 +45,9 @@
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
-  <div class="flex gap-1 border-b border-text-mute/10">
+  <div class="flex gap-1 border-b border-line">
     <a href="/exercises" class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text">Ejercicios</a>
-    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary -mb-px">Entrenamientos</a>
+    <a href="/templates" class="px-4 py-2 text-sm font-medium border-b-2 border-accent text-accent -mb-px">Entrenamientos</a>
   </div>
 
   <div class="flex items-center justify-between gap-4">
@@ -102,12 +102,14 @@
   {/if}
 
   {#if data.templates.length === 0}
-    <div class="card text-center py-16">
-      <div class="text-6xl mb-4">📋</div>
-      <h2 class="text-xl font-semibold mb-2">Sin entrenamientos todavía</h2>
-      <p class="text-sm text-text-mute max-w-md mx-auto">
-        Crea tu primer entrenamiento reutilizable para aplicarlo a cualquier cliente en segundos.
+    <div class="card max-w-2xl space-y-3">
+      <h2 class="text-2xl font-display font-semibold">Aún no tienes entrenamientos</h2>
+      <p class="text-sm text-text-mute">
+        Un entrenamiento es una secuencia de ejercicios que montas una vez y reutilizas
+        siempre: se lo aplicas a cualquier cliente, o a varios días de golpe, sin volver a
+        armarlo. Es lo que convierte programar la semana en cuestión de segundos.
       </p>
+      <button onclick={() => (showForm = true)} class="btn-primary">Crear el primero</button>
     </div>
   {:else}
     <!-- Filtro por categoría (solo si hay categorías en uso) -->
@@ -134,31 +136,25 @@
       </div>
     {/if}
 
-    <div class="grid sm:grid-cols-2 gap-4">
+    <div class="border-t border-line">
       {#each filtered as t (t.id)}
-        <div class="card flex items-center justify-between gap-4 hover:border-primary/40 transition-all">
+        <div class="row">
           <a href="/templates/{t.id}" class="flex-1 min-w-0">
-            <div class="font-semibold truncate flex items-center gap-2">
-              {t.name}
-              {#if t.category}
-                <span class="text-[10px] uppercase tracking-wide bg-primary/15 text-primary px-1.5 py-0.5 rounded whitespace-nowrap">
-                  {catLabels[t.category] ?? t.category}
-                </span>
-              {/if}
-            </div>
-            <div class="text-xs text-text-mute mt-1">{t.itemCount} ejercicios</div>
+            <div class="font-medium truncate">{t.name}</div>
+            <div class="text-xs text-text-mute">{t.itemCount} ejercicios</div>
           </a>
-          <div class="flex items-center gap-3 flex-shrink-0">
-            <a href="/templates/{t.id}" class="text-xs text-primary hover:underline">Editar</a>
-            <button
-              type="button"
-              class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
-              aria-label="Borrar entrenamiento {t.name}"
-              onclick={() => askDelete(t.id, t.name)}
-            >
-              ×
-            </button>
-          </div>
+          {#if t.category}
+            <span class="pill-mute flex-shrink-0">{catLabels[t.category] ?? t.category}</span>
+          {/if}
+          <a href="/templates/{t.id}" class="text-xs text-accent hover:underline flex-shrink-0">Editar</a>
+          <button
+            type="button"
+            class="text-text-mute hover:text-danger transition-colors text-lg leading-none flex-shrink-0"
+            aria-label="Borrar entrenamiento {t.name}"
+            onclick={() => askDelete(t.id, t.name)}
+          >
+            ×
+          </button>
         </div>
       {/each}
     </div>

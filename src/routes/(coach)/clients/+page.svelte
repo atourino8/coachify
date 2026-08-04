@@ -107,18 +107,18 @@
   {/if}
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-text-mute/10">
+  <div class="flex gap-1 border-b border-line">
     <button
       onclick={() => (tab = 'active')}
       class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-        {tab === 'active' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        {tab === 'active' ? 'border-accent text-text' : 'border-transparent text-text-mute hover:text-text'}"
     >
       Activos ({data.active.length})
     </button>
     <button
       onclick={() => (tab = 'pending')}
       class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
-        {tab === 'pending' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        {tab === 'pending' ? 'border-accent text-text' : 'border-transparent text-text-mute hover:text-text'}"
     >
       Pendientes
       {#if data.pending.length > 0}
@@ -235,7 +235,7 @@
       </div>
 
       <!-- Selector de modo -->
-      <div class="flex gap-1 border-b border-text-mute/10">
+      <div class="flex gap-1 border-b border-line">
         <button
           type="button"
           onclick={() => (inviteMode = 'one')}
