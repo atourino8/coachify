@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { navigating } from '$app/state';
+  import { navigating, page } from '$app/state';
   import { enhance } from '$app/forms';
   import {
     formatDateISO,
@@ -33,7 +33,13 @@
   const weekdayHeaders = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
   // --- Pestañas (Entrenos / Ficha / Técnica / Historial) ---
-  let tab = $state<'entrenos' | 'ficha' | 'tecnica' | 'historial'>('entrenos');
+  // La pestaña inicial se puede fijar por URL (?tab=tecnica) para que los
+  // avisos del inicio aterricen directamente donde está la acción.
+  type Tab = 'entrenos' | 'ficha' | 'tecnica' | 'historial';
+  const TABS: Tab[] = ['entrenos', 'ficha', 'tecnica', 'historial'];
+  const initialTab = page.url.searchParams.get('tab') as Tab | null;
+  // svelte-ignore state_referenced_locally
+  let tab = $state<Tab>(initialTab && TABS.includes(initialTab) ? initialTab : 'entrenos');
 
   // Nº de ejercicios con vídeo pendiente de revisar (para el badge).
   const pendingTechnique = $derived(data.technique.filter((t) => t.pending).length);

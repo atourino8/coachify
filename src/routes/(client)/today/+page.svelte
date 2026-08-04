@@ -1,8 +1,25 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { enhance } from '$app/forms';
   import type { WorkoutItemWithRelations } from '$lib/supabase/types';
 
-  let { data } = $props();
+  let { data, form } = $props();
+
+  const modalityLabel: Record<string, string> = {
+    presencial: 'Presencial',
+    online: 'Online',
+    remoto: 'Remoto'
+  };
+
+  function fmtSession(iso: string) {
+    return new Date(iso).toLocaleString('es-ES', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
   const profile = $derived(page.data.profile);
 
   const dateLabel = $derived(
@@ -58,23 +75,51 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <!-- Aviso de propuestas de cita pendientes -->
-  {#if data.proposalCount > 0}
-    <a
-      href="/my-calendar"
-      class="flex items-center gap-3 bg-accent/5 border border-accent/25 rounded-lg px-4 py-3 hover:bg-accent/10 transition-colors"
-    >
-      <span class="pill-accent flex-shrink-0">Nueva</span>
-      <div class="flex-1 min-w-0">
-        <div class="text-sm font-semibold">
-          {data.proposalCount === 1
-            ? 'Tu coach te ha propuesto una cita'
-            : `Tu coach te ha propuesto ${data.proposalCount} citas`}
-        </div>
-        <div class="text-xs text-text-mute">Revísala y confírmala en tu calendario</div>
+  <!-- Propuestas de cita: se confirman aquí mismo, sin ir al calendario -->
+  {#if data.proposals.length > 0}
+    <section class="border border-accent/25 bg-accent/5 rounded-lg px-4 py-3 space-y-3">
+      <div class="flex items-center gap-2">
+        <span class="pill-accent flex-shrink-0">Nueva</span>
+        <span class="text-sm font-semibold">
+          {data.proposals.length === 1
+            ? 'Tu coach te propone una cita'
+            : `Tu coach te propone ${data.proposals.length} citas`}
+        </span>
       </div>
-      <span class="text-xs text-primary font-medium whitespace-nowrap">Ver →</span>
-    </a>
+      {#each data.proposals as p (p.id)}
+        <div class="flex flex-wrap items-center gap-3 border-t border-accent/20 pt-3">
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-medium capitalize">{fmtSession(p.starts_at)}</div>
+            <div class="text-xs text-text-mute">
+              {modalityLabel[p.modality] ?? p.modality}{p.location ? ' · ' + p.location : ''}
+            </div>
+            {#if p.notes}<div class="text-xs text-text-mute italic mt-0.5">{p.notes}</div>{/if}
+          </div>
+          <form method="POST" action="?/confirmSession" use:enhance class="flex-shrink-0">
+            <input type="hidden" name="session_id" value={p.id} />
+            <button type="submit" class="action-primary">Confirmar</button>
+          </form>
+          <form method="POST" action="?/rejectSession" use:enhance class="flex-shrink-0">
+            <input type="hidden" name="session_id" value={p.id} />
+            <button type="submit" class="action-danger">No puedo</button>
+          </form>
+        </div>
+      {/each}
+    </section>
+  {/if}
+
+  {#if form?.error}
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+  {/if}
+  {#if form?.success && form?.confirmed}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Cita confirmada. Te la hemos guardado en tus citas.
+    </p>
+  {/if}
+  {#if form?.success && form?.rejected}
+    <p aria-live="polite" class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3">
+      Le hemos avisado a tu coach de que no te viene bien.
+    </p>
   {/if}
 
   <!-- Saludo -->
@@ -102,8 +147,21 @@
     {/if}
   </nav>
 
+  <!-- Próxima cita confirmada: dato de una línea, sin tarjeta -->
+  {#if data.nextSession}
+    <p class="text-sm text-text-mute -mt-3">
+      Próxima cita: <a href="/my-calendar" class="text-text font-medium capitalize hover:text-accent transition-colors"
+        >{fmtSession(data.nextSession.starts_at)}</a
+      >
+      · {modalityLabel[data.nextSession.modality] ?? data.nextSession.modality}{data.nextSession
+        .location
+        ? ' · ' + data.nextSession.location
+        : ''}
+    </p>
+  {/if}
+
   {#if !data.workout}
-    <div class="card max-w-xl space-y-2">
+    <div class="card max-w-xl space-y-3">
       <h2 class="text-2xl font-display font-semibold">
         {data.isToday ? 'Día de descanso' : 'Sin entreno este día'}
       </h2>
@@ -112,6 +170,10 @@
           ? 'Tu coach no ha publicado entreno para hoy. Aprovecha para recuperar, estirar o caminar.'
           : 'No hay nada programado para esta fecha.'}
       </p>
+      <div class="flex flex-wrap gap-3 pt-1">
+        <a href="/progress" class="btn-ghost">Ver mi progreso</a>
+        <a href="/my-calendar?request=1" class="btn-ghost">Pedir cita</a>
+      </div>
     </div>
   {:else}
     <!-- Hero del entreno con anillo de progreso -->
@@ -139,6 +201,14 @@
             {data.workout.workout_items?.length ?? 0} ejercicios · {doneSets}/{totalSets} series
           </p>
         </div>
+        <!-- La acción principal del día: retomar donde lo dejó, sin buscar -->
+        {#if data.nextItemId}
+          <a href="/workout/{data.nextItemId}" class="btn-primary flex-shrink-0 whitespace-nowrap">
+            {data.started ? 'Continuar' : 'Empezar'}
+          </a>
+        {:else}
+          <span class="pill-ok flex-shrink-0">Completado</span>
+        {/if}
       </div>
       {#if data.workout.notes}
         <div class="text-sm bg-bg border border-line rounded-md px-3 py-2 mt-4">
@@ -190,28 +260,23 @@
     </div>
   {/if}
 
-  <!-- Próximos entrenos -->
+  <!-- Próximos entrenos: filas densas, la fecha manda -->
   {#if data.upcoming.length > 0}
-    <section class="space-y-3 pt-2">
-      <h2 class="text-sm uppercase tracking-wider text-text-mute">Próximos entrenos</h2>
-      {#each data.upcoming as w (w.id)}
-        <a
-          href="/today?date={w.date}"
-          class="card flex items-center gap-4 hover:border-primary/40 transition-all py-3"
-        >
-          <div class="w-10 h-10 rounded-lg bg-primary/10 grid place-items-center flex-shrink-0">
-            <span class="text-lg">🗓️</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-medium truncate flex items-center gap-2">
-              {#if w.done}<span class="text-success text-sm">✓</span>{/if}
-              {w.title ?? 'Entreno'}
-            </div>
-            <div class="text-xs text-text-mute capitalize">{upcomingLabel(w.date)} · {w.itemCount} ej.</div>
-          </div>
-          <span class="text-text-mute">→</span>
-        </a>
-      {/each}
+    <section class="pt-2">
+      <h2 class="text-sm uppercase tracking-wider text-text-mute mb-2">Próximos entrenos</h2>
+      <div class="border-t border-line">
+        {#each data.upcoming as w (w.id)}
+          <a href="/today?date={w.date}" class="row-link">
+            <span class="w-24 text-sm text-text-mute capitalize flex-shrink-0">{upcomingLabel(w.date)}</span>
+            <span class="flex-1 min-w-0 truncate">
+              <span class="font-medium">{w.title ?? 'Entreno'}</span>
+              <span class="text-text-mute text-sm"> · {w.itemCount} ejercicios</span>
+            </span>
+            {#if w.done}<span class="pill-ok flex-shrink-0">Empezado</span>{/if}
+            <span class="text-text-mute text-sm flex-shrink-0">→</span>
+          </a>
+        {/each}
+      </div>
     </section>
   {/if}
 </div>

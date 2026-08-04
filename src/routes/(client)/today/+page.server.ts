@@ -5,11 +5,11 @@
 // Vercel, que de noche en España va un día por detrás -> el entreno de hoy no
 // aparecía. Con la zona horaria correcta se soluciona.
 
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { todayISOInTZ } from '$lib/week';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
 const DEFAULT_TZ = 'Europe/Madrid';
 
@@ -42,7 +42,9 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
     .order('date', { ascending: true })
     .limit(30);
 
-  const workouts = (workoutsRaw ?? []) as unknown as (WorkoutWithItems & { date: string })[];
+  const workouts = (workoutsRaw ?? []) as unknown as (WorkoutWithItems & {
+    date: string;
+  })[];
 
   // Ordenar los items de cada entreno
   for (const w of workouts) {
@@ -67,13 +69,45 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
       done: (w.workout_items ?? []).some((it) => (it.set_logs?.length ?? 0) > 0)
     }));
 
-  // Propuestas de cita pendientes de confirmar (el coach las propuso).
-  const { count: proposalCount } = await supabase
+  // Siguiente ejercicio sin terminar del entreno de hoy: es el atajo que
+  // convierte el home en "seguir donde lo dejé" en vez de "buscar por dónde iba".
+  const pendingItem =
+    (heroWorkout?.workout_items ?? []).find((it) => (it.set_logs?.length ?? 0) < it.sets) ?? null;
+  const started = (heroWorkout?.workout_items ?? []).some((it) => (it.set_logs?.length ?? 0) > 0);
+
+  // Propuestas de cita pendientes de confirmar (el coach las propuso). Traemos
+  // los datos completos, no solo el número, para poder confirmarlas desde aquí.
+  const { data: propRaw } = await supabase
     .from('sessions')
-    .select('id', { count: 'exact', head: true })
+    .select('id, starts_at, modality, location, notes')
     .eq('client_id', user.id)
     .eq('status', 'requested')
-    .neq('requested_by', user.id);
+    .neq('requested_by', user.id)
+    .order('starts_at', { ascending: true });
+  const proposals = (propRaw ?? []) as {
+    id: string;
+    starts_at: string;
+    modality: string;
+    location: string | null;
+    notes: string | null;
+  }[];
+
+  // Próxima cita ya confirmada (para que el home diga cuándo te toca).
+  const { data: nextRaw } = await supabase
+    .from('sessions')
+    .select('id, starts_at, modality, location')
+    .eq('client_id', user.id)
+    .eq('status', 'confirmed')
+    .gte('starts_at', new Date().toISOString())
+    .order('starts_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const nextSession = (nextRaw ?? null) as {
+    id: string;
+    starts_at: string;
+    modality: string;
+    location: string | null;
+  } | null;
 
   // Datos del coach (para el atajo "Contactar a mi coach"). El email vive en
   // auth.users, así que se lee con el cliente admin.
@@ -99,8 +133,50 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
     date: viewDate,
     isToday: viewDate === today,
     upcoming,
-    proposalCount: proposalCount ?? 0,
+    nextItemId: pendingItem?.id ?? null,
+    started,
+    proposals,
+    proposalCount: proposals.length,
+    nextSession,
     coachEmail,
     coachName
   };
+};
+
+// El cliente resuelve la propuesta de cita desde su propio inicio, sin tener
+// que ir a /my-calendar. El .eq('client_id') evita tocar citas ajenas.
+export const actions: Actions = {
+  confirmSession: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const id = String((await request.formData()).get('session_id') ?? '');
+    if (!id) return fail(400, { error: 'Falta la cita.' });
+
+    const { error } = await supabase
+      .from('sessions')
+      .update({
+        status: 'confirmed',
+        decided_at: new Date().toISOString()
+      } as never)
+      .eq('id', id)
+      .eq('client_id', user.id);
+    if (error) return fail(500, { error: 'No se pudo confirmar la cita.' });
+    return { success: true, confirmed: true };
+  },
+
+  rejectSession: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const id = String((await request.formData()).get('session_id') ?? '');
+    if (!id) return fail(400, { error: 'Falta la cita.' });
+
+    const { error } = await supabase
+      .from('sessions')
+      .update({
+        status: 'rejected',
+        decided_at: new Date().toISOString()
+      } as never)
+      .eq('id', id)
+      .eq('client_id', user.id);
+    if (error) return fail(500, { error: 'No se pudo rechazar la cita.' });
+    return { success: true, rejected: true };
+  }
 };
