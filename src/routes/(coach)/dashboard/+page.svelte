@@ -34,7 +34,7 @@
   // Contador de todo lo que espera una decisión tuya.
   const pendientes = $derived(
     data.pendingRequests.length +
-      data.pendingVideos.length +
+      data.pendingVideoCount +
       data.paymentAlerts.length +
       data.clientsWithoutWorkout.length
   );
@@ -84,6 +84,11 @@
   {#if form?.success && form?.rejected}
     <p aria-live="polite" class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3">
       Cita rechazada.
+    </p>
+  {/if}
+  {#if form?.success && form?.commented}
+    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      Corrección enviada. Tu cliente la verá en ese ejercicio.
     </p>
   {/if}
 
@@ -168,22 +173,106 @@
       </section>
     {/if}
 
-    <!-- ===== VÍDEOS DE TÉCNICA SIN CORREGIR ===== -->
-    {#if data.pendingVideos.length > 0}
+    <!-- ===== BANDEJA DE CORRECCIÓN DE TÉCNICA =====
+         Se corrige aquí mismo: ver el vídeo, escribir la corrección y guardar.
+         Al guardar, el vídeo sale de la bandeja. -->
+    {#if data.reviewQueue.length > 0}
       <section>
-        <h2 class="text-lg font-display font-semibold mb-2">Vídeos esperando tu corrección</h2>
-        <div class="border-t border-line">
-          {#each data.pendingVideos as v (v.id)}
-            <a href="/clients/{v.clientId}?tab=tecnica" class="row-link">
-              <span class="flex-1 min-w-0 truncate">
-                <span class="font-medium">{v.clientName}</span>
-                <span class="text-text-mute text-sm"> · {v.exerciseName}</span>
-              </span>
-              <span class="text-xs text-text-mute flex-shrink-0">{hace(v.createdAt)}</span>
-              <span class="text-xs text-accent flex-shrink-0">Corregir →</span>
-            </a>
+        <div class="flex items-baseline justify-between gap-4 mb-2">
+          <h2 class="text-lg font-display font-semibold">Técnica por corregir</h2>
+          {#if data.pendingVideoCount > data.reviewQueue.length}
+            <span class="text-xs text-text-mute">
+              {data.reviewQueue.length} de {data.pendingVideoCount}
+            </span>
+          {/if}
+        </div>
+
+        <div class="space-y-4 border-t border-line pt-4">
+          {#each data.reviewQueue as v (v.id)}
+            <article class="card space-y-3">
+              <div class="flex items-baseline justify-between gap-3">
+                <h3 class="font-semibold min-w-0 truncate">
+                  {v.clientName}
+                  <span class="text-text-mute font-normal"> · {v.exerciseName}</span>
+                </h3>
+                <span class="text-xs text-text-mute flex-shrink-0">{hace(v.createdAt)}</span>
+              </div>
+
+              <div class="grid {v.firstUrl ? 'sm:grid-cols-2' : ''} gap-3">
+                <div class="space-y-1.5">
+                  {#if v.firstUrl}
+                    <span class="text-xs uppercase tracking-wider text-text-mute">Ahora</span>
+                  {/if}
+                  {#if v.url}
+                    <!-- svelte-ignore a11y_media_has_caption -->
+                    <video
+                      src={v.url}
+                      controls
+                      playsinline
+                      preload="metadata"
+                      class="w-full max-h-72 rounded-md bg-black"
+                    ></video>
+                  {:else}
+                    <p class="text-xs text-text-mute italic">No se pudo cargar el vídeo.</p>
+                  {/if}
+                </div>
+                {#if v.firstUrl}
+                  <div class="space-y-1.5">
+                    <span class="text-xs uppercase tracking-wider text-text-mute">
+                      Su primer vídeo{v.firstAt
+                        ? ' · ' + new Date(v.firstAt).toLocaleDateString('es-ES')
+                        : ''}
+                    </span>
+                    <!-- svelte-ignore a11y_media_has_caption -->
+                    <video
+                      src={v.firstUrl}
+                      controls
+                      playsinline
+                      preload="metadata"
+                      class="w-full max-h-72 rounded-md bg-black"
+                    ></video>
+                  </div>
+                {/if}
+              </div>
+
+              <form
+                method="POST"
+                action="?/commentVideo"
+                use:enhance
+                class="space-y-2 border-t border-line pt-3"
+              >
+                <input type="hidden" name="video_id" value={v.id} />
+                <label
+                  for="cmt-{v.id}"
+                  class="block text-xs uppercase tracking-wider text-text-mute"
+                >
+                  Corrección para {v.clientName.split(' ')[0]}
+                </label>
+                <textarea
+                  id="cmt-{v.id}"
+                  name="comment"
+                  rows="2"
+                  maxlength="600"
+                  required
+                  placeholder="ej: baja más la cadera y mantén la espalda neutra…"
+                  class="w-full px-4 py-3 bg-bg border border-line rounded-md text-sm
+                         focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
+                ></textarea>
+                <div class="flex items-center justify-end gap-3">
+                  <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral">Ver historial</a>
+                  <button type="submit" class="action-primary">Enviar corrección</button>
+                </div>
+              </form>
+            </article>
           {/each}
         </div>
+
+        {#if data.pendingVideoCount > data.reviewQueue.length}
+          <p class="text-sm text-text-mute mt-3">
+            Quedan {data.pendingVideoCount - data.reviewQueue.length} vídeos más por corregir.
+            Aparecerán aquí según despaches estos.
+          </p>
+        {/if}
       </section>
     {/if}
 
