@@ -79,7 +79,10 @@
 
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
-        <label for="muscle_group" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        <label
+          for="muscle_group"
+          class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+        >
           Grupo muscular
         </label>
         <select
@@ -125,7 +128,10 @@
     </div>
 
     {#if form?.error}
-      <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      <p
+        role="alert"
+        class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+      >
         {form.error}
       </p>
     {/if}

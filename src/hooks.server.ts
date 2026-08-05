@@ -55,7 +55,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
   event.locals.session = session;
   event.locals.user = user;
 
-  const isCoachRoute = event.url.pathname.startsWith('/dashboard') ||
+  const isCoachRoute =
+    event.url.pathname.startsWith('/dashboard') ||
     event.url.pathname.startsWith('/exercises') ||
     event.url.pathname.startsWith('/templates') ||
     event.url.pathname.startsWith('/clients') ||
@@ -64,7 +65,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
     event.url.pathname.startsWith('/availability') ||
     event.url.pathname.startsWith('/settings');
 
-  const isClientRoute = event.url.pathname.startsWith('/today') ||
+  const isClientRoute =
+    event.url.pathname.startsWith('/today') ||
     event.url.pathname.startsWith('/workout') ||
     event.url.pathname.startsWith('/history') ||
     event.url.pathname.startsWith('/progress') ||

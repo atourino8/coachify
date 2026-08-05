@@ -69,7 +69,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
       .select('workout_item_id')
       .eq('client_id', params.id)
       .in('workout_item_id', allItemIds);
-    const loggedItemIds = new Set((logs ?? []).map((l) => (l as { workout_item_id: string }).workout_item_id));
+    const loggedItemIds = new Set(
+      (logs ?? []).map((l) => (l as { workout_item_id: string }).workout_item_id)
+    );
     for (const w of workouts) {
       if ((w.workout_items ?? []).some((it) => loggedItemIds.has(it.id))) {
         doneWorkoutIds.add(w.id);
@@ -100,9 +102,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     .select('id, name, category, workout_template_items(id)')
     .eq('coach_id', user.id)
     .order('name');
-  const templates = ((tplRaw ?? []) as unknown as { id: string; name: string; category: string | null; workout_template_items: { id: string }[] | null }[]).map(
-    (t) => ({ id: t.id, name: t.name, category: t.category, itemCount: (t.workout_template_items ?? []).length })
-  );
+  const templates = (
+    (tplRaw ?? []) as unknown as {
+      id: string;
+      name: string;
+      category: string | null;
+      workout_template_items: { id: string }[] | null;
+    }[]
+  ).map((t) => ({
+    id: t.id,
+    name: t.name,
+    category: t.category,
+    itemCount: (t.workout_template_items ?? []).length
+  }));
 
   // Ficha del cliente (tabla client_info, solo-coach vía RLS).
   const { data: infoRaw } = await supabase
@@ -123,7 +135,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     .order('date', { ascending: false })
     .limit(40);
   const pastWorkouts = (pastWorkoutsRaw ?? []) as unknown as {
-    id: string; date: string; title: string | null; workout_items: { id: string }[] | null;
+    id: string;
+    date: string;
+    title: string | null;
+    workout_items: { id: string }[] | null;
   }[];
 
   const pastItemIds = pastWorkouts.flatMap((w) => (w.workout_items ?? []).map((it) => it.id));
@@ -134,7 +149,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
       .select('workout_item_id')
       .eq('client_id', params.id)
       .in('workout_item_id', pastItemIds);
-    const logged = new Set((logs ?? []).map((l) => (l as { workout_item_id: string }).workout_item_id));
+    const logged = new Set(
+      (logs ?? []).map((l) => (l as { workout_item_id: string }).workout_item_id)
+    );
     for (const w of pastWorkouts) {
       if ((w.workout_items ?? []).some((it) => logged.has(it.id))) pastDone.add(w.id);
     }
@@ -157,7 +174,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     .order('starts_at', { ascending: false })
     .limit(40);
   const historySessions = (pastSessionsRaw ?? []) as {
-    id: string; starts_at: string; status: string; modality: string;
+    id: string;
+    starts_at: string;
+    status: string;
+    modality: string;
   }[];
 
   // ---- Vídeos de técnica del cliente (máx. 2 por ejercicio) ----
@@ -257,7 +277,8 @@ export const actions: Actions = {
       return Number.isFinite(n) ? n : null;
     };
     const level = str('level');
-    const validLevel = level && ['principiante', 'intermedio', 'avanzado'].includes(level) ? level : null;
+    const validLevel =
+      level && ['principiante', 'intermedio', 'avanzado'].includes(level) ? level : null;
 
     const row = {
       client_id: params.id,
@@ -299,17 +320,15 @@ export const actions: Actions = {
     next.setMonth(next.getMonth() + 1);
     const nextISO = formatDateISO(next);
 
-    const { error: upErr } = await supabase
-      .from('client_info')
-      .upsert(
-        {
-          client_id: params.id,
-          coach_id: user.id,
-          fee_amount: info?.fee_amount ?? null,
-          paid_until: nextISO
-        } as never,
-        { onConflict: 'client_id' }
-      );
+    const { error: upErr } = await supabase.from('client_info').upsert(
+      {
+        client_id: params.id,
+        coach_id: user.id,
+        fee_amount: info?.fee_amount ?? null,
+        paid_until: nextISO
+      } as never,
+      { onConflict: 'client_id' }
+    );
     if (upErr) return fail(500, { error: upErr.message });
 
     return { success: true, paidUntil: nextISO };
@@ -348,7 +367,9 @@ export const actions: Actions = {
     // Cargar el workout origen (RLS garantiza que sea del coach).
     const { data: src, error: srcErr } = await supabase
       .from('workouts')
-      .select('id, client_id, coach_id, title, notes, published, workout_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)')
+      .select(
+        'id, client_id, coach_id, title, notes, published, workout_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
+      )
       .eq('id', sourceId)
       .single();
     if (srcErr || !src) return fail(404, { error: 'No se encontró el entreno origen.' });
@@ -376,7 +397,10 @@ export const actions: Actions = {
       .eq('client_id', source.client_id)
       .eq('date', targetDate)
       .maybeSingle();
-    if (existing) return fail(409, { error: 'Ya hay un entreno en la fecha destino. Bórralo primero o elige otra.' });
+    if (existing)
+      return fail(409, {
+        error: 'Ya hay un entreno en la fecha destino. Bórralo primero o elige otra.'
+      });
 
     // Crear el nuevo workout
     const { data: created, error: createErr } = await supabase
@@ -391,7 +415,8 @@ export const actions: Actions = {
       } as never)
       .select('id')
       .single();
-    if (createErr || !created) return fail(500, { error: createErr?.message ?? 'No se pudo crear.' });
+    if (createErr || !created)
+      return fail(500, { error: createErr?.message ?? 'No se pudo crear.' });
 
     const newId = (created as { id: string }).id;
 
@@ -428,7 +453,8 @@ export const actions: Actions = {
       return fail(400, { error: 'Elige un entrenamiento, fecha de inicio y fin.' });
     }
     if (weekdays.length === 0) return fail(400, { error: 'Marca al menos un día de la semana.' });
-    if (endDate < startDate) return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
+    if (endDate < startDate)
+      return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
 
     // Recorrer el rango y quedarnos con los días cuyo weekday esté marcado.
     const dates: string[] = [];

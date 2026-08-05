@@ -85,7 +85,11 @@
             </button>
           </form>
         {:else}
-          <button type="button" class={danger ? 'action-danger-solid' : 'action-primary'} onclick={runCallback}>
+          <button
+            type="button"
+            class={danger ? 'action-danger-solid' : 'action-primary'}
+            onclick={runCallback}
+          >
             {confirmLabel}
           </button>
         {/if}

@@ -38,8 +38,7 @@
 
     if (data.user && !data.session) {
       // Email confirmation activado: mostrar mensaje
-      successMessage =
-        '¡Cuenta creada! Revisa tu email para confirmar tu cuenta y luego entra.';
+      successMessage = '¡Cuenta creada! Revisa tu email para confirmar tu cuenta y luego entra.';
       return;
     }
 
@@ -50,8 +49,7 @@
   function traducirError(msg: string): string {
     const map: Record<string, string> = {
       'User already registered': 'Este email ya está registrado. Prueba a entrar.',
-      'Password should be at least 6 characters':
-        'La contraseña debe tener al menos 6 caracteres.',
+      'Password should be at least 6 characters': 'La contraseña debe tener al menos 6 caracteres.',
       'Unable to validate email address: invalid format': 'El email no es válido.'
     };
     return map[msg] ?? msg;
@@ -76,9 +74,7 @@
     </div>
 
     {#if successMessage}
-      <div
-        class="card bg-success/10 border-success/30 text-success text-center space-y-3"
-      >
+      <div class="card bg-success/10 border-success/30 text-success text-center space-y-3">
         <p class="font-medium">{successMessage}</p>
         <a href="/login" class="text-sm underline">Ir al login</a>
       </div>
@@ -134,7 +130,10 @@
         </div>
 
         {#if error}
-          <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+          <p
+            role="alert"
+            class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+          >
             {error}
           </p>
         {/if}
@@ -149,7 +148,8 @@
         <p class="text-xs text-text-mute text-center pt-2">
           Al continuar aceptas nuestros
           <a href="/legal/terminos" class="text-primary hover:underline">Términos</a> y
-          <a href="/legal/privacidad" class="text-primary hover:underline">Política de Privacidad</a>.
+          <a href="/legal/privacidad" class="text-primary hover:underline">Política de Privacidad</a
+          >.
         </p>
       </form>
     {/if}

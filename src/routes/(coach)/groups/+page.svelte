@@ -26,8 +26,8 @@
       <span class="eyebrow">Gestión</span>
       <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Grupos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
-        Agrupa clientes para gestionarlos a la vez: invitarlos en masa o programarles
-        el mismo entrenamiento. Cada uno conserva su ficha y su seguimiento individual.
+        Agrupa clientes para gestionarlos a la vez: invitarlos en masa o programarles el mismo
+        entrenamiento. Cada uno conserva su ficha y su seguimiento individual.
       </p>
     </div>
     <button onclick={() => (showForm = !showForm)} class="btn-primary whitespace-nowrap">
@@ -36,15 +36,23 @@
   </div>
 
   {#if form?.error}
-    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      {form.error}
+    </p>
   {/if}
   {#if form?.success && form?.created}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Grupo creado. Ya puedes añadirle clientes.
     </p>
   {/if}
   {#if form?.success && form?.deleted}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Grupo eliminado. Los clientes siguen en tu cartera.
     </p>
   {/if}
@@ -100,9 +108,9 @@
     <div class="card max-w-2xl space-y-3">
       <h2 class="text-2xl font-display font-semibold">Aún no tienes grupos</h2>
       <p class="text-sm text-text-mute">
-        Un grupo te ahorra el trabajo repetido cuando llevas a varias personas a la vez:
-        las invitas de golpe pegando sus correos y les programas el mismo entrenamiento en
-        un clic. Es lo que necesitas si una empresa te contrata para sus empleadas.
+        Un grupo te ahorra el trabajo repetido cuando llevas a varias personas a la vez: las invitas
+        de golpe pegando sus correos y les programas el mismo entrenamiento en un clic. Es lo que
+        necesitas si una empresa te contrata para sus empleadas.
       </p>
       <button onclick={() => (showForm = true)} class="btn-primary">Crear el primero</button>
     </div>
@@ -113,10 +121,13 @@
           <a href="/groups/{g.id}" class="flex-1 min-w-0">
             <div class="font-medium truncate">{g.name}</div>
             <div class="text-xs text-text-mute truncate">
-              {g.memberCount} {g.memberCount === 1 ? 'persona' : 'personas'}{g.company ? ' · ' + g.company : ''}
+              {g.memberCount}
+              {g.memberCount === 1 ? 'persona' : 'personas'}{g.company ? ' · ' + g.company : ''}
             </div>
           </a>
-          <a href="/groups/{g.id}" class="text-xs text-accent hover:underline flex-shrink-0">Abrir</a>
+          <a href="/groups/{g.id}" class="text-xs text-accent hover:underline flex-shrink-0"
+            >Abrir</a
+          >
           <button
             type="button"
             class="text-text-mute hover:text-danger transition-colors text-lg leading-none flex-shrink-0"

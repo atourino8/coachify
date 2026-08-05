@@ -21,7 +21,9 @@
 <header class="sticky top-0 z-50 bg-bg/90 backdrop-blur-md border-b border-line">
   <div class="container-narrow flex items-center justify-between py-4">
     <a href="/dashboard" class="flex items-center gap-2.5">
-      <div class="w-7 h-7 rounded-md bg-accent grid place-items-center text-white font-display font-bold text-sm">
+      <div
+        class="w-7 h-7 rounded-md bg-accent grid place-items-center text-white font-display font-bold text-sm"
+      >
         C
       </div>
       <span class="font-display font-semibold tracking-tight text-[17px]">Coachify</span>
@@ -32,7 +34,9 @@
         <a
           href={link.href}
           aria-current={isActive(link.match) ? 'page' : undefined}
-          class="transition-colors {isActive(link.match) ? 'text-accent font-medium' : 'text-text-mute hover:text-text'}"
+          class="transition-colors {isActive(link.match)
+            ? 'text-accent font-medium'
+            : 'text-text-mute hover:text-text'}"
         >
           {link.label}
         </a>

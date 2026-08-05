@@ -39,7 +39,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
       try {
         const { data: au } = await supabaseAdmin.auth.admin.getUserById(p.id);
         const u = au?.user as
-          | { email?: string; last_sign_in_at?: string | null; email_confirmed_at?: string | null; invited_at?: string | null; created_at?: string }
+          | {
+              email?: string;
+              last_sign_in_at?: string | null;
+              email_confirmed_at?: string | null;
+              invited_at?: string | null;
+              created_at?: string;
+            }
           | undefined;
         email = u?.email ?? null;
         // "Aceptó" = ha iniciado sesión alguna vez o confirmó su email.
@@ -65,8 +71,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .select('client_id, fee_amount, paid_until')
     .eq('coach_id', user.id);
   const fees = new Map(
-    ((feesRaw ?? []) as { client_id: string; fee_amount: number | null; paid_until: string | null }[])
-      .map((f) => [f.client_id, { fee_amount: f.fee_amount, paid_until: f.paid_until }])
+    (
+      (feesRaw ?? []) as {
+        client_id: string;
+        fee_amount: number | null;
+        paid_until: string | null;
+      }[]
+    ).map((f) => [f.client_id, { fee_amount: f.fee_amount, paid_until: f.paid_until }])
   );
 
   const withFees = enriched.map((c) => ({ ...c, fee: fees.get(c.id) ?? null }));

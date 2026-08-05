@@ -7,11 +7,7 @@ export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSessio
   const { session, user } = await safeGetSession();
   if (!session || !user) redirect(303, '/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
 
   if (!profile) redirect(303, '/login?error=no-profile');
   if (profile.role !== 'client') redirect(303, '/dashboard');

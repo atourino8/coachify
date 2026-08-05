@@ -98,7 +98,10 @@
 
     <div class="grid sm:grid-cols-2 gap-4">
       <div>
-        <label for="muscle_group" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+        <label
+          for="muscle_group"
+          class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+        >
           Grupo muscular
         </label>
         <select
@@ -143,16 +146,23 @@
         rows="4"
         maxlength="1000"
         class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-      >{data.exercise.description ?? ''}</textarea>
+        >{data.exercise.description ?? ''}</textarea
+      >
     </div>
 
     {#if form?.error}
-      <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      <p
+        role="alert"
+        class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+      >
         {form.error}
       </p>
     {/if}
     {#if form?.success}
-      <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+      <p
+        aria-live="polite"
+        class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+      >
         ✓ Cambios guardados.
       </p>
     {/if}

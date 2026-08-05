@@ -102,10 +102,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   // Totales para las tarjetas de cabecera
   const totalSets = logs.length;
-  const totalVolume = logs.reduce(
-    (sum, l) => sum + (l.weight_done ?? 0) * (l.reps_done ?? 0),
-    0
-  );
+  const totalVolume = logs.reduce((sum, l) => sum + (l.weight_done ?? 0) * (l.reps_done ?? 0), 0);
 
   return {
     exercises,

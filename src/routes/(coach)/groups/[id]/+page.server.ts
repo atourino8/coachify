@@ -21,14 +21,18 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   // Miembros del grupo
   const { data: memRaw } = await supabase
     .from('client_group_members')
-    .select('client_id, added_at, client:profiles!client_group_members_client_id_fkey(id, full_name)')
+    .select(
+      'client_id, added_at, client:profiles!client_group_members_client_id_fkey(id, full_name)'
+    )
     .eq('group_id', params.id);
 
-  const members = ((memRaw ?? []) as unknown as {
-    client_id: string;
-    added_at: string;
-    client: { id: string; full_name: string | null } | null;
-  }[])
+  const members = (
+    (memRaw ?? []) as unknown as {
+      client_id: string;
+      added_at: string;
+      client: { id: string; full_name: string | null } | null;
+    }[]
+  )
     .map((m) => ({
       id: m.client_id,
       name: m.client?.full_name ?? 'Cliente',
@@ -55,9 +59,13 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     .select('id, name, workout_template_items(id)')
     .eq('coach_id', user.id)
     .order('name');
-  const templates = ((tplRaw ?? []) as unknown as {
-    id: string; name: string; workout_template_items: { id: string }[] | null;
-  }[]).map((t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length }));
+  const templates = (
+    (tplRaw ?? []) as unknown as {
+      id: string;
+      name: string;
+      workout_template_items: { id: string }[] | null;
+    }[]
+  ).map((t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length }));
 
   return { group, members, available, templates };
 };
@@ -109,7 +117,8 @@ export const actions: Actions = {
       return fail(400, { error: 'Elige entrenamiento, fecha de inicio y fin.' });
     }
     if (weekdays.length === 0) return fail(400, { error: 'Marca al menos un día de la semana.' });
-    if (endDate < startDate) return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
+    if (endDate < startDate)
+      return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
 
     // Miembros del grupo
     const { data: memRaw } = await supabase
@@ -138,7 +147,12 @@ export const actions: Actions = {
     for (const clientId of clientIds) {
       for (const date of dates) {
         const res = await materializeTemplateWorkout(
-          supabase, user.id, clientId, date, templateId, { overwrite }
+          supabase,
+          user.id,
+          clientId,
+          date,
+          templateId,
+          { overwrite }
         );
         if ('workoutId' in res) created++;
         else if ('skipped' in res) skipped++;

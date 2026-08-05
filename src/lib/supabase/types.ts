@@ -3,11 +3,10 @@
 
 export type Role = 'coach' | 'client';
 export type MuscleGroup =
-  | 'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';
+  'chest' | 'back' | 'legs' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'full_body';
 export type Equipment =
-  | 'barbell' | 'dumbbell' | 'machine' | 'bodyweight' | 'kettlebell' | 'band' | 'other';
-export type SessionStatus =
-  | 'requested' | 'confirmed' | 'rejected' | 'cancelled' | 'completed';
+  'barbell' | 'dumbbell' | 'machine' | 'bodyweight' | 'kettlebell' | 'band' | 'other';
+export type SessionStatus = 'requested' | 'confirmed' | 'rejected' | 'cancelled' | 'completed';
 export type Modality = 'presencial' | 'online' | 'remoto';
 export type Feedback = 'easy' | 'just_right' | 'hard';
 export type ClientLevel = 'principiante' | 'intermedio' | 'avanzado';

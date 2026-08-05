@@ -53,9 +53,7 @@
         C
       </div>
       <h1 class="text-3xl font-display font-semibold mb-2">Recuperar contraseña</h1>
-      <p class="text-text-mute">
-        Te enviamos un email con un enlace para definir una nueva.
-      </p>
+      <p class="text-text-mute">Te enviamos un email con un enlace para definir una nueva.</p>
     </div>
 
     {#if sent}
@@ -63,8 +61,8 @@
         <div class="text-4xl">📬</div>
         <h2 class="text-xl font-semibold">Email enviado</h2>
         <p class="text-sm text-text-mute">
-          Si <strong class="text-text">{email}</strong> tiene una cuenta en Coachify,
-          te llegará un email con un enlace para restablecer tu contraseña.
+          Si <strong class="text-text">{email}</strong> tiene una cuenta en Coachify, te llegará un email
+          con un enlace para restablecer tu contraseña.
         </p>
         <p class="text-xs text-text-mute">
           Revisa también la carpeta de spam. El enlace expira en 1 hora.
@@ -93,7 +91,10 @@
         </div>
 
         {#if error}
-          <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+          <p
+            role="alert"
+            class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+          >
             {error}
           </p>
         {/if}

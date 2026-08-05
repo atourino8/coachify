@@ -49,7 +49,10 @@ export async function materializeTemplateWorkout(
   let workoutId: string;
   if (existing) {
     workoutId = (existing as { id: string }).id;
-    await supabase.from('workouts').update({ title: template.name } as never).eq('id', workoutId);
+    await supabase
+      .from('workouts')
+      .update({ title: template.name } as never)
+      .eq('id', workoutId);
     await supabase.from('workout_items').delete().eq('workout_id', workoutId);
   } else {
     const { data: created, error: createErr } = await supabase
@@ -57,11 +60,14 @@ export async function materializeTemplateWorkout(
       .insert({ client_id: clientId, coach_id: coachId, date, title: template.name } as never)
       .select('id')
       .single();
-    if (createErr || !created) return { error: createErr?.message ?? 'No se pudo crear el entreno.' };
+    if (createErr || !created)
+      return { error: createErr?.message ?? 'No se pudo crear el entreno.' };
     workoutId = (created as { id: string }).id;
   }
 
-  const items = [...(template.workout_template_items ?? [])].sort((a, b) => a.order_index - b.order_index);
+  const items = [...(template.workout_template_items ?? [])].sort(
+    (a, b) => a.order_index - b.order_index
+  );
   if (items.length > 0) {
     const rows = items.map((it, i) => ({
       workout_id: workoutId,

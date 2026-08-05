@@ -7,10 +7,17 @@
     return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
   function fmtDay(iso: string) {
-    return new Date(iso).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    return new Date(iso).toLocaleDateString('es-ES', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short'
+    });
   }
   function fmtDate(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short'
+    });
   }
   // "hace 2 días" en vez de una fecha: para un vídeo pendiente, lo que importa
   // es cuánto lleva esperando el cliente.
@@ -28,7 +35,9 @@
   };
 
   const hoy = new Date().toLocaleDateString('es-ES', {
-    weekday: 'long', day: 'numeric', month: 'long'
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
   });
 
   // Contador de todo lo que espera una decisión tuya.
@@ -67,27 +76,42 @@
   <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-line py-3 text-sm">
     <span class="text-xs uppercase tracking-wider text-text-mute">Crear</span>
     <a href="/agenda?propose=1" class="font-medium hover:text-accent transition-colors">Cita</a>
-    <a href="/templates?new=1" class="font-medium hover:text-accent transition-colors">Entrenamiento</a>
+    <a href="/templates?new=1" class="font-medium hover:text-accent transition-colors"
+      >Entrenamiento</a
+    >
     <a href="/exercises/new" class="font-medium hover:text-accent transition-colors">Ejercicio</a>
-    <a href="/clients?invite=1" class="font-medium hover:text-accent transition-colors">Invitar cliente</a>
+    <a href="/clients?invite=1" class="font-medium hover:text-accent transition-colors"
+      >Invitar cliente</a
+    >
     <a href="/groups" class="font-medium hover:text-accent transition-colors">Grupo</a>
   </nav>
 
   {#if form?.error}
-    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      {form.error}
+    </p>
   {/if}
   {#if form?.success && form?.confirmed}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Cita confirmada. Ya le aparece al cliente en sus citas.
     </p>
   {/if}
   {#if form?.success && form?.rejected}
-    <p aria-live="polite" class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3"
+    >
       Cita rechazada.
     </p>
   {/if}
   {#if form?.success && form?.commented}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Corrección enviada. Tu cliente la verá en ese ejercicio.
     </p>
   {/if}
@@ -97,8 +121,8 @@
     <div class="card max-w-2xl space-y-4">
       <h2 class="text-2xl font-display font-semibold">Monta tu primer entreno en cinco minutos</h2>
       <p class="text-sm text-text-mute">
-        El orden que funciona: carga la biblioteca de ejercicios, arma un entrenamiento
-        con ellos y luego invita a tu primer cliente para asignárselo.
+        El orden que funciona: carga la biblioteca de ejercicios, arma un entrenamiento con ellos y
+        luego invita a tu primer cliente para asignárselo.
       </p>
       <div class="flex flex-wrap gap-3">
         <a href="/exercises" class="btn-primary">Cargar biblioteca base</a>
@@ -110,7 +134,9 @@
     <section>
       <div class="flex items-baseline justify-between gap-4 mb-2">
         <h2 class="text-lg font-display font-semibold">Hoy</h2>
-        <a href="/agenda" class="text-xs text-text-mute hover:text-accent transition-colors">Ver agenda →</a>
+        <a href="/agenda" class="text-xs text-text-mute hover:text-accent transition-colors"
+          >Ver agenda →</a
+        >
       </div>
       {#if data.todaySessions.length === 0}
         <p class="text-sm text-text-mute border-t border-line pt-3">
@@ -129,17 +155,24 @@
                 <div class="text-xs text-text-mute">{modalityLabel[s.modality] ?? s.modality}</div>
               </div>
               {#if s.workout}
-                <a href="/clients/{s.client_id}/workouts/{s.workout.date}"
-                   class="text-xs text-accent hover:underline flex-shrink-0">
+                <a
+                  href="/clients/{s.client_id}/workouts/{s.workout.date}"
+                  class="text-xs text-accent hover:underline flex-shrink-0"
+                >
                   {s.workout.title ?? 'Ver entreno'} →
                 </a>
               {:else}
-                <a href="/clients/{s.client_id}/workouts/{data.today}"
-                   class="text-xs text-accent hover:underline flex-shrink-0">
+                <a
+                  href="/clients/{s.client_id}/workouts/{data.today}"
+                  class="text-xs text-accent hover:underline flex-shrink-0"
+                >
                   Montar entreno →
                 </a>
               {/if}
-              <a href="/clients/{s.client_id}" class="text-xs text-text-mute hover:text-text flex-shrink-0">Ficha</a>
+              <a
+                href="/clients/{s.client_id}"
+                class="text-xs text-text-mute hover:text-text flex-shrink-0">Ficha</a
+              >
             </div>
           {/each}
         </div>
@@ -156,7 +189,8 @@
               <div class="flex-1 min-w-0">
                 <div class="font-medium truncate">{s.client?.full_name ?? 'Cliente'}</div>
                 <div class="text-xs text-text-mute capitalize">
-                  {fmtDay(s.starts_at)} · {fmtTime(s.starts_at)} · {modalityLabel[s.modality] ?? s.modality}
+                  {fmtDay(s.starts_at)} · {fmtTime(s.starts_at)} · {modalityLabel[s.modality] ??
+                    s.modality}
                 </div>
               </div>
               <form method="POST" action="?/confirmSession" use:enhance class="flex-shrink-0">
@@ -259,7 +293,9 @@
                          focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
                 ></textarea>
                 <div class="flex items-center justify-end gap-3">
-                  <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral">Ver historial</a>
+                  <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral"
+                    >Ver historial</a
+                  >
                   <button type="submit" class="action-primary">Enviar corrección</button>
                 </div>
               </form>
@@ -269,8 +305,8 @@
 
         {#if data.pendingVideoCount > data.reviewQueue.length}
           <p class="text-sm text-text-mute mt-3">
-            Quedan {data.pendingVideoCount - data.reviewQueue.length} vídeos más por corregir.
-            Aparecerán aquí según despaches estos.
+            Quedan {data.pendingVideoCount - data.reviewQueue.length} vídeos más por corregir. Aparecerán
+            aquí según despaches estos.
           </p>
         {/if}
       </section>
@@ -307,8 +343,12 @@
                 <span class="font-medium">{c.full_name ?? 'Cliente'}</span>
                 <span class="text-text-mute text-sm"> no tiene nada esta semana</span>
               </span>
-              <a href="/clients/{c.id}/workouts/{data.today}" class="action-primary flex-shrink-0">Programar</a>
-              <a href="/clients/{c.id}" class="text-xs text-text-mute hover:text-text flex-shrink-0">Ficha</a>
+              <a href="/clients/{c.id}/workouts/{data.today}" class="action-primary flex-shrink-0"
+                >Programar</a
+              >
+              <a href="/clients/{c.id}" class="text-xs text-text-mute hover:text-text flex-shrink-0"
+                >Ficha</a
+              >
             </div>
           {/each}
         </div>

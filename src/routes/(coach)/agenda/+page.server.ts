@@ -66,7 +66,12 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .limit(200);
 
   const workoutsByClient: Record<string, { id: string; date: string; title: string | null }[]> = {};
-  for (const w of (workoutsRaw ?? []) as { id: string; client_id: string; date: string; title: string | null }[]) {
+  for (const w of (workoutsRaw ?? []) as {
+    id: string;
+    client_id: string;
+    date: string;
+    title: string | null;
+  }[]) {
     (workoutsByClient[w.client_id] ??= []).push({ id: w.id, date: w.date, title: w.title });
   }
 
@@ -76,9 +81,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .select('id, name, workout_template_items(id)')
     .eq('coach_id', user.id)
     .order('name');
-  const templates = ((tplRaw ?? []) as unknown as { id: string; name: string; workout_template_items: { id: string }[] | null }[]).map(
-    (t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length })
-  );
+  const templates = (
+    (tplRaw ?? []) as unknown as {
+      id: string;
+      name: string;
+      workout_template_items: { id: string }[] | null;
+    }[]
+  ).map((t) => ({ id: t.id, name: t.name, itemCount: (t.workout_template_items ?? []).length }));
 
   // Clientes del coach (para proponer una cita a uno de ellos).
   const { data: clientsRaw } = await supabase
@@ -133,7 +142,10 @@ async function materializeTemplate(
   let workoutId: string;
   if (existing) {
     workoutId = (existing as { id: string }).id;
-    await supabase.from('workouts').update({ title: template.name } as never).eq('id', workoutId);
+    await supabase
+      .from('workouts')
+      .update({ title: template.name } as never)
+      .eq('id', workoutId);
     await supabase.from('workout_items').delete().eq('workout_id', workoutId);
   } else {
     const { data: created, error: createErr } = await supabase
@@ -141,11 +153,14 @@ async function materializeTemplate(
       .insert({ client_id: clientId, coach_id: coachId, date, title: template.name } as never)
       .select('id')
       .single();
-    if (createErr || !created) return { error: createErr?.message ?? 'No se pudo crear el entreno.' };
+    if (createErr || !created)
+      return { error: createErr?.message ?? 'No se pudo crear el entreno.' };
     workoutId = (created as { id: string }).id;
   }
 
-  const tplItems = [...(template.workout_template_items ?? [])].sort((a, b) => a.order_index - b.order_index);
+  const tplItems = [...(template.workout_template_items ?? [])].sort(
+    (a, b) => a.order_index - b.order_index
+  );
   if (tplItems.length > 0) {
     const rows = tplItems.map((it, i) => ({
       workout_id: workoutId,
@@ -326,7 +341,8 @@ export const actions: Actions = {
       } as never)
       .select('id')
       .single();
-    if (createErr || !created) return fail(500, { error: createErr?.message ?? 'No se pudo crear la cita.' });
+    if (createErr || !created)
+      return fail(500, { error: createErr?.message ?? 'No se pudo crear la cita.' });
     const sessionId = (created as { id: string }).id;
 
     // Si eligió plantilla, materializarla y ligarla.

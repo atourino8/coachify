@@ -56,20 +56,22 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     .eq('coach_id', user.id)
     .order('name');
 
-  const templates = ((tplRaw ?? []) as unknown as {
-    id: string;
-    name: string;
-    workout_template_items: {
-      exercise_id: string;
-      order_index: number;
-      sets: number;
-      reps_prescribed: string | null;
-      weight_prescribed: string | null;
-      rest_seconds: number | null;
-      notes: string | null;
-      exercise: unknown;
-    }[];
-  }[]).map((t) => ({
+  const templates = (
+    (tplRaw ?? []) as unknown as {
+      id: string;
+      name: string;
+      workout_template_items: {
+        exercise_id: string;
+        order_index: number;
+        sets: number;
+        reps_prescribed: string | null;
+        weight_prescribed: string | null;
+        rest_seconds: number | null;
+        notes: string | null;
+        exercise: unknown;
+      }[];
+    }[]
+  ).map((t) => ({
     id: t.id,
     name: t.name,
     items: [...(t.workout_template_items ?? [])]

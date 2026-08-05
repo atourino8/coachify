@@ -67,7 +67,9 @@
   </div>
 
   {#if form?.error}
-    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">{form.error}</p>
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      {form.error}
+    </p>
   {/if}
 
   <!-- Añadir hueco -->
@@ -75,21 +77,41 @@
     <h2 class="font-semibold">Añadir hueco semanal</h2>
     <div class="grid grid-cols-2 gap-3">
       <div>
-        <label for="dow" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Día</label>
-        <select id="dow" name="day_of_week" bind:value={dayOfWeek}
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary">
+        <label for="dow" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          >Día</label
+        >
+        <select
+          id="dow"
+          name="day_of_week"
+          bind:value={dayOfWeek}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+        >
           {#each DAYS as d}<option value={d.v}>{d.label}</option>{/each}
         </select>
       </div>
       <div>
-        <label for="start" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Hora inicio</label>
-        <input id="start" type="time" name="start_time" bind:value={startTime} required
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary" />
+        <label for="start" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          >Hora inicio</label
+        >
+        <input
+          id="start"
+          type="time"
+          name="start_time"
+          bind:value={startTime}
+          required
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+        />
       </div>
       <div>
-        <label for="dur" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Duración</label>
-        <select id="dur" name="duration_minutes" bind:value={duration}
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary">
+        <label for="dur" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          >Duración</label
+        >
+        <select
+          id="dur"
+          name="duration_minutes"
+          bind:value={duration}
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+        >
           <option value="30">30 min</option>
           <option value="45">45 min</option>
           <option value="60">60 min</option>
@@ -100,7 +122,12 @@
         <span class="block text-xs uppercase tracking-wider text-text-mute mb-2">Modalidad</span>
         <div class="flex gap-3 items-center pt-2">
           <label class="flex items-center gap-1.5 text-sm">
-            <input type="checkbox" name="modalities" value="presencial" bind:checked={modPresencial} /> Presencial
+            <input
+              type="checkbox"
+              name="modalities"
+              value="presencial"
+              bind:checked={modPresencial}
+            /> Presencial
           </label>
           <label class="flex items-center gap-1.5 text-sm">
             <input type="checkbox" name="modalities" value="online" bind:checked={modOnline} /> Online
@@ -131,7 +158,12 @@
                 </div>
                 <form method="POST" action="?/remove" use:enhance>
                   <input type="hidden" name="slot_id" value={s.id} />
-                  <button type="submit" aria-label="Borrar hueco de disponibilidad" class="text-text-mute hover:text-danger transition-colors text-lg leading-none">×</button>
+                  <button
+                    type="submit"
+                    aria-label="Borrar hueco de disponibilidad"
+                    class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
+                    >×</button
+                  >
                 </form>
               </div>
             {/each}

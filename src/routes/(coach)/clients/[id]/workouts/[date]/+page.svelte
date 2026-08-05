@@ -217,7 +217,9 @@
   <!-- Cargar plantilla -->
   {#if data.templates && data.templates.length > 0}
     <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
-      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap">Cargar entrenamiento</span>
+      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap"
+        >Cargar entrenamiento</span
+      >
       <select
         bind:value={selectedTemplate}
         onchange={loadTemplate}
@@ -228,7 +230,9 @@
           <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
         {/each}
       </select>
-      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap">Gestionar entrenamientos →</a>
+      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap"
+        >Gestionar entrenamientos →</a
+      >
     </div>
   {/if}
 
@@ -239,8 +243,21 @@
       <div>
         <h2 class="text-sm uppercase tracking-wider text-text-mute mb-3">Biblioteca</h2>
         <div class="relative mb-2">
-          <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round" />
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" /><line
+              x1="21"
+              y1="21"
+              x2="16.65"
+              y2="16.65"
+              stroke-linecap="round"
+            />
           </svg>
           <input
             type="search"
@@ -337,7 +354,10 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label for="sets-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Series</label>
+                <label
+                  for="sets-{item.id}"
+                  class="text-[10px] uppercase tracking-wider text-text-mute">Series</label
+                >
                 <input
                   id="sets-{item.id}"
                   type="number"
@@ -348,7 +368,10 @@
                 />
               </div>
               <div>
-                <label for="reps-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label>
+                <label
+                  for="reps-{item.id}"
+                  class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label
+                >
                 <input
                   id="reps-{item.id}"
                   type="text"
@@ -358,7 +381,10 @@
                 />
               </div>
               <div>
-                <label for="weight-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label>
+                <label
+                  for="weight-{item.id}"
+                  class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label
+                >
                 <input
                   id="weight-{item.id}"
                   type="text"
@@ -368,7 +394,10 @@
                 />
               </div>
               <div>
-                <label for="rest-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label>
+                <label
+                  for="rest-{item.id}"
+                  class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label
+                >
                 <input
                   id="rest-{item.id}"
                   type="number"
@@ -390,7 +419,9 @@
           </div>
         {:else}
           <div class="text-center text-text-mute text-sm">
-            <p class="mb-1">Añade ejercicios con el botón <span class="text-primary">+</span> de la biblioteca ←</p>
+            <p class="mb-1">
+              Añade ejercicios con el botón <span class="text-primary">+</span> de la biblioteca ←
+            </p>
             <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
           </div>
         {/each}

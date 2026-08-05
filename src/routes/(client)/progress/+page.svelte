@@ -5,9 +5,7 @@
   // svelte-ignore state_referenced_locally
   let selectedId = $state<string | null>(data.exercises[0]?.id ?? null);
 
-  const selected = $derived(
-    data.exercises.find((e) => e.id === selectedId) ?? null
-  );
+  const selected = $derived(data.exercises.find((e) => e.id === selectedId) ?? null);
 
   // Construir el path SVG de la línea de progresión de peso.
   // viewBox 0..100 x 0..100, con padding. Y invertido (SVG crece hacia abajo).
@@ -30,7 +28,9 @@
       return { x, y, ...p };
     });
 
-    const line = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+    const line = coords
+      .map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`)
+      .join(' ');
     // Área bajo la curva para relleno suave
     const area =
       `M ${coords[0].x.toFixed(1)} ${(CHART_H - PAD).toFixed(1)} ` +
@@ -80,7 +80,9 @@
       <div class="text-xs text-text-mute mt-1">ejercicios</div>
     </div>
     <div class="card text-center">
-      <div class="text-2xl font-display font-semibold text-primary">{data.stats.totalVolume.toLocaleString('es-ES')}</div>
+      <div class="text-2xl font-display font-semibold text-primary">
+        {data.stats.totalVolume.toLocaleString('es-ES')}
+      </div>
       <div class="text-xs text-text-mute mt-1">kg · volumen total</div>
     </div>
   </div>
@@ -90,7 +92,8 @@
       <div class="text-6xl mb-4">📊</div>
       <h2 class="text-xl font-semibold mb-2">Aún no hay datos</h2>
       <p class="text-sm text-text-mute max-w-md mx-auto">
-        Cuando registres las series de tus entrenos, aquí verás cómo evoluciona tu fuerza en cada ejercicio.
+        Cuando registres las series de tus entrenos, aquí verás cómo evoluciona tu fuerza en cada
+        ejercicio.
       </p>
     </div>
   {:else}
@@ -116,11 +119,15 @@
           <div>
             <h2 class="text-xl font-bold">{selected.name}</h2>
             {#if selected.muscleGroup}
-              <span class="text-xs text-text-mute">{muscleLabels[selected.muscleGroup] ?? selected.muscleGroup}</span>
+              <span class="text-xs text-text-mute"
+                >{muscleLabels[selected.muscleGroup] ?? selected.muscleGroup}</span
+              >
             {/if}
           </div>
           <div class="text-right">
-            <div class="text-2xl font-display font-semibold text-primary">{selected.bestWeight ?? '—'} kg</div>
+            <div class="text-2xl font-display font-semibold text-primary">
+              {selected.bestWeight ?? '—'} kg
+            </div>
             <div class="text-xs text-text-mute">mejor marca</div>
           </div>
         </div>
@@ -128,7 +135,15 @@
         {#if chart}
           <!-- Gráfica de progresión (SVG inline) -->
           <div class="relative">
-            <svg viewBox="0 0 {CHART_W} {CHART_H}" class="w-full" style="height:200px" preserveAspectRatio="none" role="img" aria-label="Gráfica de progresión de peso en {selected.name}. Mejor marca: {selected.bestWeight ?? 'sin datos'} kg.">
+            <svg
+              viewBox="0 0 {CHART_W} {CHART_H}"
+              class="w-full"
+              style="height:200px"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Gráfica de progresión de peso en {selected.name}. Mejor marca: {selected.bestWeight ??
+                'sin datos'} kg."
+            >
               <!-- área -->
               <path d={chart.area} fill="currentColor" class="text-primary/10" />
               <!-- línea -->
@@ -144,7 +159,14 @@
               />
               <!-- puntos -->
               {#each chart.coords as c}
-                <circle cx={c.x} cy={c.y} r="1.6" fill="currentColor" class="text-primary" vector-effect="non-scaling-stroke" />
+                <circle
+                  cx={c.x}
+                  cy={c.y}
+                  r="1.6"
+                  fill="currentColor"
+                  class="text-primary"
+                  vector-effect="non-scaling-stroke"
+                />
               {/each}
             </svg>
             <div class="flex justify-between text-[10px] text-text-mute mt-1">

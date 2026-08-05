@@ -32,7 +32,9 @@
         <a
           href={link.href}
           aria-current={isActive(link.match) ? 'page' : undefined}
-          class="transition-colors {isActive(link.match) ? 'text-primary font-medium' : 'text-text-mute hover:text-primary'}"
+          class="transition-colors {isActive(link.match)
+            ? 'text-primary font-medium'
+            : 'text-text-mute hover:text-primary'}"
         >
           {link.label}
         </a>

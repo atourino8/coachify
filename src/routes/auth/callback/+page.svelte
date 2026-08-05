@@ -122,9 +122,18 @@
     </div>
     <p class="text-text-mute">{status}</p>
     <div class="flex justify-center gap-1.5">
-      <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-      <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-      <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+      <div
+        class="w-2 h-2 bg-primary rounded-full animate-bounce"
+        style="animation-delay: 0ms"
+      ></div>
+      <div
+        class="w-2 h-2 bg-primary rounded-full animate-bounce"
+        style="animation-delay: 150ms"
+      ></div>
+      <div
+        class="w-2 h-2 bg-primary rounded-full animate-bounce"
+        style="animation-delay: 300ms"
+      ></div>
     </div>
   </div>
 </div>

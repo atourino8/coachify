@@ -70,12 +70,8 @@ export const actions: Actions = {
     if (!user) redirect(303, '/login');
     const formData = await request.formData();
     const set_number = Number(formData.get('set_number'));
-    const reps_done = formData.get('reps_done')
-      ? Number(formData.get('reps_done'))
-      : null;
-    const weight_done = formData.get('weight_done')
-      ? Number(formData.get('weight_done'))
-      : null;
+    const reps_done = formData.get('reps_done') ? Number(formData.get('reps_done')) : null;
+    const weight_done = formData.get('weight_done') ? Number(formData.get('weight_done')) : null;
     const feedback = (formData.get('feedback') as string) || null;
 
     if (!set_number || set_number < 1) return fail(400, { error: 'Serie inválida.' });

@@ -13,14 +13,16 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .eq('coach_id', user.id)
     .order('created_at', { ascending: false });
 
-  const groups = ((raw ?? []) as unknown as {
-    id: string;
-    name: string;
-    company: string | null;
-    notes: string | null;
-    created_at: string;
-    client_group_members: { client_id: string }[] | null;
-  }[]).map((g) => ({
+  const groups = (
+    (raw ?? []) as unknown as {
+      id: string;
+      name: string;
+      company: string | null;
+      notes: string | null;
+      created_at: string;
+      client_group_members: { client_id: string }[] | null;
+    }[]
+  ).map((g) => ({
     id: g.id,
     name: g.name,
     company: g.company,

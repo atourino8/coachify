@@ -24,9 +24,7 @@
       ? 'Define una contraseña nueva para tu cuenta.'
       : 'Define una contraseña para entrar a Coachify cada vez que quieras.'
   );
-  const submitLabel = $derived(
-    isRecovery ? 'Guardar contraseña' : 'Definir contraseña y entrar'
-  );
+  const submitLabel = $derived(isRecovery ? 'Guardar contraseña' : 'Definir contraseña y entrar');
 
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
@@ -140,7 +138,10 @@
       </div>
 
       {#if error}
-        <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+        <p
+          role="alert"
+          class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+        >
           {error}
         </p>
       {/if}

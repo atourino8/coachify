@@ -22,13 +22,9 @@ if (!supabaseUrl || !serviceRoleKey) {
  * Cliente Supabase con permisos de service_role. Bypassa RLS.
  * SOLO usar en código server (load functions, actions, endpoints API).
  */
-export const supabaseAdmin = createClient<Database>(
-  supabaseUrl ?? '',
-  serviceRoleKey ?? '',
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+export const supabaseAdmin = createClient<Database>(supabaseUrl ?? '', serviceRoleKey ?? '', {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
   }
-);
+});

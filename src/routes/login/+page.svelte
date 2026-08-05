@@ -58,8 +58,7 @@
   function traducirError(msg: string): string {
     const map: Record<string, string> = {
       'Invalid login credentials': 'Email o contraseña incorrectos.',
-      'Email not confirmed':
-        'Confirma tu email antes de entrar. Revisa tu bandeja de entrada.'
+      'Email not confirmed': 'Confirma tu email antes de entrar. Revisa tu bandeja de entrada.'
     };
     return map[msg] ?? msg;
   }
@@ -114,7 +113,10 @@
       </div>
 
       {#if error}
-        <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+        <p
+          role="alert"
+          class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+        >
           {error}
         </p>
       {/if}
@@ -127,14 +129,13 @@
       </div>
 
       <div class="text-center text-sm text-text-mute pt-2">
-        <a href="/recover" class="hover:text-text transition-colors">
-          ¿Olvidaste tu contraseña?
-        </a>
+        <a href="/recover" class="hover:text-text transition-colors"> ¿Olvidaste tu contraseña? </a>
       </div>
     </form>
 
     <p class="text-center text-sm text-text-mute mt-6">
-      ¿No tienes cuenta? <a href="/register" class="text-primary hover:underline">Crea una gratis</a>
+      ¿No tienes cuenta? <a href="/register" class="text-primary hover:underline">Crea una gratis</a
+      >
     </p>
   </div>
 </div>

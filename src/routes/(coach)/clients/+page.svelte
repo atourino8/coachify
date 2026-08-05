@@ -16,15 +16,16 @@
   // Modo de invitación: una persona o una lista pegada. Si venimos de un grupo
   // (?group=…), lo natural es abrir directamente en masa.
   // svelte-ignore state_referenced_locally
-  let inviteMode = $state<'one' | 'bulk'>(
-    page.url.searchParams.get('group') ? 'bulk' : 'one'
-  );
+  let inviteMode = $state<'one' | 'bulk'>(page.url.searchParams.get('group') ? 'bulk' : 'one');
   // Grupo preseleccionado si venimos de /groups/[id].
   // svelte-ignore state_referenced_locally
   let inviteGroup = $state(page.url.searchParams.get('group') ?? '');
   let bulkEmails = $state('');
   const bulkCount = $derived(
-    bulkEmails.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean).length
+    bulkEmails
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean).length
   );
 
   // Modal de cancelar invitación.
@@ -47,7 +48,11 @@
 
   function fmtDate(iso: string | null) {
     if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
   }
 </script>
 
@@ -68,25 +73,39 @@
       <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
     </div>
     <div class="flex items-center gap-3">
-      <a href="/groups" class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap">
+      <a
+        href="/groups"
+        class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
+      >
         Grupos
       </a>
-      <button class="btn-primary whitespace-nowrap" onclick={() => (showInvite = true)}>+ Invitar cliente</button>
+      <button class="btn-primary whitespace-nowrap" onclick={() => (showInvite = true)}
+        >+ Invitar cliente</button
+      >
     </div>
   </div>
 
   {#if form?.success && form?.invited_email}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Invitación enviada a {form.invited_email}. Aparecerá en “Pendientes” hasta que la acepte.
     </p>
   {/if}
   {#if form?.success && form?.resent_email}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Invitación reenviada a {form.resent_email}.
     </p>
   {/if}
   {#if form?.success && form?.bulk}
-    <div aria-live="polite" class="text-sm bg-success/10 border border-success/20 rounded-md p-3 space-y-1">
+    <div
+      aria-live="polite"
+      class="text-sm bg-success/10 border border-success/20 rounded-md p-3 space-y-1"
+    >
       <p class="text-success font-medium">
         {form.sent} de {form.total} invitaciones enviadas.
       </p>
@@ -101,7 +120,10 @@
     </div>
   {/if}
   {#if form?.success && form?.cancelled}
-    <p aria-live="polite" class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3">
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
       Invitación cancelada.
     </p>
   {/if}
@@ -111,18 +133,24 @@
     <button
       onclick={() => (tab = 'active')}
       class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-        {tab === 'active' ? 'border-accent text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        {tab === 'active'
+        ? 'border-accent text-text'
+        : 'border-transparent text-text-mute hover:text-text'}"
     >
       Activos ({data.active.length})
     </button>
     <button
       onclick={() => (tab = 'pending')}
       class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
-        {tab === 'pending' ? 'border-accent text-text' : 'border-transparent text-text-mute hover:text-text'}"
+        {tab === 'pending'
+        ? 'border-accent text-text'
+        : 'border-transparent text-text-mute hover:text-text'}"
     >
       Pendientes
       {#if data.pending.length > 0}
-        <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning">{data.pending.length}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning"
+          >{data.pending.length}</span
+        >
       {/if}
     </button>
   </div>
@@ -143,7 +171,9 @@
         {#each data.active as client (client.id)}
           {@const pay = payLabelFor(client.fee)}
           <a href="/clients/{client.id}" class="row-link">
-            <div class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0">
+            <div
+              class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0"
+            >
               {client.full_name?.charAt(0).toUpperCase() ?? '?'}
             </div>
             <div class="flex-1 min-w-0">
@@ -163,50 +193,65 @@
         {/each}
       </div>
     {/if}
+  {:else if data.pending.length === 0}
+    <div class="card text-center py-16">
+      <div class="text-5xl mb-4" aria-hidden="true">📭</div>
+      <h2 class="text-xl font-semibold mb-2">No hay invitaciones pendientes</h2>
+      <p class="text-sm text-text-mute max-w-md mx-auto">
+        Cuando invites a alguien, aparecerá aquí hasta que acepte y ponga su contraseña.
+      </p>
+    </div>
   {:else}
-    {#if data.pending.length === 0}
-      <div class="card text-center py-16">
-        <div class="text-5xl mb-4" aria-hidden="true">📭</div>
-        <h2 class="text-xl font-semibold mb-2">No hay invitaciones pendientes</h2>
-        <p class="text-sm text-text-mute max-w-md mx-auto">
-          Cuando invites a alguien, aparecerá aquí hasta que acepte y ponga su contraseña.
-        </p>
-      </div>
-    {:else}
-      <div class="space-y-2">
-        {#each data.pending as client (client.id)}
-          <div class="card p-4 flex items-center gap-4">
-            <div class="w-11 h-11 rounded-full bg-warning/10 grid place-items-center text-warning flex-shrink-0" aria-hidden="true">
-              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" stroke-linecap="round" />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
-              <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
-              <div class="text-[11px] text-text-mute mt-0.5">Invitado el {fmtDate(client.invited_at)}</div>
-            </div>
-            <span class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0">
-              Pendiente de aceptar
-            </span>
-            <div class="flex flex-col gap-1.5 flex-shrink-0">
-              <form method="POST" action="?/resendInvite" use:enhance>
-                <input type="hidden" name="email" value={client.email ?? ''} />
-                <input type="hidden" name="full_name" value={client.full_name ?? ''} />
-                <button type="submit" class="action-neutral w-full">Reenviar</button>
-              </form>
-              <button
-                type="button"
-                class="action-danger"
-                onclick={() => askCancel(client.id, client.full_name ?? client.email ?? 'este cliente')}
-              >
-                Cancelar
-              </button>
+    <div class="space-y-2">
+      {#each data.pending as client (client.id)}
+        <div class="card p-4 flex items-center gap-4">
+          <div
+            class="w-11 h-11 rounded-full bg-warning/10 grid place-items-center text-warning flex-shrink-0"
+            aria-hidden="true"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" /><path
+                d="m3 7 9 6 9-6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
+            <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
+            <div class="text-[11px] text-text-mute mt-0.5">
+              Invitado el {fmtDate(client.invited_at)}
             </div>
           </div>
-        {/each}
-      </div>
-    {/if}
+          <span
+            class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0"
+          >
+            Pendiente de aceptar
+          </span>
+          <div class="flex flex-col gap-1.5 flex-shrink-0">
+            <form method="POST" action="?/resendInvite" use:enhance>
+              <input type="hidden" name="email" value={client.email ?? ''} />
+              <input type="hidden" name="full_name" value={client.full_name ?? ''} />
+              <button type="submit" class="action-neutral w-full">Reenviar</button>
+            </form>
+            <button
+              type="button"
+              class="action-danger"
+              onclick={() =>
+                askCancel(client.id, client.full_name ?? client.email ?? 'este cliente')}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      {/each}
+    </div>
   {/if}
 </div>
 
@@ -240,7 +285,9 @@
           type="button"
           onclick={() => (inviteMode = 'one')}
           class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-            {inviteMode === 'one' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+            {inviteMode === 'one'
+            ? 'border-primary text-text'
+            : 'border-transparent text-text-mute hover:text-text'}"
         >
           Una persona
         </button>
@@ -248,7 +295,9 @@
           type="button"
           onclick={() => (inviteMode = 'bulk')}
           class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-            {inviteMode === 'bulk' ? 'border-primary text-text' : 'border-transparent text-text-mute hover:text-text'}"
+            {inviteMode === 'bulk'
+            ? 'border-primary text-text'
+            : 'border-transparent text-text-mute hover:text-text'}"
         >
           Varias a la vez
         </button>
@@ -263,13 +312,19 @@
             return async ({ update }) => {
               await update();
               inviting = false;
-              if (form?.success) { bulkEmails = ''; showInvite = false; }
+              if (form?.success) {
+                bulkEmails = '';
+                showInvite = false;
+              }
             };
           }}
           class="space-y-4"
         >
           <div>
-            <label for="bulk-emails" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+            <label
+              for="bulk-emails"
+              class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+            >
               Emails
             </label>
             <textarea
@@ -290,89 +345,119 @@
 
           {#if data.groups.length > 0}
             <div>
-              <label for="bulk-group" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-                Añadir al grupo <span class="normal-case tracking-normal text-text-mute/70">(opcional)</span>
+              <label
+                for="bulk-group"
+                class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+              >
+                Añadir al grupo <span class="normal-case tracking-normal text-text-mute/70"
+                  >(opcional)</span
+                >
               </label>
-              <select id="bulk-group" name="group_id" bind:value={inviteGroup}
-                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary">
+              <select
+                id="bulk-group"
+                name="group_id"
+                bind:value={inviteGroup}
+                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
+              >
                 <option value="">Sin grupo</option>
                 {#each data.groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
               </select>
             </div>
           {/if}
 
-          <p class="text-[11px] text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5">
-            Enviar muchas invitaciones de golpe puede topar con el límite de envío del
-            proveedor de correo. Te diremos cuáles salieron y cuáles no.
+          <p
+            class="text-[11px] text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5"
+          >
+            Enviar muchas invitaciones de golpe puede topar con el límite de envío del proveedor de
+            correo. Te diremos cuáles salieron y cuáles no.
           </p>
 
           {#if form?.error}
-            <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+            <p
+              role="alert"
+              class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+            >
               {form.error}
             </p>
           {/if}
 
           <div class="flex gap-3 justify-end pt-1">
-            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}>Cancelar</button>
-            <button type="submit" disabled={inviting || bulkCount === 0} class="btn-primary py-2 px-5">
+            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}
+              >Cancelar</button
+            >
+            <button
+              type="submit"
+              disabled={inviting || bulkCount === 0}
+              class="btn-primary py-2 px-5"
+            >
               {inviting ? 'Enviando…' : `Invitar ${bulkCount || ''}`}
             </button>
           </div>
         </form>
       {:else}
-      <form
-        method="POST"
-        action="?/invite"
-        use:enhance={() => {
-          inviting = true;
-          return async ({ update }) => {
-            await update();
-            inviting = false;
-            if (form?.success) showInvite = false;
-          };
-        }}
-        class="space-y-4"
-      >
-        <div>
-          <label for="full_name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-            Nombre completo
-          </label>
-          <input
-            id="full_name"
-            name="full_name"
-            type="text"
-            required
-            maxlength="80"
-            placeholder="Ej: Pepe García"
-            class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <div>
-          <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            maxlength="100"
-            placeholder="pepe@email.com"
-            class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+        <form
+          method="POST"
+          action="?/invite"
+          use:enhance={() => {
+            inviting = true;
+            return async ({ update }) => {
+              await update();
+              inviting = false;
+              if (form?.success) showInvite = false;
+            };
+          }}
+          class="space-y-4"
+        >
+          <div>
+            <label
+              for="full_name"
+              class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+            >
+              Nombre completo
+            </label>
+            <input
+              id="full_name"
+              name="full_name"
+              type="text"
+              required
+              maxlength="80"
+              placeholder="Ej: Pepe García"
+              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+              >Email</label
+            >
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              maxlength="100"
+              placeholder="pepe@email.com"
+              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
 
-        {#if form?.error}
-          <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
-            {form.error}
-          </p>
-        {/if}
+          {#if form?.error}
+            <p
+              role="alert"
+              class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+            >
+              {form.error}
+            </p>
+          {/if}
 
-        <div class="flex gap-3 justify-end pt-1">
-          <button type="button" class="action-neutral" onclick={() => (showInvite = false)}>Cancelar</button>
-          <button type="submit" disabled={inviting} class="btn-primary py-2 px-5">
-            {inviting ? 'Enviando…' : 'Enviar invitación'}
-          </button>
-        </div>
-      </form>
+          <div class="flex gap-3 justify-end pt-1">
+            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}
+              >Cancelar</button
+            >
+            <button type="submit" disabled={inviting} class="btn-primary py-2 px-5">
+              {inviting ? 'Enviando…' : 'Enviar invitación'}
+            </button>
+          </div>
+        </form>
       {/if}
     </div>
   </div>

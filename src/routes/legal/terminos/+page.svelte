@@ -19,36 +19,35 @@
     </p>
 
     <h2 class="text-2xl font-semibold text-text">1. Aceptación</h2>
-    <p>
-      Al usar Coachify aceptas estos términos. Si no estás de acuerdo, no uses el servicio.
-    </p>
+    <p>Al usar Coachify aceptas estos términos. Si no estás de acuerdo, no uses el servicio.</p>
 
     <h2 class="text-2xl font-semibold text-text">2. Servicio</h2>
     <p>
-      Coachify es una herramienta SaaS para entrenadores personales. Nos esforzamos por
-      mantener el servicio disponible pero no garantizamos uptime del 100%.
+      Coachify es una herramienta SaaS para entrenadores personales. Nos esforzamos por mantener el
+      servicio disponible pero no garantizamos uptime del 100%.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">3. Cuentas</h2>
-    <p>
-      Eres responsable de la seguridad de tu cuenta. No compartas tu contraseña.
-    </p>
+    <p>Eres responsable de la seguridad de tu cuenta. No compartas tu contraseña.</p>
 
     <h2 class="text-2xl font-semibold text-text">4. Contenido</h2>
     <p>
-      Los vídeos, rutinas y datos que subes a Coachify son de tu propiedad. No los usaremos
-      para nada que no sea prestarte el servicio.
+      Los vídeos, rutinas y datos que subes a Coachify son de tu propiedad. No los usaremos para
+      nada que no sea prestarte el servicio.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">5. Pagos</h2>
     <p>
-      Los planes de pago se gestionan a través de Stripe. Puedes cancelar en cualquier momento
-      desde tu panel.
+      Los planes de pago se gestionan a través de Stripe. Puedes cancelar en cualquier momento desde
+      tu panel.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">6. Contacto</h2>
     <p>
-      Para cualquier consulta: <a href="mailto:hola@coachify.app" class="text-primary hover:underline">hola@coachify.app</a>
+      Para cualquier consulta: <a
+        href="mailto:hola@coachify.app"
+        class="text-primary hover:underline">hola@coachify.app</a
+      >
     </p>
   </div>
 </div>

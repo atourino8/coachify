@@ -101,14 +101,16 @@
   <div class="container-narrow relative">
     <div class="max-w-3xl mx-auto text-center">
       <span class="eyebrow inline-block mb-6">para entrenadores personales</span>
-      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight mb-6 leading-[1.05]">
+      <h1
+        class="text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight mb-6 leading-[1.05]"
+      >
         Entrena a tus clientes <br />
         con
         <span class="text-accent">tus propios vídeos</span>
       </h1>
       <p class="text-lg sm:text-xl text-text-mute leading-relaxed mb-10 max-w-2xl mx-auto">
-        Sin Excel. Sin WhatsApp. Sin caos. Coachify es la app que reúne tu biblioteca de
-        ejercicios, el calendario semanal de tus clientes y su progreso en un solo sitio.
+        Sin Excel. Sin WhatsApp. Sin caos. Coachify es la app que reúne tu biblioteca de ejercicios,
+        el calendario semanal de tus clientes y su progreso en un solo sitio.
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a href="/register" class="btn-primary text-base px-8 py-4">
@@ -117,9 +119,7 @@
         </a>
         <a href="#features" class="btn-ghost text-base px-8 py-4">Ver cómo funciona</a>
       </div>
-      <p class="mt-6 text-sm text-text-mute">
-        Sin tarjeta · Tu primer cliente en 5 minutos
-      </p>
+      <p class="mt-6 text-sm text-text-mute">Sin tarjeta · Tu primer cliente en 5 minutos</p>
     </div>
   </div>
 </section>
@@ -129,8 +129,12 @@
   <div class="container-narrow">
     <div class="text-center mb-12 max-w-2xl mx-auto">
       <span class="eyebrow inline-block mb-4">acceso</span>
-      <h2 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mb-3">¿Ya usas Coachify?</h2>
-      <p class="text-text-mute">Entra según quién seas. Es el mismo acceso, te llevamos a tu sitio.</p>
+      <h2 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mb-3">
+        ¿Ya usas Coachify?
+      </h2>
+      <p class="text-text-mute">
+        Entra según quién seas. Es el mismo acceso, te llevamos a tu sitio.
+      </p>
     </div>
 
     <div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
@@ -143,7 +147,10 @@
         </p>
         <div class="flex flex-col gap-2">
           <a href="/register" class="btn-primary w-full text-sm">Empezar gratis</a>
-          <a href="/login" class="text-xs text-text-mute hover:text-text text-center transition-colors">
+          <a
+            href="/login"
+            class="text-xs text-text-mute hover:text-text text-center transition-colors"
+          >
             Ya tengo cuenta · Entrar
           </a>
         </div>
@@ -207,9 +214,7 @@
 
     <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
       {#each tiers as tier}
-        <div
-          class="card relative flex flex-col {tier.featured ? 'border-accent border-2' : ''}"
-        >
+        <div class="card relative flex flex-col {tier.featured ? 'border-accent border-2' : ''}">
           {#if tier.featured}
             <span
               class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs
@@ -236,10 +241,7 @@
             {/each}
           </ul>
 
-          <a
-            href="/register"
-            class={tier.featured ? 'btn-primary w-full' : 'btn-ghost w-full'}
-          >
+          <a href="/register" class={tier.featured ? 'btn-primary w-full' : 'btn-ghost w-full'}>
             {tier.cta}
           </a>
         </div>

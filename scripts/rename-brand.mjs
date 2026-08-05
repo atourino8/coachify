@@ -36,7 +36,13 @@ const OLD_DOMAIN = 'coachify.app';
 
 // Directorios y extensiones a revisar.
 const ROOTS = ['src', 'static'];
-const SINGLE_FILES = ['package.json', 'README.md', 'SPEC-TRAINER.md', 'NEGOCIO.md', 'COMPETENCIA.md'];
+const SINGLE_FILES = [
+  'package.json',
+  'README.md',
+  'SPEC-TRAINER.md',
+  'NEGOCIO.md',
+  'COMPETENCIA.md'
+];
 const EXTS = new Set(['.svelte', '.ts', '.js', '.json', '.md', '.html', '.txt', '.css']);
 
 function walk(dir, out = []) {
@@ -51,10 +57,19 @@ function walk(dir, out = []) {
 
 const files = [
   ...ROOTS.flatMap((r) => {
-    try { return walk(r); } catch { return []; }
+    try {
+      return walk(r);
+    } catch {
+      return [];
+    }
   }),
   ...SINGLE_FILES.filter((f) => {
-    try { statSync(f); return true; } catch { return false; }
+    try {
+      statSync(f);
+      return true;
+    } catch {
+      return false;
+    }
   })
 ];
 
