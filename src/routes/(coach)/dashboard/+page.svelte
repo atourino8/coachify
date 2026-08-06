@@ -40,6 +40,13 @@
     month: 'long'
   });
 
+  // Comparar con el primer vídeo es útil pero ocasional: si estuviera siempre
+  // abierto, un solo pendiente ocuparía más que el resto del panel junto.
+  let comparando = $state<string[]>([]);
+  function toggleCompare(id: string) {
+    comparando = comparando.includes(id) ? comparando.filter((x) => x !== id) : [...comparando, id];
+  }
+
   // Contador de todo lo que espera una decisión tuya.
   const pendientes = $derived(
     data.pendingRequests.length +
@@ -54,22 +61,26 @@
 </svelte:head>
 
 <div class="space-y-8">
-  <!-- Cabecera: la jerarquía la marca el tipo, no la decoración -->
+  <!-- Cabecera: la jerarquía la marca el tipo, no la decoración.
+       Fecha y resumen van en la misma línea para no gastar tres alturas de
+       texto en decir poco. -->
   <div>
-    <span class="eyebrow capitalize">{hoy}</span>
-    <h1 class="text-4xl font-display font-semibold tracking-tight mt-1.5">
+    <p class="eyebrow">
+      <span class="capitalize">{hoy}</span>
+      {#if data.hasClients}
+        <span class="text-text-mute normal-case tracking-normal">
+          ·
+          {#if pendientes === 0}
+            nada pendiente
+          {:else}
+            {pendientes} {pendientes === 1 ? 'cosa espera' : 'cosas esperan'} por ti
+          {/if}
+        </span>
+      {/if}
+    </p>
+    <h1 class="text-3xl font-display font-semibold tracking-tight mt-1">
       Hola{data.firstName ? ', ' + data.firstName : ''}
     </h1>
-    {#if data.hasClients}
-      <p class="text-sm text-text-mute mt-2">
-        {#if pendientes === 0}
-          Nada pendiente. Tienes {data.counts.clients}
-          {data.counts.clients === 1 ? 'cliente' : 'clientes'} en marcha.
-        {:else}
-          {pendientes} {pendientes === 1 ? 'cosa espera' : 'cosas esperan'} por ti.
-        {/if}
-      </p>
-    {/if}
   </div>
 
   <!-- Acciones: tira compacta de texto, sin tarjetas ni iconos decorativos -->
@@ -223,82 +234,99 @@
 
         <div class="space-y-4 border-t border-line pt-4">
           {#each data.reviewQueue as v (v.id)}
+            {@const cmp = comparando.includes(v.id)}
             <article class="card space-y-3">
               <div class="flex items-baseline justify-between gap-3">
                 <h3 class="font-semibold min-w-0 truncate">
                   {v.clientName}
                   <span class="text-text-mute font-normal"> · {v.exerciseName}</span>
                 </h3>
-                <span class="text-xs text-text-mute flex-shrink-0">{hace(v.createdAt)}</span>
-              </div>
-
-              <div class="grid {v.firstUrl ? 'sm:grid-cols-2' : ''} gap-3">
-                <div class="space-y-1.5">
+                <div class="flex items-baseline gap-3 flex-shrink-0">
                   {#if v.firstUrl}
-                    <span class="text-xs uppercase tracking-wider text-text-mute">Ahora</span>
+                    <button
+                      type="button"
+                      onclick={() => toggleCompare(v.id)}
+                      class="action-neutral"
+                    >
+                      {cmp ? 'Ocultar el primero' : 'Comparar con el primero'}
+                    </button>
                   {/if}
-                  {#if v.url}
-                    <!-- svelte-ignore a11y_media_has_caption -->
-                    <video
-                      src={v.url}
-                      controls
-                      playsinline
-                      preload="metadata"
-                      class="w-full max-h-72 rounded-md bg-black"
-                    ></video>
-                  {:else}
-                    <p class="text-xs text-text-mute italic">No se pudo cargar el vídeo.</p>
-                  {/if}
+                  <span class="text-xs text-text-mute">{hace(v.createdAt)}</span>
                 </div>
-                {#if v.firstUrl}
-                  <div class="space-y-1.5">
-                    <span class="text-xs uppercase tracking-wider text-text-mute">
-                      Su primer vídeo{v.firstAt
-                        ? ' · ' + new Date(v.firstAt).toLocaleDateString('es-ES')
-                        : ''}
-                    </span>
-                    <!-- svelte-ignore a11y_media_has_caption -->
-                    <video
-                      src={v.firstUrl}
-                      controls
-                      playsinline
-                      preload="metadata"
-                      class="w-full max-h-72 rounded-md bg-black"
-                    ></video>
-                  </div>
-                {/if}
               </div>
 
-              <form
-                method="POST"
-                action="?/commentVideo"
-                use:enhance
-                class="space-y-2 border-t border-line pt-3"
-              >
-                <input type="hidden" name="video_id" value={v.id} />
-                <label
-                  for="cmt-{v.id}"
-                  class="block text-xs uppercase tracking-wider text-text-mute"
-                >
-                  Corrección para {v.clientName.split(' ')[0]}
-                </label>
-                <textarea
-                  id="cmt-{v.id}"
-                  name="comment"
-                  rows="2"
-                  maxlength="600"
-                  required
-                  placeholder="ej: baja más la cadera y mantén la espalda neutra…"
-                  class="w-full px-4 py-3 bg-bg border border-line rounded-md text-sm
-                         focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
-                ></textarea>
-                <div class="flex items-center justify-end gap-3">
-                  <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral"
-                    >Ver historial</a
-                  >
-                  <button type="submit" class="action-primary">Enviar corrección</button>
+              <!-- Compacto: vídeo a la izquierda y corrección a la derecha, que
+                   hay ancho de sobra. Al comparar pasa a una columna para que
+                   los dos vídeos quepan al lado. -->
+              <div class="grid gap-4 {cmp ? '' : 'sm:grid-cols-[minmax(0,20rem)_1fr]'}">
+                <div class="grid gap-3 {cmp ? 'sm:grid-cols-2' : ''}">
+                  <div class="space-y-1.5">
+                    {#if cmp}
+                      <span class="text-xs uppercase tracking-wider text-text-mute">Ahora</span>
+                    {/if}
+                    {#if v.url}
+                      <!-- svelte-ignore a11y_media_has_caption -->
+                      <video
+                        src={v.url}
+                        controls
+                        playsinline
+                        preload="metadata"
+                        class="w-full rounded-md bg-black {cmp ? 'max-h-64' : 'max-h-44'}"
+                      ></video>
+                    {:else}
+                      <p class="text-xs text-text-mute italic">No se pudo cargar el vídeo.</p>
+                    {/if}
+                  </div>
+                  {#if cmp && v.firstUrl}
+                    <div class="space-y-1.5">
+                      <span class="text-xs uppercase tracking-wider text-text-mute">
+                        Su primer vídeo{v.firstAt
+                          ? ' · ' + new Date(v.firstAt).toLocaleDateString('es-ES')
+                          : ''}
+                      </span>
+                      <!-- svelte-ignore a11y_media_has_caption -->
+                      <video
+                        src={v.firstUrl}
+                        controls
+                        playsinline
+                        preload="metadata"
+                        class="w-full max-h-64 rounded-md bg-black"
+                      ></video>
+                    </div>
+                  {/if}
                 </div>
-              </form>
+
+                <form
+                  method="POST"
+                  action="?/commentVideo"
+                  use:enhance
+                  class="space-y-2 {cmp ? 'border-t border-line pt-3' : ''}"
+                >
+                  <input type="hidden" name="video_id" value={v.id} />
+                  <label
+                    for="cmt-{v.id}"
+                    class="block text-xs uppercase tracking-wider text-text-mute"
+                  >
+                    Corrección para {v.clientName.split(' ')[0]}
+                  </label>
+                  <textarea
+                    id="cmt-{v.id}"
+                    name="comment"
+                    rows="3"
+                    maxlength="600"
+                    required
+                    placeholder="ej: baja más la cadera y mantén la espalda neutra…"
+                    class="w-full px-4 py-2.5 bg-bg border border-line rounded-md text-sm
+                           focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
+                  ></textarea>
+                  <div class="flex items-center justify-end gap-3">
+                    <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral"
+                      >Ver historial</a
+                    >
+                    <button type="submit" class="action-primary">Enviar corrección</button>
+                  </div>
+                </form>
+              </div>
             </article>
           {/each}
         </div>
