@@ -87,6 +87,8 @@ export interface Profile {
   timezone: string;
   locale: string;
   archived: boolean;
+  /** Cuándo terminó (o saltó) el asistente de primer login. Null = pendiente. */
+  onboarded_at: string | null;
   created_at: string;
   updated_at: string;
 }
