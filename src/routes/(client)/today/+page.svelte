@@ -134,7 +134,7 @@
   <!-- Saludo -->
   <div>
     <span class="eyebrow capitalize">{dateLabel}</span>
-    <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">
+    <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-2">
       {#if data.isToday}
         Hola, {profile?.full_name?.split(' ')[0] ?? 'crack'}
       {:else}
@@ -194,7 +194,9 @@
   {:else}
     <!-- Hero del entreno con anillo de progreso -->
     <div class="card bg-accent/5 border-accent/20">
-      <div class="flex items-center gap-5">
+      <!-- En móvil el botón cae a una segunda línea a todo el ancho: es la
+           acción principal del día y tiene que ser fácil de acertar. -->
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-4">
         <!-- Anillo de progreso SVG -->
         <div class="relative w-20 h-20 flex-shrink-0">
           <svg
@@ -234,7 +236,10 @@
         </div>
         <!-- La acción principal del día: retomar donde lo dejó, sin buscar -->
         {#if data.nextItemId}
-          <a href="/workout/{data.nextItemId}" class="btn-primary flex-shrink-0 whitespace-nowrap">
+          <a
+            href="/workout/{data.nextItemId}"
+            class="btn-primary w-full sm:w-auto text-center flex-shrink-0 whitespace-nowrap"
+          >
             {data.started ? 'Continuar' : 'Empezar'}
           </a>
         {:else}

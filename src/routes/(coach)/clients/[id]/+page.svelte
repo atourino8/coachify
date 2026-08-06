@@ -163,10 +163,10 @@
 </svelte:head>
 
 <div class="space-y-8">
-  <div class="flex items-start justify-between gap-4">
-    <div>
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
       <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
-      <h1 class="text-3xl font-display font-semibold tracking-tight mt-3">
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-3">
         {data.client.full_name}
       </h1>
       <p class="text-text-mute text-sm mt-1">
@@ -190,11 +190,11 @@
   </div>
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line">
+  <div class="flex gap-1 border-b border-line overflow-x-auto">
     {#each [{ v: 'entrenos', l: 'Entrenos' }, { v: 'ficha', l: 'Ficha' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}
-        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
+        class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors flex items-center gap-2
           {tab === t.v
           ? 'border-accent text-text'
           : 'border-transparent text-text-mute hover:text-text'}"
@@ -397,7 +397,9 @@
         >
       </div>
 
-      <div class="grid grid-cols-7 gap-1.5">
+      <!-- Siete columnas también en móvil (un calendario con menos no es un
+           calendario), pero con celdas más bajas y menos relleno. -->
+      <div class="grid grid-cols-7 gap-1 sm:gap-1.5">
         {#each weekdayHeaders as h}
           <div class="text-center text-xs uppercase tracking-wider text-text-mute pb-1">{h}</div>
         {/each}
@@ -405,7 +407,7 @@
           {@const workout = data.workoutsByDate[day.iso]}
           <a
             href="/clients/{data.client.id}/workouts/{day.iso}"
-            class="card p-2 min-h-[84px] flex flex-col transition-all text-sm
+            class="card p-1.5 sm:p-2 min-h-[52px] sm:min-h-[84px] flex flex-col transition-all text-xs sm:text-sm
             {!day.inMonth ? 'opacity-30' : ''}
             {day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
             {day.isPast && day.inMonth ? 'opacity-55 hover:opacity-90' : 'hover:border-primary/50'}
@@ -416,9 +418,15 @@
               {#if workout?.done}<span class="text-success text-xs" title="Completado">✓</span>{/if}
             </div>
             {#if workout}
+              <!-- En móvil no cabe el título: un punto basta para decir "aquí
+                   hay entreno", y el nombre se lee al abrir el día. -->
               <div class="mt-auto">
-                <div class="text-[11px] font-medium truncate">{workout.title ?? 'Entreno'}</div>
-                <div class="text-[10px] text-text-mute">{workout.itemCount} ej.</div>
+                <span class="sm:hidden block h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"
+                ></span>
+                <div class="hidden sm:block">
+                  <div class="text-[11px] font-medium truncate">{workout.title ?? 'Entreno'}</div>
+                  <div class="text-[10px] text-text-mute">{workout.itemCount} ej.</div>
+                </div>
               </div>
             {/if}
           </a>

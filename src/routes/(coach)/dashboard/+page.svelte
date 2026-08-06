@@ -78,7 +78,7 @@
         </span>
       {/if}
     </p>
-    <h1 class="text-3xl font-display font-semibold tracking-tight mt-1">
+    <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-1">
       Hola{data.firstName ? ', ' + data.firstName : ''}
     </h1>
   </div>

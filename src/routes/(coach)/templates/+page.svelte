@@ -45,22 +45,22 @@
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
-  <div class="flex gap-1 border-b border-line">
+  <div class="flex gap-1 border-b border-line overflow-x-auto">
     <a
       href="/exercises"
-      class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-text-mute hover:text-text"
+      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-transparent text-text-mute hover:text-text"
       >Ejercicios</a
     >
     <a
       href="/templates"
-      class="px-4 py-2 text-sm font-medium border-b-2 border-accent text-accent -mb-px"
+      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-accent text-accent -mb-px"
       >Entrenamientos</a
     >
   </div>
 
   <div class="flex items-center justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-display font-semibold tracking-tight">Entrenamientos</h1>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Entrenamientos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
         Entrenamientos predefinidos (hipertrofia principiante, cardio avanzado…) que reutilizas al
         programar los días de tus clientes.

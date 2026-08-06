@@ -59,7 +59,7 @@ body {
   }
 
   .container-narrow {
-    @apply max-w-6xl mx-auto px-6 sm:px-8;
+    @apply max-w-6xl mx-auto px-4 sm:px-8;
   }
 
   .container-text {
@@ -75,8 +75,11 @@ body {
   }
 
   /* Fila de lista: la unidad de las pantallas de listado. */
+  /* Las filas envuelven en vez de comprimirse: en un móvil, una fila con
+     nombre + dos acciones no cabe en una línea, y aplastar los botones los
+     vuelve intocables. Al envolver, las acciones caen a una segunda línea. */
   .row {
-    @apply flex items-center gap-4 py-3 border-b border-line
+    @apply flex flex-wrap items-center gap-x-4 gap-y-2 py-3 border-b border-line
            transition-colors duration-150;
   }
   .row-link {

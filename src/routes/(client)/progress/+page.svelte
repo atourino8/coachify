@@ -66,21 +66,26 @@
 <div class="space-y-8">
   <div>
     <span class="eyebrow">Tu evolución</span>
-    <h1 class="text-4xl font-display font-semibold tracking-tight mt-2">Progreso</h1>
+    <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-2">Progreso</h1>
   </div>
 
-  <!-- Tarjetas de resumen -->
-  <div class="grid grid-cols-3 gap-3">
-    <div class="card text-center">
-      <div class="text-2xl font-display font-semibold text-primary">{data.stats.totalSets}</div>
+  <!-- Tarjetas de resumen. En móvil van tres en fila igualmente, pero con
+       menos relleno y número más pequeño: un volumen de 5 cifras no cabe. -->
+  <div class="grid grid-cols-3 gap-2 sm:gap-3">
+    <div class="card p-3 sm:p-5 text-center">
+      <div class="text-xl sm:text-2xl font-display font-semibold text-text">
+        {data.stats.totalSets}
+      </div>
       <div class="text-xs text-text-mute mt-1">series registradas</div>
     </div>
-    <div class="card text-center">
-      <div class="text-2xl font-display font-semibold text-primary">{data.stats.exerciseCount}</div>
+    <div class="card p-3 sm:p-5 text-center">
+      <div class="text-xl sm:text-2xl font-display font-semibold text-text">
+        {data.stats.exerciseCount}
+      </div>
       <div class="text-xs text-text-mute mt-1">ejercicios</div>
     </div>
-    <div class="card text-center">
-      <div class="text-2xl font-display font-semibold text-primary">
+    <div class="card p-3 sm:p-5 text-center">
+      <div class="text-xl sm:text-2xl font-display font-semibold text-text">
         {data.stats.totalVolume.toLocaleString('es-ES')}
       </div>
       <div class="text-xs text-text-mute mt-1">kg · volumen total</div>

@@ -139,7 +139,9 @@
   {/if}
 
   <div>
-    <h1 class="text-3xl font-display font-semibold tracking-tight">{data.item.exercise.name}</h1>
+    <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">
+      {data.item.exercise.name}
+    </h1>
     {#if data.item.exercise.description}
       <p class="text-text-mute mt-2 italic">{data.item.exercise.description}</p>
     {/if}

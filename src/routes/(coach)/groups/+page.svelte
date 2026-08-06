@@ -24,7 +24,7 @@
   <div class="flex items-center justify-between gap-4">
     <div>
       <span class="eyebrow">Gestión</span>
-      <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Grupos</h1>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Grupos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
         Agrupa clientes para gestionarlos a la vez: invitarlos en masa o programarles el mismo
         entrenamiento. Cada uno conserva su ficha y su seguimiento individual.

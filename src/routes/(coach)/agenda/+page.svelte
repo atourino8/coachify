@@ -288,7 +288,7 @@
   <div class="flex items-center justify-between gap-4">
     <div>
       <span class="eyebrow">Citas</span>
-      <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Agenda</h1>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Agenda</h1>
     </div>
     <div class="flex items-center gap-3">
       <a

@@ -70,7 +70,7 @@
   <div class="flex items-center justify-between gap-4">
     <div>
       <span class="eyebrow">tu cartera</span>
-      <h1 class="text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
     </div>
     <div class="flex items-center gap-3">
       <a
@@ -129,10 +129,10 @@
   {/if}
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line">
+  <div class="flex gap-1 border-b border-line overflow-x-auto">
     <button
       onclick={() => (tab = 'active')}
-      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors
         {tab === 'active'
         ? 'border-accent text-text'
         : 'border-transparent text-text-mute hover:text-text'}"
@@ -141,7 +141,7 @@
     </button>
     <button
       onclick={() => (tab = 'pending')}
-      class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors flex items-center gap-2
+      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors flex items-center gap-2
         {tab === 'pending'
         ? 'border-accent text-text'
         : 'border-transparent text-text-mute hover:text-text'}"
@@ -280,7 +280,7 @@
       </div>
 
       <!-- Selector de modo -->
-      <div class="flex gap-1 border-b border-line">
+      <div class="flex gap-1 border-b border-line overflow-x-auto">
         <button
           type="button"
           onclick={() => (inviteMode = 'one')}
