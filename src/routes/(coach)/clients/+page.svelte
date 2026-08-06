@@ -67,8 +67,8 @@
 />
 
 <div class="space-y-6">
-  <div class="flex items-center justify-between gap-4">
-    <div>
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
       <span class="eyebrow">tu cartera</span>
       <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
     </div>

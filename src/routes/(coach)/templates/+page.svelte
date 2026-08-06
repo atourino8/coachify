@@ -58,8 +58,10 @@
     >
   </div>
 
-  <div class="flex items-center justify-between gap-4">
-    <div>
+  <!-- El botón cae a su propia línea en móvil: junto al título no cabía y se
+       salía de la pantalla. -->
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
       <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Entrenamientos</h1>
       <p class="text-text-mute text-sm mt-2 max-w-lg">
         Entrenamientos predefinidos (hipertrofia principiante, cardio avanzado…) que reutilizas al

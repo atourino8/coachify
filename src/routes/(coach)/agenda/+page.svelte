@@ -285,8 +285,8 @@
 {/snippet}
 
 <div class="space-y-8">
-  <div class="flex items-center justify-between gap-4">
-    <div>
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
       <span class="eyebrow">Citas</span>
       <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Agenda</h1>
     </div>
