@@ -2,7 +2,15 @@
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
-  import { BUCKET, validateVideo, videoPath, formatBytes, readDuration } from '$lib/technique';
+  import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+  import {
+    validateVideo,
+    videoPath,
+    formatBytes,
+    readDuration,
+    uploadWithProgress,
+    type UploadHandle
+  } from '$lib/technique';
   import type { SetLog } from '$lib/supabase/types';
 
   let { data, form } = $props();
@@ -10,9 +18,16 @@
   // ---- Vídeo de técnica ----
   let uploading = $state(false);
   let uploadPct = $state(0);
+  // Dos fases: la subida (lenta, con progreso real) y el guardado del registro
+  // (instantáneo). Mezclarlas en una sola barra es lo que hacía que se quedara
+  // parada en un número raro.
+  let uploadPhase = $state<'subiendo' | 'guardando'>('subiendo');
   let videoError = $state('');
   let consent = $state(false);
   let fileInput = $state<HTMLInputElement | null>(null);
+  // Guardamos el archivo para poder reintentar sin obligar a volver a grabarlo.
+  let pendingFile = $state<File | null>(null);
+  let currentUpload: UploadHandle | null = null;
 
   // Solo hace falta consentir la primera vez (si ya tiene vídeos, ya consintió).
   const needsConsent = $derived(!data.techniqueFirst && !data.techniqueLatest);
@@ -20,36 +35,56 @@
   async function handleFile(e: Event) {
     const input = e.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
-    videoError = '';
 
+    videoError = '';
     const problem = await validateVideo(file);
     if (problem) {
       videoError = problem;
-      input.value = '';
       return;
     }
     if (!data.coachId) {
       videoError = 'Necesitas tener un entrenador asignado para enviar vídeos.';
-      input.value = '';
       return;
     }
+    pendingFile = file;
+    await sendVideo(file);
+  }
+
+  async function sendVideo(file: File) {
+    if (!data.coachId) return;
+    videoError = '';
 
     // Primera subida → 'first' (no se pisa nunca). Siguientes → 'latest'.
     const kind = data.techniqueFirst ? 'latest' : 'first';
     const path = videoPath(data.clientId, data.item.exercise_id, kind, file.type);
     const duration = await readDuration(file);
 
-    uploading = true;
-    uploadPct = 10;
-    try {
-      const supabase = page.data.supabase;
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, file, { upsert: true, contentType: file.type });
-      if (upErr) throw upErr;
-      uploadPct = 80;
+    const supabase = page.data.supabase;
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+    if (!session) {
+      videoError = 'Tu sesión ha caducado. Vuelve a entrar e inténtalo otra vez.';
+      return;
+    }
 
+    uploading = true;
+    uploadPhase = 'subiendo';
+    uploadPct = 0;
+
+    try {
+      currentUpload = uploadWithProgress({
+        supabaseUrl: PUBLIC_SUPABASE_URL,
+        accessToken: session.access_token,
+        path,
+        file,
+        onProgress: (pct) => (uploadPct = pct)
+      });
+      await currentUpload.promise;
+
+      uploadPhase = 'guardando';
       const { error: dbErr } = await supabase.from('technique_videos').upsert(
         {
           client_id: data.clientId,
@@ -67,15 +102,23 @@
       );
       if (dbErr) throw dbErr;
 
-      uploadPct = 100;
+      pendingFile = null;
       await invalidateAll();
     } catch (err) {
-      videoError = err instanceof Error ? err.message : 'No se pudo subir el vídeo.';
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        videoError = '';
+      } else {
+        videoError = err instanceof Error ? err.message : 'No se pudo subir el vídeo.';
+      }
     } finally {
+      currentUpload = null;
       uploading = false;
       uploadPct = 0;
-      input.value = '';
     }
+  }
+
+  function cancelUpload() {
+    currentUpload?.abort();
   }
 
   function youtubeId(url: string | null): string | null {
@@ -398,15 +441,48 @@
 
       {#if uploading}
         <div class="space-y-2">
-          <div class="h-1.5 bg-surface-2 rounded-full overflow-hidden">
+          <div class="flex items-baseline justify-between gap-3 text-xs">
+            <span class="font-medium">
+              {uploadPhase === 'guardando' ? 'Guardando…' : 'Subiendo vídeo'}
+            </span>
+            {#if uploadPhase === 'subiendo'}
+              <span class="tabular-nums text-text-mute">
+                {uploadPct}%{pendingFile ? ' de ' + formatBytes(pendingFile.size) : ''}
+              </span>
+            {/if}
+          </div>
+          <div
+            class="h-2 bg-surface-2 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={uploadPhase === 'guardando' ? 100 : uploadPct}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label="Progreso de la subida del vídeo"
+          >
             <div
-              class="h-full bg-primary transition-all duration-300"
-              style="width: {uploadPct}%"
+              class="h-full bg-accent transition-all duration-200"
+              style="width: {uploadPhase === 'guardando' ? 100 : uploadPct}%"
             ></div>
           </div>
-          <p class="text-xs text-text-mute">Subiendo vídeo… no cierres la página.</p>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs text-text-mute">No cierres la página.</p>
+            {#if uploadPhase === 'subiendo'}
+              <button type="button" onclick={cancelUpload} class="action-neutral">Cancelar</button>
+            {/if}
+          </div>
         </div>
       {:else}
+        <!-- Si falló a media subida no le hacemos volver a grabar: el archivo
+             sigue en memoria y se reintenta con un toque. -->
+        {#if pendingFile && videoError}
+          <button
+            type="button"
+            onclick={() => pendingFile && sendVideo(pendingFile)}
+            class="btn-primary w-full"
+          >
+            Reintentar la subida
+          </button>
+        {/if}
         <input
           bind:this={fileInput}
           type="file"

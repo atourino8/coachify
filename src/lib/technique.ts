@@ -72,3 +72,68 @@ export function formatBytes(bytes: number | null): string {
   const mb = bytes / 1024 / 1024;
   return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
 }
+
+/**
+ * Subida con progreso REAL y cancelable.
+ *
+ * Por qué no usamos supabase.storage.upload(): va por fetch(), que no expone
+ * el progreso de subida. Con un vídeo de decenas de MB por 4G eso significa
+ * una barra parada durante un minuto, que el usuario lee como "colgado" y
+ * acaba recargando la página a mitad de la subida.
+ *
+ * XMLHttpRequest sí da upload.onprogress, así que hablamos directamente con
+ * el endpoint REST de Storage. El cuerpo es multipart igual que lo envía
+ * supabase-js, y `x-upsert` permite sobrescribir el vídeo 'latest'.
+ */
+export type UploadHandle = {
+  promise: Promise<void>;
+  abort: () => void;
+};
+
+export function uploadWithProgress(opts: {
+  supabaseUrl: string;
+  accessToken: string;
+  path: string;
+  file: File;
+  onProgress: (pct: number) => void;
+}): UploadHandle {
+  const xhr = new XMLHttpRequest();
+
+  const promise = new Promise<void>((resolve, reject) => {
+    xhr.open('POST', `${opts.supabaseUrl}/storage/v1/object/${BUCKET}/${opts.path}`, true);
+    xhr.setRequestHeader('Authorization', `Bearer ${opts.accessToken}`);
+    xhr.setRequestHeader('x-upsert', 'true');
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) opts.onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+        return;
+      }
+      // Storage devuelve un JSON con `message`; si no, nos quedamos con el código.
+      let detalle = `Error ${xhr.status}`;
+      try {
+        const body = JSON.parse(xhr.responseText);
+        if (body?.message) detalle = body.message;
+      } catch {
+        // respuesta no-JSON: nos quedamos con el código de estado
+      }
+      reject(new Error(detalle));
+    };
+
+    xhr.onerror = () =>
+      reject(new Error('Se perdió la conexión durante la subida. Inténtalo de nuevo.'));
+    xhr.ontimeout = () => reject(new Error('La subida tardó demasiado. Inténtalo de nuevo.'));
+    xhr.onabort = () => reject(new DOMException('Subida cancelada', 'AbortError'));
+
+    const body = new FormData();
+    body.append('cacheControl', '3600');
+    body.append('', opts.file);
+    xhr.send(body);
+  });
+
+  return { promise, abort: () => xhr.abort() };
+}
