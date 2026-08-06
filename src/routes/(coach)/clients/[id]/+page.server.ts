@@ -236,6 +236,78 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     a.pending === b.pending ? b.lastAt.localeCompare(a.lastAt) : a.pending ? -1 : 1
   );
 
+  // ---- Progreso por ejercicio ----
+  // El entrenador necesita ver esto más que nadie: es literalmente su trabajo.
+  // Hasta ahora la evolución solo existía en la pantalla del cliente, así que
+  // el coach tenía que creerse lo que le contaran.
+  const { data: logsRaw } = await supabase
+    .from('set_logs')
+    .select(
+      `exercise_id, reps_done, weight_done, completed_at,
+       exercise:exercises(id, name, muscle_group)`
+    )
+    .eq('client_id', params.id)
+    .order('completed_at', { ascending: true });
+
+  type LogRow = {
+    exercise_id: string;
+    reps_done: number | null;
+    weight_done: number | null;
+    completed_at: string;
+    exercise: { id: string; name: string; muscle_group: string | null } | null;
+  };
+
+  // Un punto por ejercicio y día, con el peso máximo de ese día: dentro de una
+  // sesión hay varias series y lo que interesa es el tope, no el promedio.
+  const porEjercicio = new Map<
+    string,
+    {
+      id: string;
+      name: string;
+      muscleGroup: string | null;
+      dias: Map<string, { maxWeight: number; totalReps: number }>;
+    }
+  >();
+
+  for (const l of (logsRaw ?? []) as unknown as LogRow[]) {
+    if (!l.exercise) continue;
+    const dia = l.completed_at.slice(0, 10);
+    let ex = porEjercicio.get(l.exercise.id);
+    if (!ex) {
+      ex = {
+        id: l.exercise.id,
+        name: l.exercise.name,
+        muscleGroup: l.exercise.muscle_group,
+        dias: new Map()
+      };
+      porEjercicio.set(l.exercise.id, ex);
+    }
+    const agg = ex.dias.get(dia) ?? { maxWeight: 0, totalReps: 0 };
+    agg.maxWeight = Math.max(agg.maxWeight, l.weight_done ?? 0);
+    agg.totalReps += l.reps_done ?? 0;
+    ex.dias.set(dia, agg);
+  }
+
+  const progress = [...porEjercicio.values()]
+    .map((ex) => {
+      const points = [...ex.dias.entries()]
+        .map(([date, agg]) => ({ date, ...agg }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const pesos = points.map((p) => p.maxWeight);
+      return {
+        id: ex.id,
+        name: ex.name,
+        muscleGroup: ex.muscleGroup,
+        points,
+        sessions: points.length,
+        bestWeight: pesos.length ? Math.max(...pesos) : null,
+        // Diferencia entre la primera y la última sesión: es el dato que el
+        // entrenador quiere de un vistazo ("¿ha mejorado o no?").
+        delta: points.length > 1 ? points[points.length - 1].maxWeight - points[0].maxWeight : null
+      };
+    })
+    .sort((a, b) => b.sessions - a.sessions);
+
   return {
     client,
     view,
@@ -247,7 +319,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     info,
     historyWorkouts,
     historySessions,
-    technique
+    technique,
+    progress
   };
 };
 
