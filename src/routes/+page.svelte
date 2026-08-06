@@ -2,6 +2,39 @@
   // Landing pública de Coachify. Los CTA apuntan a /login (acceso, auto-enruta
   // por rol) y /register (alta de entrenador; los clientes entran por invitación).
 
+  import { page } from '$app/state';
+
+  // Datos estructurados para los buscadores. Deliberadamente NO declaramos
+  // precios: los de NEGOCIO.md están sin confirmar y publicar en schema.org un
+  // precio que luego cambie es peor que no publicar ninguno.
+  const jsonLd = $derived(
+    JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': page.url.origin + '/#organizacion',
+          name: 'Coachify',
+          url: page.url.origin,
+          logo: page.url.origin + '/favicon.svg',
+          email: 'hola@coachify.app',
+          areaServed: 'ES'
+        },
+        {
+          '@type': 'SoftwareApplication',
+          name: 'Coachify',
+          applicationCategory: 'HealthApplication',
+          operatingSystem: 'Web',
+          inLanguage: 'es-ES',
+          url: page.url.origin,
+          publisher: { '@id': page.url.origin + '/#organizacion' },
+          description:
+            'Aplicación para entrenadores personales: gestión de clientes, programación de entrenos, citas y corrección de la técnica por vídeo.'
+        }
+      ]
+    })
+  );
+
   const features = [
     {
       icon: '🎥',
@@ -68,6 +101,13 @@
     }
   ];
 </script>
+
+<svelte:head>
+  <!-- Se inyecta con {@html} porque Svelte trataría un <script> escrito tal
+       cual como código del propio componente. El contenido es nuestro y no
+       incorpora nada que venga del usuario. -->
+  {@html `<script type="application/ld+json">${jsonLd}<\/script>`}
+</svelte:head>
 
 <!-- ============== Header ============== -->
 <header class="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-line">
@@ -282,9 +322,10 @@
       </div>
       <span>© {new Date().getFullYear()} Coachify</span>
     </div>
-    <nav class="flex items-center gap-6">
+    <nav class="flex flex-wrap items-center gap-x-6 gap-y-2">
       <a href="/legal/terminos" class="hover:text-text transition-colors">Términos</a>
       <a href="/legal/privacidad" class="hover:text-text transition-colors">Privacidad</a>
+      <a href="/legal/cookies" class="hover:text-text transition-colors">Cookies</a>
       <a href="mailto:hola@coachify.app" class="hover:text-text transition-colors">Contacto</a>
     </nav>
   </div>

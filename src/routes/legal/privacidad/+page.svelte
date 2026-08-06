@@ -130,7 +130,8 @@
     <h2 class="text-2xl font-semibold text-text">10. Cookies</h2>
     <p>
       Usamos únicamente cookies estrictamente necesarias para mantener tu sesión iniciada. No
-      utilizamos cookies publicitarias ni analítica de terceros.
+      utilizamos cookies publicitarias ni analítica de terceros. Lo detallamos en la
+      <a href="/legal/cookies" class="text-accent hover:underline">Política de Cookies</a>.
     </p>
   </div>
 </div>

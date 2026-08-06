@@ -1,10 +1,17 @@
 <script lang="ts">
   import '../app.css';
   import { invalidate } from '$app/navigation';
-  import { navigating } from '$app/state';
+  import { navigating, page } from '$app/state';
   import { onMount } from 'svelte';
 
   let { data, children } = $props();
+
+  const TITULO = 'Coachify · La app de entrenamiento personal para coaches modernos';
+  const DESCRIPCION =
+    'Coachify es la app para entrenadores personales: gestiona clientes, arma rutinas con vídeos propios y sigue el progreso. Sin Excel, sin WhatsApp, sin caos.';
+
+  const urlActual = $derived(page.url.origin + page.url.pathname);
+  const imagenOG = $derived(page.url.origin + '/og-image.png');
 
   // Cuando Supabase Auth detecta un cambio (login/logout/refresh), invalidamos
   // la query para que el layout server se vuelva a ejecutar y refresque la sesión.
@@ -19,11 +26,33 @@
 </script>
 
 <svelte:head>
-  <title>Coachify · La app de entrenamiento personal para coaches modernos</title>
+  <title>{TITULO}</title>
+  <meta name="description" content={DESCRIPCION} />
+
+  <!-- Open Graph / Twitter. Las redes exigen URLs ABSOLUTAS en og:image; con
+       una ruta relativa no se previsualiza nada. Por eso se compone con el
+       origen de la petición en vez de escribirla a mano: así funciona igual en
+       local, en las previsualizaciones de Vercel y en el dominio final. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Coachify" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:title" content={TITULO} />
+  <meta property="og:description" content={DESCRIPCION} />
+  <meta property="og:url" content={urlActual} />
+  <meta property="og:image" content={imagenOG} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta
-    name="description"
-    content="Coachify es la app para entrenadores personales: gestiona clientes, arma rutinas con vídeos propios y sigue el progreso. Sin Excel, sin WhatsApp, sin caos."
+    property="og:image:alt"
+    content="Coachify · tus clientes, tus entrenos y tu agenda en un sitio"
   />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={TITULO} />
+  <meta name="twitter:description" content={DESCRIPCION} />
+  <meta name="twitter:image" content={imagenOG} />
+
+  <link rel="canonical" href={urlActual} />
 </svelte:head>
 
 {#if navigating.to}

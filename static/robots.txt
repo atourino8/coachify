@@ -1,7 +1,29 @@
 # Coachify · BETA PRIVADA
 # Mientras estemos en pruebas, NO permitimos que ningún crawler indexe el sitio.
-# Cuando el producto esté listo para lanzamiento, sustituir este archivo por uno
-# que permita el rastreo y apunte a sitemap.xml.
+#
+# EL DÍA DEL LANZAMIENTO, dos cambios (los dos, o no sirve de nada):
+#   1. Sustituir el bloque de abajo por:
+#        User-agent: *
+#        Allow: /
+#        Disallow: /dashboard
+#        Disallow: /clients
+#        Disallow: /agenda
+#        Disallow: /exercises
+#        Disallow: /templates
+#        Disallow: /groups
+#        Disallow: /availability
+#        Disallow: /today
+#        Disallow: /my-calendar
+#        Disallow: /progress
+#        Disallow: /workout
+#        Disallow: /onboarding
+#        Sitemap: https://EL-DOMINIO/sitemap.xml
+#   2. Quitar las etiquetas <meta name="robots" content="noindex, nofollow">
+#      de src/app.html. Este archivo por sí solo NO evita la indexación si
+#      alguien enlaza el sitio desde fuera; el meta es el que manda.
+#
+# El sitemap ya está hecho y se genera solo en /sitemap.xml. Solo hay que
+# dejar de bloquearlo.
 
 User-agent: *
 Disallow: /
