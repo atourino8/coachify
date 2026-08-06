@@ -193,9 +193,11 @@
     </div>
   </div>
 
+  <!-- Igual que en el constructor del día: en móvil primero el entrenamiento
+       que estás montando, y la biblioteca detrás. -->
   <div class="grid md:grid-cols-2 gap-6">
     <!-- Biblioteca -->
-    <aside class="card space-y-3">
+    <aside class="card space-y-3 order-2 md:order-1">
       <h2 class="text-sm uppercase tracking-wider text-text-mute">Biblioteca</h2>
       <div class="relative">
         <svg
@@ -242,7 +244,6 @@
               onclick={() => addExercise(ex)}
               class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3 hover:border-primary/40 transition-colors group"
             >
-              <div class="text-2xl">🏋️</div>
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{ex.name}</div>
                 {#if ex.muscle_group}<div class="text-xs text-text-mute">
@@ -257,7 +258,7 @@
     </aside>
 
     <!-- Ejercicios de la plantilla -->
-    <section class="card space-y-4 min-h-[300px]">
+    <section class="card space-y-4 min-h-[300px] order-1 md:order-2">
       <h2 class="text-sm uppercase tracking-wider text-text-mute">Ejercicios · {items.length}</h2>
       {#if items.length === 0}
         <div

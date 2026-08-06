@@ -2,7 +2,7 @@
   import { dndzone, type DndEvent } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
   import { enhance } from '$app/forms';
-  import { formatHumanDate } from '$lib/week';
+  import { formatHumanDate, todayISOLocal } from '$lib/week';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import type { Exercise, WorkoutItemWithRelations } from '$lib/supabase/types';
 
@@ -46,6 +46,15 @@
   let filterText = $state('');
   let filterMuscle = $state<string>('');
   let selectedTemplate = $state('');
+
+  // ---- Consultar vs. editar -------------------------------------------------
+  // Un día pasado se abre para MIRAR qué se hizo, no para montarlo. Enseñar la
+  // biblioteca entera ahí sobra, y en el móvil es peor: aparece antes que el
+  // propio entreno, así que hay que pasar 48 ejercicios para ver lo que buscas.
+  // Se puede editar igualmente, pero hay que pedirlo.
+  const esPasado = $derived(data.date < todayISOLocal());
+  // svelte-ignore state_referenced_locally
+  let editando = $state(!(data.date < todayISOLocal()));
 
   // Cargar los ejercicios de una plantilla en el día (reemplaza los actuales).
   // Si ya hay ejercicios, pide confirmación en modal antes de reemplazar.
@@ -142,18 +151,22 @@
 
 <div class="space-y-6">
   <!-- Cabecera -->
-  <div class="flex items-center justify-between">
-    <div>
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
       <a href="/clients/{data.client.id}" class="text-sm text-text-mute hover:text-text">
         ← {data.client.full_name}
       </a>
       <h1 class="text-2xl font-display font-semibold tracking-tight mt-2 capitalize">
         {formatHumanDate(data.date)}
       </h1>
+      {#if esPasado}
+        <p class="text-xs text-text-mute mt-1">Día pasado</p>
+      {/if}
     </div>
     <form
       method="POST"
       action="?/save"
+      class={editando ? '' : 'hidden'}
       use:enhance={() => {
         saving = true;
         return async ({ update }) => {
@@ -182,254 +195,320 @@
     </div>
   {/if}
 
-  <!-- Datos generales del workout -->
-  <div class="card space-y-4">
-    <div>
-      <label for="w-title" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-        Título del día
-      </label>
-      <input
-        id="w-title"
-        type="text"
-        bind:value={title}
-        placeholder="ej: PIERNA — Bloque hipertrofia"
-        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-lg font-semibold
+  {#if !editando}
+    <!-- ===== CONSULTA (día pasado) =====
+         Solo el entreno que se hizo. Sin biblioteca, sin plantillas y sin
+         formularios: aquí se viene a mirar, no a montar. -->
+    {#if dayItems.length > 0}
+      <section class="card space-y-4">
+        <div>
+          <h2 class="font-semibold">{title || 'Entreno sin título'}</h2>
+          <p class="text-xs text-text-mute mt-0.5">
+            {dayItems.length}
+            {dayItems.length === 1 ? 'ejercicio' : 'ejercicios'}
+          </p>
+        </div>
+
+        {#if notes}
+          <p class="text-sm bg-bg border border-line rounded-md px-3 py-2">
+            <span class="text-xs uppercase tracking-wider text-text-mute block mb-1">
+              Nota para el cliente
+            </span>
+            {notes}
+          </p>
+        {/if}
+
+        <div class="border-t border-line">
+          {#each dayItems as item, i (item.id)}
+            <div class="row">
+              <span class="w-6 text-text-mute tabular-nums flex-shrink-0">{i + 1}</span>
+              <span class="flex-1 min-w-0">
+                <span class="font-medium block truncate">{item.exercise.name}</span>
+                <span class="text-xs text-text-mute">
+                  {item.sets} series{item.reps_prescribed
+                    ? ' · ' + item.reps_prescribed + ' reps'
+                    : ''}{item.weight_prescribed
+                    ? ' · ' + item.weight_prescribed
+                    : ''}{item.rest_seconds ? ' · ' + item.rest_seconds + 's desc.' : ''}
+                </span>
+                {#if item.notes}
+                  <span class="text-xs text-text-mute italic block">{item.notes}</span>
+                {/if}
+              </span>
+            </div>
+          {/each}
+        </div>
+
+        <button type="button" onclick={() => (editando = true)} class="btn-ghost">
+          Editar este día
+        </button>
+      </section>
+    {:else}
+      <!-- Sin entreno ese día: se puede añadir a posteriori, que es justo lo
+           que hace falta cuando se entrenó y no se llegó a apuntar. -->
+      <div class="card max-w-2xl space-y-3">
+        <h2 class="text-2xl font-display font-semibold">Ese día no tiene entreno</h2>
+        <p class="text-sm text-text-mute">
+          No hay nada registrado para esta fecha. Puedes añadirlo ahora si entrenasteis y se quedó
+          sin apuntar: le aparecerá a tu cliente en su historial.
+        </p>
+        <button type="button" onclick={() => (editando = true)} class="btn-primary">
+          Registrar el entreno de ese día
+        </button>
+      </div>
+    {/if}
+  {:else}
+    <!-- Datos generales del workout -->
+    <div class="card space-y-4">
+      <div>
+        <label for="w-title" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+          Título del día
+        </label>
+        <input
+          id="w-title"
+          type="text"
+          bind:value={title}
+          placeholder="ej: PIERNA — Bloque hipertrofia"
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-lg font-semibold
                focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all
                placeholder:font-normal placeholder:text-text-mute/40"
-      />
-    </div>
-    <div>
-      <label for="w-notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-        Notas para tu cliente
-      </label>
-      <textarea
-        id="w-notes"
-        bind:value={notes}
-        placeholder="ej: calienta bien, ojo al hombro derecho..."
-        rows="2"
-        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+        />
+      </div>
+      <div>
+        <label for="w-notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+          Notas para tu cliente
+        </label>
+        <textarea
+          id="w-notes"
+          bind:value={notes}
+          placeholder="ej: calienta bien, ojo al hombro derecho..."
+          rows="2"
+          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
                focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none
                placeholder:text-text-mute/40"
-      ></textarea>
+        ></textarea>
+      </div>
     </div>
-  </div>
 
-  <!-- Cargar plantilla -->
-  {#if data.templates && data.templates.length > 0}
-    <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
-      <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap"
-        >Cargar entrenamiento</span
-      >
-      <select
-        bind:value={selectedTemplate}
-        onchange={loadTemplate}
-        class="flex-1 px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-      >
-        <option value="">Elige un entrenamiento para rellenar el día…</option>
-        {#each data.templates as t (t.id)}
-          <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
-        {/each}
-      </select>
-      <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap"
-        >Gestionar entrenamientos →</a
-      >
+    <!-- Cargar plantilla -->
+    {#if data.templates && data.templates.length > 0}
+      <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
+        <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap"
+          >Cargar entrenamiento</span
+        >
+        <select
+          bind:value={selectedTemplate}
+          onchange={loadTemplate}
+          class="flex-1 px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
+        >
+          <option value="">Elige un entrenamiento para rellenar el día…</option>
+          {#each data.templates as t (t.id)}
+            <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
+          {/each}
+        </select>
+        <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap"
+          >Gestionar entrenamientos →</a
+        >
+      </div>
+    {/if}
+
+    <!-- Cuerpo: biblioteca + día.
+       En móvil el DÍA va primero: es el sujeto de la pantalla. Con la
+       biblioteca delante había que pasar 48 ejercicios para ver el entreno
+       que estabas montando. -->
+    <div class="grid lg:grid-cols-[1fr_1.5fr] gap-6">
+      <!-- BIBLIOTECA -->
+      <aside class="card space-y-4 order-2 lg:order-1">
+        <div>
+          <h2 class="text-sm uppercase tracking-wider text-text-mute mb-3">Biblioteca</h2>
+          <div class="relative mb-2">
+            <svg
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" /><line
+                x1="21"
+                y1="21"
+                x2="16.65"
+                y2="16.65"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              type="search"
+              bind:value={filterText}
+              placeholder="Buscar ejercicio..."
+              class="w-full pl-9 pr-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <select
+            bind:value={filterMuscle}
+            class="w-full px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
+          >
+            <option value="">Todos los grupos</option>
+            {#each Object.entries(muscleLabels) as [v, l]}
+              <option value={v}>{l}</option>
+            {/each}
+          </select>
+        </div>
+
+        {#if filteredExercises.length === 0}
+          <div class="text-center py-10 text-sm text-text-mute">
+            {data.exercises.length === 0
+              ? 'No tienes ejercicios. Crea algunos en la biblioteca.'
+              : 'Ningún ejercicio coincide.'}
+          </div>
+        {:else}
+          <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+            {#each filteredExercises as ex (ex.id)}
+              <button
+                type="button"
+                onclick={() => addExercise(ex)}
+                class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3
+                     hover:border-primary/40 transition-colors group"
+                title="Añadir al día"
+              >
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">{ex.name}</div>
+                  {#if ex.muscle_group}
+                    <div class="text-xs text-text-mute">{muscleLabels[ex.muscle_group]}</div>
+                  {/if}
+                </div>
+                <span class="text-primary group-hover:text-accent text-lg font-bold">+</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </aside>
+
+      <!-- DÍA -->
+      <section class="card space-y-4 min-h-[400px] order-1 lg:order-2">
+        <h2 class="text-sm uppercase tracking-wider text-text-mute">
+          Ejercicios del día · {dayItems.length}
+        </h2>
+
+        <div
+          class="space-y-3 min-h-[300px] rounded-md transition-colors {dayItems.length === 0
+            ? 'border-2 border-dashed border-text-mute/20 p-6 grid place-items-center'
+            : ''}"
+          use:dndzone={{
+            items: dayItems,
+            type: 'exercise',
+            flipDurationMs: 200,
+            dropFromOthersDisabled: true,
+            dropTargetStyle: {}
+          }}
+          onconsider={handleDayConsider}
+          onfinalize={handleDayFinalize}
+        >
+          {#each dayItems as item, i (item.id)}
+            <div
+              animate:flip={{ duration: 200 }}
+              class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
+            >
+              <div class="flex items-start gap-3">
+                <div class="text-primary font-bold mt-0.5 w-6">#{i + 1}</div>
+                <div class="flex-1">
+                  <div class="font-semibold">{item.exercise.name}</div>
+                  {#if item.exercise.muscle_group}
+                    <div class="text-xs text-text-mute">
+                      {muscleLabels[item.exercise.muscle_group]}
+                    </div>
+                  {/if}
+                </div>
+                <button
+                  type="button"
+                  onclick={() => removeItem(item.id)}
+                  class="text-text-mute hover:text-danger text-xl"
+                  title="Quitar"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <label
+                    for="sets-{item.id}"
+                    class="text-[10px] uppercase tracking-wider text-text-mute">Series</label
+                  >
+                  <input
+                    id="sets-{item.id}"
+                    type="number"
+                    min="1"
+                    max="20"
+                    bind:value={item.sets}
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    for="reps-{item.id}"
+                    class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label
+                  >
+                  <input
+                    id="reps-{item.id}"
+                    type="text"
+                    bind:value={item.reps_prescribed}
+                    placeholder="8-10"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    for="weight-{item.id}"
+                    class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label
+                  >
+                  <input
+                    id="weight-{item.id}"
+                    type="text"
+                    bind:value={item.weight_prescribed}
+                    placeholder="80kg"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label
+                    for="rest-{item.id}"
+                    class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label
+                  >
+                  <input
+                    id="rest-{item.id}"
+                    type="number"
+                    min="0"
+                    step="15"
+                    bind:value={item.rest_seconds}
+                    placeholder="90"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+              </div>
+
+              <input
+                type="text"
+                bind:value={item.notes}
+                placeholder="Nota técnica (opcional)..."
+                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
+              />
+            </div>
+          {:else}
+            <div class="text-center text-text-mute text-sm">
+              <p class="mb-1">
+                Añade ejercicios desde la biblioteca con el botón <span class="text-accent">+</span>
+              </p>
+              <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
+            </div>
+          {/each}
+        </div>
+      </section>
     </div>
   {/if}
 
-  <!-- Cuerpo: biblioteca + día -->
-  <div class="grid lg:grid-cols-[1fr_1.5fr] gap-6">
-    <!-- BIBLIOTECA -->
-    <aside class="card space-y-4">
-      <div>
-        <h2 class="text-sm uppercase tracking-wider text-text-mute mb-3">Biblioteca</h2>
-        <div class="relative mb-2">
-          <svg
-            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <circle cx="11" cy="11" r="7" /><line
-              x1="21"
-              y1="21"
-              x2="16.65"
-              y2="16.65"
-              stroke-linecap="round"
-            />
-          </svg>
-          <input
-            type="search"
-            bind:value={filterText}
-            placeholder="Buscar ejercicio..."
-            class="w-full pl-9 pr-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-        <select
-          bind:value={filterMuscle}
-          class="w-full px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-        >
-          <option value="">Todos los grupos</option>
-          {#each Object.entries(muscleLabels) as [v, l]}
-            <option value={v}>{l}</option>
-          {/each}
-        </select>
-      </div>
-
-      {#if filteredExercises.length === 0}
-        <div class="text-center py-10 text-sm text-text-mute">
-          {data.exercises.length === 0
-            ? 'No tienes ejercicios. Crea algunos en la biblioteca.'
-            : 'Ningún ejercicio coincide.'}
-        </div>
-      {:else}
-        <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-          {#each filteredExercises as ex (ex.id)}
-            <button
-              type="button"
-              onclick={() => addExercise(ex)}
-              class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3
-                     hover:border-primary/40 transition-colors group"
-              title="Añadir al día"
-            >
-              <div class="text-2xl">🏋️</div>
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm truncate">{ex.name}</div>
-                {#if ex.muscle_group}
-                  <div class="text-xs text-text-mute">{muscleLabels[ex.muscle_group]}</div>
-                {/if}
-              </div>
-              <span class="text-primary group-hover:text-accent text-lg font-bold">+</span>
-            </button>
-          {/each}
-        </div>
-      {/if}
-    </aside>
-
-    <!-- DÍA -->
-    <section class="card space-y-4 min-h-[400px]">
-      <h2 class="text-sm uppercase tracking-wider text-text-mute">
-        Ejercicios del día · {dayItems.length}
-      </h2>
-
-      <div
-        class="space-y-3 min-h-[300px] rounded-md transition-colors {dayItems.length === 0
-          ? 'border-2 border-dashed border-text-mute/20 p-6 grid place-items-center'
-          : ''}"
-        use:dndzone={{
-          items: dayItems,
-          type: 'exercise',
-          flipDurationMs: 200,
-          dropFromOthersDisabled: true,
-          dropTargetStyle: {}
-        }}
-        onconsider={handleDayConsider}
-        onfinalize={handleDayFinalize}
-      >
-        {#each dayItems as item, i (item.id)}
-          <div
-            animate:flip={{ duration: 200 }}
-            class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
-          >
-            <div class="flex items-start gap-3">
-              <div class="text-primary font-bold mt-0.5 w-6">#{i + 1}</div>
-              <div class="flex-1">
-                <div class="font-semibold">{item.exercise.name}</div>
-                {#if item.exercise.muscle_group}
-                  <div class="text-xs text-text-mute">
-                    {muscleLabels[item.exercise.muscle_group]}
-                  </div>
-                {/if}
-              </div>
-              <button
-                type="button"
-                onclick={() => removeItem(item.id)}
-                class="text-text-mute hover:text-danger text-xl"
-                title="Quitar"
-              >
-                ×
-              </button>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div>
-                <label
-                  for="sets-{item.id}"
-                  class="text-[10px] uppercase tracking-wider text-text-mute">Series</label
-                >
-                <input
-                  id="sets-{item.id}"
-                  type="number"
-                  min="1"
-                  max="20"
-                  bind:value={item.sets}
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  for="reps-{item.id}"
-                  class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label
-                >
-                <input
-                  id="reps-{item.id}"
-                  type="text"
-                  bind:value={item.reps_prescribed}
-                  placeholder="8-10"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  for="weight-{item.id}"
-                  class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label
-                >
-                <input
-                  id="weight-{item.id}"
-                  type="text"
-                  bind:value={item.weight_prescribed}
-                  placeholder="80kg"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  for="rest-{item.id}"
-                  class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label
-                >
-                <input
-                  id="rest-{item.id}"
-                  type="number"
-                  min="0"
-                  step="15"
-                  bind:value={item.rest_seconds}
-                  placeholder="90"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-            </div>
-
-            <input
-              type="text"
-              bind:value={item.notes}
-              placeholder="Nota técnica (opcional)..."
-              class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
-            />
-          </div>
-        {:else}
-          <div class="text-center text-text-mute text-sm">
-            <p class="mb-1">
-              Añade ejercicios con el botón <span class="text-primary">+</span> de la biblioteca ←
-            </p>
-            <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
-          </div>
-        {/each}
-      </div>
-    </section>
-  </div>
-
-  {#if data.workout}
+  {#if data.workout && editando}
     <div class="text-center pt-4">
       <button
         type="button"
