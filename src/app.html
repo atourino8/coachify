@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#FBFAF7" />
 
+    <!-- La interfaz es "papel": fondo claro con tinta. No tenemos paleta
+         oscura, así que declaramos que solo admitimos claro. Sin esto, el
+         oscurecido automático de algunos navegadores móviles invierte los
+         colores por su cuenta y destroza la jerarquía (el acento terracota
+         sobre papel se convierte en un cian sobre gris).
+         Va también en app.css, pero aquí el navegador lo lee antes de pintar.
+         El día que exista paleta oscura de verdad, esto pasa a "light dark". -->
+    <meta name="color-scheme" content="light" />
+
     <!-- Beta privada: NO indexar en buscadores hasta que esté listo para lanzar -->
     <meta name="robots" content="noindex, nofollow" />
     <meta name="googlebot" content="noindex, nofollow" />
