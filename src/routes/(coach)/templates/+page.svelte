@@ -7,6 +7,7 @@
 
   let newName = $state('');
   let creating = $state(false);
+  let nameError = $state('');
   // Se abre solo con ?new=1 (atajo desde el home).
   // svelte-ignore state_referenced_locally
   let showForm = $state(page.url.searchParams.get('new') === '1');
@@ -80,9 +81,18 @@
   {/if}
 
   {#if showForm}
+    <!-- El botón NO se deshabilita cuando falta el nombre: un botón muerto no
+         explica nada, y en el móvil ni siquiera se aprecia que está apagado.
+         Se deja pulsable y decimos qué falta. -->
     <form
       method="POST"
       action="?/create"
+      onsubmit={(e) => {
+        if (!newName.trim()) {
+          e.preventDefault();
+          nameError = 'Ponle un nombre al entrenamiento para poder crearlo.';
+        }
+      }}
       use:enhance={() => {
         creating = true;
         return async ({ update }) => {
@@ -91,25 +101,34 @@
           newName = '';
         };
       }}
-      class="card flex flex-col sm:flex-row gap-3 sm:items-end"
+      class="card space-y-3"
     >
-      <div class="flex-1">
-        <label for="tpl-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-          Nombre del entrenamiento
-        </label>
-        <input
-          id="tpl-name"
-          name="name"
-          bind:value={newName}
-          required
-          maxlength="80"
-          placeholder="Ej: Hipertrofia principiante"
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
+      <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+        <div class="flex-1">
+          <label for="tpl-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+            Nombre del entrenamiento
+          </label>
+          <input
+            id="tpl-name"
+            name="name"
+            bind:value={newName}
+            oninput={() => (nameError = '')}
+            maxlength="80"
+            aria-invalid={nameError ? 'true' : undefined}
+            aria-describedby={nameError ? 'tpl-name-error' : undefined}
+            placeholder="Ej: Hipertrofia principiante"
+            class="w-full px-4 py-3 bg-bg border rounded-md focus:ring-2 focus:ring-accent/20 {nameError
+              ? 'border-danger'
+              : 'border-line focus:border-accent'}"
+          />
+        </div>
+        <button type="submit" disabled={creating} class="btn-primary py-3">
+          {creating ? 'Creando…' : 'Crear y editar'}
+        </button>
       </div>
-      <button type="submit" disabled={creating || !newName.trim()} class="btn-primary py-3">
-        {creating ? 'Creando…' : 'Crear y editar'}
-      </button>
+      {#if nameError}
+        <p id="tpl-name-error" role="alert" class="text-sm text-danger">{nameError}</p>
+      {/if}
     </form>
   {/if}
 

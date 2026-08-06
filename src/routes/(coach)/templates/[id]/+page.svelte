@@ -129,6 +129,9 @@
       <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
         {saving ? 'Guardando…' : 'Guardar entrenamiento'}
       </button>
+      {#if !name.trim()}
+        <p class="text-xs text-text-mute mt-1.5">El entrenamiento necesita un nombre.</p>
+      {/if}
     </form>
   </div>
 

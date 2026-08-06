@@ -178,6 +178,16 @@
         >
           {pgSubmitting ? 'Programando…' : `Programar a ${data.members.length} personas`}
         </button>
+        <!-- Si el botón está apagado, decimos por qué: si no, parece roto. -->
+        {#if !pgTemplate || pgDays.length === 0}
+          <p class="text-xs text-text-mute text-center">
+            {!pgTemplate && pgDays.length === 0
+              ? 'Elige un entrenamiento y marca al menos un día.'
+              : !pgTemplate
+                ? 'Elige un entrenamiento.'
+                : 'Marca al menos un día de la semana.'}
+          </p>
+        {/if}
       </form>
     </div>
   {/if}
@@ -238,6 +248,9 @@
         <button type="submit" disabled={adding || selected.length === 0} class="btn-primary">
           {adding ? 'Añadiendo…' : `Añadir ${selected.length || ''}`}
         </button>
+        {#if selected.length === 0}
+          <p class="text-xs text-text-mute">Marca al menos una persona de la lista.</p>
+        {/if}
       </form>
     {/if}
 

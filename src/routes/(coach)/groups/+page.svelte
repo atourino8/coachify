@@ -7,6 +7,7 @@
   let showForm = $state(false);
   let creating = $state(false);
   let newName = $state('');
+  let nameError = $state('');
 
   let confirmOpen = $state(false);
   let toDelete = $state<{ id: string; name: string }>({ id: '', name: '' });
@@ -58,9 +59,17 @@
   {/if}
 
   {#if showForm}
+    <!-- El botón se queda pulsable aunque falte el nombre: así podemos decir
+         qué falta en vez de no reaccionar. -->
     <form
       method="POST"
       action="?/create"
+      onsubmit={(e) => {
+        if (!newName.trim()) {
+          e.preventDefault();
+          nameError = 'Ponle un nombre al grupo para poder crearlo.';
+        }
+      }}
       use:enhance={() => {
         creating = true;
         return async ({ update }) => {
@@ -70,37 +79,46 @@
           if (form?.success) showForm = false;
         };
       }}
-      class="card grid sm:grid-cols-[1fr_1fr_auto] gap-3 sm:items-end"
+      class="card space-y-3"
     >
-      <div>
-        <label for="g-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-          Nombre del grupo
-        </label>
-        <input
-          id="g-name"
-          name="name"
-          bind:value={newName}
-          required
-          maxlength="80"
-          placeholder="Ej: Empleadas de Talleres López"
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
+      <div class="grid sm:grid-cols-[1fr_1fr_auto] gap-3 sm:items-end">
+        <div>
+          <label for="g-name" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+            Nombre del grupo
+          </label>
+          <input
+            id="g-name"
+            name="name"
+            bind:value={newName}
+            oninput={() => (nameError = '')}
+            maxlength="80"
+            aria-invalid={nameError ? 'true' : undefined}
+            aria-describedby={nameError ? 'g-name-error' : undefined}
+            placeholder="Ej: Empleadas de Talleres López"
+            class="w-full px-4 py-3 bg-bg border rounded-md focus:ring-2 focus:ring-accent/20 {nameError
+              ? 'border-danger'
+              : 'border-line focus:border-accent'}"
+          />
+        </div>
+        <div>
+          <label for="g-company" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+            Empresa <span class="normal-case tracking-normal text-text-mute/70">(opcional)</span>
+          </label>
+          <input
+            id="g-company"
+            name="company"
+            maxlength="120"
+            placeholder="Para facturación"
+            class="w-full px-4 py-3 bg-bg border border-line rounded-md focus:border-accent focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
+        <button type="submit" disabled={creating} class="btn-primary py-3">
+          {creating ? 'Creando…' : 'Crear grupo'}
+        </button>
       </div>
-      <div>
-        <label for="g-company" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-          Empresa <span class="normal-case tracking-normal text-text-mute/70">(opcional)</span>
-        </label>
-        <input
-          id="g-company"
-          name="company"
-          maxlength="120"
-          placeholder="Para facturación"
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
-      <button type="submit" disabled={creating || !newName.trim()} class="btn-primary py-3">
-        {creating ? 'Creando…' : 'Crear grupo'}
-      </button>
+      {#if nameError}
+        <p id="g-name-error" role="alert" class="text-sm text-danger">{nameError}</p>
+      {/if}
     </form>
   {/if}
 

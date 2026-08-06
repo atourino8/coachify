@@ -548,6 +548,16 @@
             >
               {pgSubmitting ? 'Programando…' : 'Programar'}
             </button>
+            <!-- Si el botón está apagado, decimos por qué: si no, parece roto. -->
+            {#if !pgTemplate || pgDays.length === 0}
+              <p class="text-xs text-text-mute text-center">
+                {!pgTemplate && pgDays.length === 0
+                  ? 'Elige un entrenamiento y marca al menos un día.'
+                  : !pgTemplate
+                    ? 'Elige un entrenamiento.'
+                    : 'Marca al menos un día de la semana.'}
+              </p>
+            {/if}
           </form>
         {/if}
       </div>

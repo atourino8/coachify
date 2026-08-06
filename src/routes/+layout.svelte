@@ -27,13 +27,17 @@
 </svelte:head>
 
 {#if navigating.to}
-  <!-- Barra de progreso global: feedback de carga en cualquier navegación -->
+  <!-- Barra de progreso global: feedback de carga en cualquier navegación.
+       En el móvil hace MÁS falta que en el escritorio, no menos: la latencia
+       de una 4G floja en un gimnasio no se parece al wifi de casa. Por eso
+       va en acento y con grosor suficiente para verse a un palmo de la cara;
+       a 2px y en tinta pasaba desapercibida. -->
   <div
-    class="fixed top-0 left-0 right-0 z-[100] h-0.5 bg-primary/15 overflow-hidden"
+    class="fixed top-0 left-0 right-0 z-[100] h-1 bg-accent/15 overflow-hidden"
     role="status"
     aria-label="Cargando página"
   >
-    <div class="h-full w-1/3 bg-primary loading-bar"></div>
+    <div class="h-full w-1/3 bg-accent loading-bar"></div>
   </div>
 {/if}
 
