@@ -27,13 +27,19 @@
    CÓMO SE CAMBIA LA PALETA: se reescriben estos valores. Nada más. Ningún
    componente menciona un color concreto, todos usan los tokens.
 
-   MARCA POR ENTRENADOR (pendiente): el día que se implemente, basta con
-   inyectar un bloque que redefina --c-accent (y las que se deriven de ella)
-   en un contenedor. Las variables cascadean, así que redefinirlas en un div
-   repinta todo lo que hay dentro sin tocar una sola plantilla.
+   MARCA POR ENTRENADOR: implementada. El servidor inyecta un :root que
+   redefine --c-accent, --c-marca-fondo y --c-marca-tinta con el color del
+   entrenador. Las variables cascadean, así que se repinta todo sin tocar una
+   sola plantilla. Los valores de aquí abajo son lo que ve quien no ha elegido
+   nada. La matemática de contraste está en src/lib/brand.ts.
 
    --c-danger, --c-warning y --c-success quedan FUERA de la personalización:
-   comunican significado, no identidad.
+   comunican significado, no identidad. Un entrenador con la marca roja no
+   puede convertir los avisos de error en decoración.
+
+   --c-bg tampoco se personaliza. Cada color de fondo nuevo multiplica los
+   pares que hay que verificar en contraste, y el grafito es lo que hace que
+   cualquier marca se vea encima.
    ========================================================================== */
 :root {
   color-scheme: dark;
@@ -50,6 +56,14 @@
   --c-primary: 240 237 230; /* #F0EDE6 · hueso */
   --c-primary-hover: 216 211 199; /* #D8D3C7 */
   --c-accent: 232 98 42; /* #E8622A · naranja quemado */
+
+  /* El cuadro de la marca. Se separa de --c-accent porque es el único sitio
+     que admite un degradado (el entrenador que tenga uno en su identidad),
+     y porque lleva una letra encima que necesita su propia tinta.
+     --c-marca-fondo es un valor de `background` completo, no unos canales:
+     así puede ser tanto rgb(...) como linear-gradient(...). */
+  --c-marca-fondo: rgb(var(--c-accent));
+  --c-marca-tinta: 23 21 15; /* grafito sobre naranja · 5.40:1 */
 
   /* Los separadores son la base de las listas densas, así que aquí tienen que
      verse. Por debajo de 1.5:1 sobre el fondo desaparecen. */
@@ -100,6 +114,22 @@ body {
   /* Antetítulo discreto. Sin barras ni líneas de acento. */
   .eyebrow {
     @apply uppercase tracking-[0.18em] text-2xs font-semibold text-accent;
+  }
+
+  /* ---- Cuadro de la marca ----
+     El logotipo: un cuadrado de color con una inicial dentro. Es una clase y
+     no un puñado de utilidades porque el relleno puede ser un degradado, y las
+     utilidades de degradado de Tailwind exigen escribir los colores sueltos en
+     la plantilla, que es justo lo que prohíbe el guardián del sistema de
+     diseño. Aquí ese relleno vive dentro de una variable que pone el servidor,
+     así que no hay ningún color escrito a mano en ninguna plantilla.
+
+     La inicial va con aria-hidden en las plantillas: es decoración de un
+     logotipo y el nombre completo está escrito al lado. */
+  .marca-cuadro {
+    background: var(--c-marca-fondo);
+    color: rgb(var(--c-marca-tinta));
+    @apply grid place-items-center rounded-md font-display font-bold;
   }
 
   .btn {

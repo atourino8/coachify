@@ -116,7 +116,8 @@
 <div class="min-h-screen flex items-center justify-center p-6">
   <div class="text-center space-y-6">
     <div
-      class="w-16 h-16 mx-auto rounded-xl bg-accent grid place-items-center text-white font-display font-bold text-2xl animate-pulse"
+      aria-hidden="true"
+      class="marca-cuadro w-16 h-16 mx-auto rounded-xl text-2xl animate-pulse"
     >
       T
     </div>

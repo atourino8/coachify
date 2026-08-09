@@ -63,10 +63,7 @@
 <div class="min-h-screen flex items-center justify-center p-6">
   <div class="w-full max-w-md">
     <div class="text-center mb-10">
-      <div
-        class="w-14 h-14 mx-auto mb-6 rounded-xl bg-accent
-               grid place-items-center text-white font-display font-bold text-2xl"
-      >
+      <div aria-hidden="true" class="marca-cuadro w-14 h-14 mx-auto mb-6 rounded-xl text-2xl">
         T
       </div>
       <h1 class="text-3xl font-display font-semibold mb-2">Empieza gratis</h1>

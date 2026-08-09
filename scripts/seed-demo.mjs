@@ -297,6 +297,14 @@ async function main() {
     await db.from('exercises').delete().eq('coach_id', coachId).eq('name', DEMO_EXERCISE);
     ok('Grupo y ejercicio demo borrados');
 
+    // La marca vuelve a NULL, no al naranja: NULL significa "no ha elegido",
+    // y así el coach queda como estaba antes de sembrar.
+    await db
+      .from('profiles')
+      .update({ brand_accent: null, brand_accent_2: null })
+      .eq('id', coachId);
+    ok('Marca demo retirada');
+
     if (existing.length === 0) {
       ok('No había clientes demo que borrar.');
     }
@@ -331,6 +339,40 @@ async function main() {
         coachEmail +
         ' --limpiar'
     );
+  }
+
+  // ---- Marca del entrenador ----
+  //
+  // Se siembra un color a propósito, y uno HOSTIL: un azul marino que sobre
+  // el fondo grafito contrasta 1.62:1 y sería ilegible tal cual. Así la
+  // primera vez que se entra en "Mi marca" se ve funcionando la corrección
+  // automática, con sus dos números, en vez de un caso fácil que no demuestra
+  // nada. Si ya había elegido color, no se toca.
+  const MARCA_DEMO = '#1B3A6B';
+
+  // Se consulta aparte y no en el select del perfil de arriba porque ese
+  // select falla entero si la columna no existe, y entonces la siembra moriría
+  // por no poder poner un color. Aquí, si la migración 0014 no está aplicada,
+  // esta consulta falla sola, se avisa y el resto de los datos se siembra igual.
+  const { data: marcaActual, error: errLeerMarca } = await db
+    .from('profiles')
+    .select('brand_accent')
+    .eq('id', coachId)
+    .maybeSingle();
+
+  if (errLeerMarca) {
+    log(`  (marca demo omitida, ¿falta la migración 0014?: ${errLeerMarca.message})`);
+  } else if (marcaActual?.brand_accent) {
+    // Si ya eligió color, no se toca. Sembrar datos de prueba no es motivo
+    // para borrarle una decisión suya.
+    ok(`Marca: respetada la que ya tenías (${marcaActual.brand_accent})`);
+  } else {
+    const { error: errMarca } = await db
+      .from('profiles')
+      .update({ brand_accent: MARCA_DEMO })
+      .eq('id', coachId);
+    if (errMarca) log(`  (marca demo omitida: ${errMarca.message})`);
+    else ok(`Marca demo: ${MARCA_DEMO} · se corrige solo a un azul legible`);
   }
 
   // ---- Ejercicios del coach (necesarios para montar entrenos) ----
@@ -802,6 +844,12 @@ async function main() {
   log('   · Un cobro de Nadia a medias, para ver un importe distinto de la cuota');
   log('   · Descarga los dos CSV y ábrelos en Excel: hay una nota con punto y');
   log('     coma dentro, que es justo lo que rompe estos ficheros mal hechos');
+  log('');
+  log('  MARCA');
+  log('   · Mi marca → tu color es un azul marino que NO se lee sobre el fondo:');
+  log('     mira los dos números y el color con el que lo hemos sustituido');
+  log('   · Marca la casilla del degradado para ver el aviso de la inicial');
+  log('   · Luego entra como cliente: verás tu nombre arriba, no "Treno"');
   log('');
   log('  COMO CLIENTE (contraseña: ' + DEMO_PASSWORD + ')');
   log(`   · ${emailFor('lucia', coachEmail)}`);

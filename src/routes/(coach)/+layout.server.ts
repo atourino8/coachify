@@ -1,6 +1,7 @@
 // Layout server del coach: verifica que el usuario sea coach. Si no, redirige.
 
 import { redirect } from '@sveltejs/kit';
+import { identidadDeMarca } from '$lib/brand';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetSession } }) => {
@@ -25,5 +26,18 @@ export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetS
     redirect(303, '/onboarding');
   }
 
-  return { profile };
+  // Su marca. Se calcula en el servidor para que llegue ya pintada: si se
+  // hiciera al hidratar, el entrenador vería medio segundo de naranja Treno
+  // antes de que apareciera su color, en cada carga.
+  //
+  // El `?? null` no sobra por lo mismo que el `in profile` de arriba: si esto
+  // llega a producción antes que la migración 0014, las columnas no existen y
+  // la marca sale vacía, que es exactamente el comportamiento correcto.
+  const marca = identidadDeMarca(
+    profile.full_name,
+    profile.brand_accent ?? null,
+    profile.brand_accent_2 ?? null
+  );
+
+  return { profile, marca };
 };

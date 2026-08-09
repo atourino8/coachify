@@ -35,40 +35,64 @@
   {/each}
 {/snippet}
 
-<header class="sticky top-0 z-50 bg-bg/90 backdrop-blur-md border-b border-line">
-  <div class="container-narrow py-3 sm:py-4">
-    <div class="flex items-center justify-between gap-4">
-      <a href="/dashboard" class="flex items-center gap-2.5 flex-shrink-0">
-        <div
-          class="w-7 h-7 rounded-md bg-accent grid place-items-center text-white font-display font-bold text-sm"
-        >
-          T
+<!-- El color de marca del entrenador se declara aquí, en un contenedor que
+     envuelve todo lo suyo. Las variables CSS cascadean, así que con esto se
+     repintan la cabecera, los enlaces activos, los antetítulos, el foco y las
+     barras de progreso sin que ninguna plantilla mencione un color.
+     Si no ha elegido marca, `estilo` viene vacío y manda app.css. -->
+<div style={data.marca.estilo}>
+  <header class="sticky top-0 z-50 bg-bg/90 backdrop-blur-md border-b border-line">
+    <div class="container-narrow py-3 sm:py-4">
+      <div class="flex items-center justify-between gap-4">
+        <!-- Aquí el nombre sigue siendo Treno, no el del entrenador. Él es
+             nuestro cliente y esta es la herramienta que ha contratado; verse
+             su propio nombre en la esquina de su panel no le dice nada. Lo
+             que sí cambia es el color del cuadro, que toma el suyo. Donde su
+             marca manda entera es en la pantalla del cliente. -->
+        <a href="/dashboard" class="flex items-center gap-2.5 flex-shrink-0">
+          <div aria-hidden="true" class="marca-cuadro w-7 h-7 text-sm">T</div>
+          <span class="font-display font-semibold tracking-tight text-lg">Treno</span>
+        </a>
+
+        <div class="flex items-center gap-4 sm:gap-6 text-sm">
+          <nav class="hidden sm:flex items-center gap-6">
+            {@render navLinks()}
+          </nav>
+          <span class="text-line-strong hidden sm:inline">|</span>
+          <a
+            href="/marca"
+            class="hidden md:inline transition-colors {page.url.pathname === '/marca'
+              ? 'text-accent font-medium'
+              : 'text-text-mute hover:text-text'}"
+          >
+            {data.profile.full_name ?? 'Coach'}
+          </a>
+          <form method="POST" action="/logout">
+            <button type="submit" class="text-text-mute hover:text-danger transition-colors">
+              Salir
+            </button>
+          </form>
         </div>
-        <span class="font-display font-semibold tracking-tight text-lg">Treno</span>
-      </a>
-
-      <div class="flex items-center gap-4 sm:gap-6 text-sm">
-        <nav class="hidden sm:flex items-center gap-6">
-          {@render navLinks()}
-        </nav>
-        <span class="text-line-strong hidden sm:inline">|</span>
-        <span class="text-text-mute hidden md:inline">
-          {data.profile.full_name ?? 'Coach'}
-        </span>
-        <form method="POST" action="/logout">
-          <button type="submit" class="text-text-mute hover:text-danger transition-colors">
-            Salir
-          </button>
-        </form>
       </div>
+
+      <nav class="flex sm:hidden items-center gap-5 text-sm pt-2.5 overflow-x-auto">
+        {@render navLinks()}
+        <!-- En móvil el nombre no cabe arriba, así que el acceso a la marca
+             viaja con el resto de la navegación en vez de desaparecer. -->
+        <a
+          href="/marca"
+          aria-current={page.url.pathname === '/marca' ? 'page' : undefined}
+          class="whitespace-nowrap transition-colors {page.url.pathname === '/marca'
+            ? 'text-accent font-medium'
+            : 'text-text-mute hover:text-text'}"
+        >
+          Mi marca
+        </a>
+      </nav>
     </div>
+  </header>
 
-    <nav class="flex sm:hidden items-center gap-5 text-sm pt-2.5 overflow-x-auto">
-      {@render navLinks()}
-    </nav>
-  </div>
-</header>
-
-<main class="container-narrow py-6 sm:py-10">
-  {@render children()}
-</main>
+  <main class="container-narrow py-6 sm:py-10">
+    {@render children()}
+  </main>
+</div>

@@ -203,31 +203,58 @@ Tailwind las compone como `rgb(var(--c-accent) / 0.05)`. Con un hexadecimal
 dentro de la variable, **todas esas opacidades dejarían de aplicarse sin dar
 ningún error**. Es la peor forma de romperse: en silencio.
 
-### Marca por entrenador (decidido, pendiente de implementar)
+### Marca por entrenador (implementado, agosto de 2026)
 
-Cada entrenador podrá poner su color, y lo verán **tanto él como sus
-clientes** — es su espacio dentro de la aplicación. Incluido desde el primer
-plan: pesa más el boca a boca que cobrarlo aparte.
+Cada entrenador pone su color, y lo ven **tanto él como sus clientes** — es su
+espacio dentro de la aplicación. Incluido desde el primer plan: pesa más el
+boca a boca que cobrarlo aparte.
 
-Mecanismo: redefinir `--c-accent` en un contenedor. Las variables cascadean,
-así que repinta todo lo de dentro —transparencias incluidas— sin tocar una
-plantilla.
+Mecanismo: el servidor calcula las variables y las declara en el atributo
+`style` de un contenedor que envuelve todo. Las variables CSS cascadean, así
+que repinta lo de dentro —transparencias incluidas— sin tocar una plantilla.
+Va en un atributo y no en una etiqueta `<style>` a propósito: un `<style>`
+generado en servidor hay que escribirlo con `{@html}`, y con CSS inyectado se
+puede leer el contenido de un formulario a base de selectores de atributo. Un
+atributo lo escapa Svelte solo.
 
-1. **Se deriva una familia de su tono, no se usa su color en todas partes.** Lo
-   que alguien reconoce como "su color" es el tono, no la luminosidad. De su
-   hex se generan una variante clara (fondos, pastillas), la suya tal cual
-   (superficies grandes) y una oscurecida para texto pequeño y enlaces, que es
-   lo único obligado a cumplir 4.5:1. Así un celeste o un amarillo funcionan
-   sin pedirle a nadie que cambie de color.
-2. **`danger`, `warning` y `success` no se personalizan.** Comunican
+Tres variables: `--c-accent` (el color corregido, para todo), `--c-marca-fondo`
+(el relleno del cuadro del logotipo, que admite degradado) y `--c-marca-tinta`
+(la letra que va encima). La matemática está en `src/lib/brand.ts`.
+
+1. **Se corrige la luminosidad, no se deriva una familia.** El plan original
+   preveía tres variantes (una clara para fondos, la suya para superficies y
+   una oscurecida para texto). Se descartó al implementarlo: ese plan se
+   escribió cuando el fondo era papel, y sobre grafito no se oscurece nada,
+   se aclara. Con una sola variante corregida hacia arriba se cubren los
+   cincuenta y tantos usos del acento sin multiplicar los tokens ni obligar a
+   revisar qué variante toca en cada sitio.
+2. **Se aclara en HSL, no mezclando con blanco.** Mezclar con blanco desatura:
+   el rojo de bomberos acaba en rosa palo y el entrenador ya no reconoce su
+   color. Subiendo la L se conservan el tono y buena parte de la saturación.
+   La búsqueda es binaria para devolver el color **menos** aclarado que cumple.
+3. **Se le dice.** Si hemos tenido que tocar su color, la pantalla de marca se
+   lo enseña con los dos números: cuánto contrastaba el suyo y cuánto contrasta
+   el que usamos. Corregirlo en silencio sería peor que no corregirlo.
+4. **`danger`, `warning` y `success` no se personalizan.** Comunican
    significado, no identidad.
-3. **Dentro es su espacio; fuera somos nosotros.** La aplicación va con su
-   marca, incluida la pantalla donde su cliente estrena la contraseña. La
-   landing y el login genérico siguen siendo de Treno.
+5. **`--c-bg` tampoco.** Cada fondo nuevo multiplica los pares que hay que
+   verificar, y el grafito es justo lo que hace que cualquier marca se vea
+   encima.
+6. **Dentro es su espacio; fuera somos nosotros.** En la pantalla del cliente
+   manda él: su nombre y su inicial arriba, y "Hecho con Treno" en el pie, una
+   vez y sin color. En el panel del entrenador el nombre sigue siendo Treno
+   —él es nuestro cliente y ha contratado esta herramienta— y lo que cambia es
+   el color. La landing y el login son de Treno.
 
 Efecto secundario valioso: si el color fuerte lo pone cada entrenador,
 **dos instalaciones no pueden parecerse**. Es una defensa estructural contra
 el aspecto genérico.
+
+**El punto débil**: `brand.ts` necesita el fondo como número para calcular
+contrastes, así que la paleta está duplicada en dos ficheros. Si alguien
+cambiara `app.css` sin tocar `brand.ts`, los contrastes se calcularían contra
+un fondo inexistente y nada daría error. Por eso `check-design.mjs` compara
+los dos valores y falla el build si divergen.
 
 ### Dirección visual vigente: grafito cálido
 
@@ -260,13 +287,27 @@ degradado morado-azul es la firma del diseño generado por defecto.
 
 La excepción es el entrenador. Si su marca tiene un degradado, su cliente debe
 verlo — es lo que hace que la aplicación se sienta su espacio, y es lo que
-justifica que quiera pagar por él. Dos condiciones:
+justifica que quiera pagar por él. Tres condiciones, más estrictas que las que
+se plantearon al decidirlo:
 
-- **El degradado vive en superficies grandes de marca** (banda de cabecera,
-  pantalla de bienvenida), nunca en elementos funcionales.
-- **Botones, enlaces y pastillas van en sólido**, derivado del tono dominante.
-  No es purismo: sobre un degradado el contraste cambia según dónde caiga cada
-  letra, y ahí la legibilidad deja de poder garantizarse.
+- **El degradado vive solo en el cuadro del logotipo.** El plan hablaba de
+  "superficies grandes de marca". Al implementarlo se redujo al cuadro, porque
+  no hay ninguna otra superficie grande en la aplicación que no lleve texto
+  encima.
+- **Botones, enlaces y pastillas van en sólido**, con el color principal
+  corregido. No es purismo: sobre un degradado el contraste cambia según dónde
+  caiga cada letra, y ahí la legibilidad deja de poder garantizarse.
+- **La inicial del cuadro es decorativa** (`aria-hidden`), y el nombre completo
+  va escrito al lado en tinta normal. Hace falta porque hay degradados donde
+  ninguna tinta se lee: `#0B2E59 → #3B82F6` atraviesa la franja de luminosidad
+  en la que ni la clara ni la oscura llegan a 4.5:1. No es un fallo del
+  cálculo, es una propiedad de ese degradado. WCAG 2.1 excluye del criterio
+  1.4.3 el texto que forma parte de un logotipo, pero eso no basta: lo que
+  hace que no se pierda información es que el nombre esté al lado. Y aun así
+  la pantalla de marca **avisa** con el número, para que pueda decidir.
+
+Lo que no se hace es ponerle una sombra a la letra para maquillar el número.
+Eso arregla la métrica, no la lectura.
 
 La diferencia entre las dos cosas: un degradado nuestro es pereza; el de un
 entrenador es identidad.

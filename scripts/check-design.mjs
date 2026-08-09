@@ -79,6 +79,67 @@ function ficheros(dir, salida = []) {
 
 const infracciones = [];
 
+/**
+ * La paleta vive en app.css, pero src/lib/brand.ts necesita dos de esos
+ * valores como NÚMEROS para calcular contrastes: el fondo, contra el que se
+ * mide todo, y el acento por defecto.
+ *
+ * Esa duplicación es el punto débil de todo el sistema de marca. Si alguien
+ * cambia la paleta y no toca brand.ts, no se rompe nada visible: simplemente
+ * los contrastes se calculan contra un fondo que ya no existe, y la promesa
+ * de "el color del entrenador siempre se lee" pasa a ser mentira sin que
+ * nadie se entere. Por eso se comprueba aquí en vez de confiarlo a un
+ * comentario.
+ */
+function comprobarSincroniaDePaleta() {
+  let css, ts;
+  try {
+    css = readFileSync('src/app.css', 'utf8');
+    ts = readFileSync('src/lib/brand.ts', 'utf8');
+  } catch {
+    return; // Si falta alguno, ya fallará por otro lado.
+  }
+
+  const varCss = (nombre) => css.match(new RegExp(`--c-${nombre}:\\s*([\\d]+ [\\d]+ [\\d]+)`))?.[1];
+
+  const fondoCss = varCss('bg');
+  const fondoTs = ts.match(/export const FONDO: Rgb = \[([^\]]+)\]/)?.[1];
+  if (fondoCss && fondoTs) {
+    const normalizado = fondoTs
+      .split(',')
+      .map((n) => n.trim())
+      .join(' ');
+    if (normalizado !== fondoCss) {
+      infracciones.push({
+        ruta: 'src/lib/brand.ts',
+        linea: ts.split('\n').findIndex((l) => l.includes('export const FONDO')) + 1,
+        regla: 'paleta-desincronizada',
+        hallazgo: `FONDO = ${normalizado}, pero --c-bg = ${fondoCss}`,
+        mensaje:
+          'brand.ts calcula los contrastes contra un fondo que ya no es el de app.css. Todos los colores de marca que dependen de ese cálculo pasan a ser incorrectos sin dar ningún error.'
+      });
+    }
+  }
+
+  const acentoCss = varCss('accent');
+  const acentoTs = ts.match(/export const ACENTO_TRENO = '(#[0-9A-Fa-f]{6})'/)?.[1];
+  if (acentoCss && acentoTs) {
+    const enCanales = [1, 3, 5].map((i) => parseInt(acentoTs.slice(i, i + 2), 16)).join(' ');
+    if (enCanales !== acentoCss) {
+      infracciones.push({
+        ruta: 'src/lib/brand.ts',
+        linea: ts.split('\n').findIndex((l) => l.includes('ACENTO_TRENO')) + 1,
+        regla: 'paleta-desincronizada',
+        hallazgo: `ACENTO_TRENO = ${enCanales}, pero --c-accent = ${acentoCss}`,
+        mensaje:
+          'El color que se le ofrece de partida al entrenador no es el que ve la aplicación por defecto.'
+      });
+    }
+  }
+}
+
+comprobarSincroniaDePaleta();
+
 for (const ruta of ficheros(RAIZ)) {
   // app.css es el único sitio donde los colores pueden ser literales: es
   // donde se define la paleta.

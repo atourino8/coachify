@@ -91,9 +91,7 @@
 <header class="sticky top-0 z-50 bg-bg/85 backdrop-blur-md border-b border-line">
   <div class="container-narrow flex items-center justify-between py-3.5">
     <a href="/" class="flex items-center gap-2.5">
-      <div class="w-7 h-7 rounded-md bg-accent grid place-items-center text-bg font-bold text-sm">
-        T
-      </div>
+      <div aria-hidden="true" class="marca-cuadro w-7 h-7 text-sm">T</div>
       <span class="font-semibold tracking-tight">Treno</span>
     </a>
 
@@ -380,9 +378,7 @@
 <footer class="border-t border-line py-10 text-sm text-text-mute">
   <div class="container-narrow flex flex-col sm:flex-row items-center justify-between gap-6">
     <div class="flex items-center gap-2">
-      <div class="w-6 h-6 rounded-md bg-accent grid place-items-center text-bg font-bold text-2xs">
-        T
-      </div>
+      <div aria-hidden="true" class="marca-cuadro w-6 h-6 text-2xs">T</div>
       <span>© {new Date().getFullYear()} Treno</span>
     </div>
     <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
