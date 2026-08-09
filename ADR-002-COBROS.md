@@ -201,10 +201,11 @@ el primer día, nunca como subida sorpresa.
   Stripe**. Es exactamente el coste que `NEGOCIO.md` §7 identifica como el
   único que escala mal con un fundador solo.
 - Los términos de servicio: pasan a describir una relación de tres partes.
-- Prometerlo en la landing antes de tenerlo. **Hoy la landing ya dice
-  "Programa, cobra y corrige"**, y el verbo "cobra" solo se sostiene si se
-  entiende como llevar el control de los cobros. Hay que revisar esa frase o
-  ponerle fecha.
+- Prometerlo en la landing antes de tenerlo. Ya pasó una vez: la landing decía
+  "Programa, **cobra** y corrige", que solo se sostenía entendiendo "cobrar"
+  como llevar el control de las cuotas. Corregido a "gestiona", que describe lo
+  que sí hace hoy y además promete menos. Cuando exista la pasarela de verdad,
+  el verbo puede volver.
 
 **Habrá que revisarlo cuando**
 
@@ -239,7 +240,7 @@ Va con las preguntas de la beta cerrada de `NEGOCIO.md` §6:
 
 1. [ ] Hacer las cinco preguntas a los tres entrenadores que lo pidieron.
 2. [ ] Decidir forma jurídica tras la cita del día 18.
-3. [ ] Revisar el verbo "cobra" de la landing: o se matiza, o se pone fecha.
+3. [x] Revisar el verbo "cobra" de la landing. Hecho: ahora dice "gestiona".
 4. [ ] Implementar la fase 1 (cobro contra su cuenta, sin tocar el dinero)
        **después** de las funcionalidades pendientes, las maquetas y las
        pruebas de rendimiento de subida de vídeo.

@@ -123,8 +123,8 @@
         La semana de tus clientes, montada en diez minutos.
       </h1>
       <p class="text-text-mute leading-relaxed max-w-md">
-        Programa, cobra y corrige la técnica desde el mismo sitio. Ellos entrenan mirando el móvil;
-        tú ves si han levantado más que el mes pasado.
+        Programa, gestiona y corrige la técnica desde el mismo sitio. Ellos entrenan mirando el
+        móvil; tú ves si han levantado más que el mes pasado.
       </p>
       <div class="flex flex-wrap items-center gap-x-5 gap-y-3 mt-7">
         <a href="/register" class="btn-primary">Empezar gratis</a>
