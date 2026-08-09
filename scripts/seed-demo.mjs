@@ -642,6 +642,85 @@ async function main() {
   }
   ok(`${citas.length} citas creadas (4 activas + 3 de historial)`);
 
+  // ---- Cobros ----
+  // Sin histórico la pantalla de Cobros no dice nada: hace falta más de un mes
+  // para que aparezca una evolución. Se generan meses hacia atrás y se meten a
+  // propósito los casos raros que en la vida real siempre acaban saliendo.
+  log('\nRegistrando cobros…');
+
+  /** Resta meses a una fecha ISO manteniendo el día. */
+  function restarMeses(iso, meses) {
+    const d = new Date(iso + 'T00:00:00');
+    d.setMonth(d.getMonth() - meses);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const METODOS = ['transferencia', 'bizum', 'efectivo', 'transferencia', 'bizum'];
+  const cobros = [];
+
+  for (const c of DEMO_CLIENTS) {
+    const cuota = c.info?.fee_amount;
+    if (!cuota) continue; // Sofía no tiene cuota: no genera cobros.
+
+    // Rubén está invitado y no ha entrado todavía; nunca ha pagado.
+    if (c.pending) continue;
+
+    // Elena se dio de baja: cobros hasta marzo y se acabó.
+    const meses = c.archived ? 5 : 7;
+    const desde = c.archived ? 4 : 0;
+
+    // `i` son los meses hacia atrás en que EMPIEZA el periodo cubierto. Con
+    // i=0 el periodo arranca hoy, así que el mes en curso tiene cobros y la
+    // primera cifra de la pantalla no sale a cero.
+    for (let i = desde; i < desde + meses; i++) {
+      // Nadia está marcada como cuota vencida, así que NO puede tener un cobro
+      // que cubra el mes en curso: se contradiría con su propia ficha. Además
+      // hace que "cobrado este mes" y "si cobras todas las cuotas" den cifras
+      // distintas, que es lo que permite ver que son dos métricas.
+      if (c.key === 'nadia' && i === 0) continue;
+
+      const periodoDesde = restarMeses(day(0), i);
+      const periodoHasta = restarMeses(day(0), i - 1);
+
+      // Se paga unos días después del comienzo del periodo, como en la vida real.
+      const diasTarde = (i * 3) % 7;
+      const pagado = new Date(periodoDesde + 'T00:00:00');
+      pagado.setDate(pagado.getDate() + diasTarde);
+
+      // Un mes concreto de Nadia se paga a medias, para que el importe no
+      // coincida con la cuota y se vea que la pantalla lo aguanta.
+      const aMedias = c.key === 'nadia' && i === 2;
+
+      cobros.push({
+        client_id: ids[c.key],
+        coach_id: coachId,
+        paid_on: pagado.toISOString().slice(0, 10),
+        amount: aMedias ? cuota / 2 : cuota,
+        currency: 'EUR',
+        method: METODOS[i % METODOS.length],
+        covers_from: periodoDesde,
+        covers_until: periodoHasta,
+        notes: aMedias
+          ? 'Pagó la mitad; el resto lo dejamos para el mes que viene'
+          : diasTarde > 4
+            ? 'Cobrado con unos días de retraso'
+            : null
+      });
+    }
+  }
+
+  const { error: cobrosErr } = await db.from('client_payments').insert(cobros);
+  if (cobrosErr) {
+    // La tabla llega en la migración 0013. Si no está aplicada, avisamos con
+    // claridad en vez de reventar el resto de la siembra.
+    log(`  ! No se pudieron registrar los cobros: ${cobrosErr.message}`);
+    log('    ¿Has aplicado la migración 0013_client_payments.sql?');
+  } else {
+    const total = cobros.reduce((s, c) => s + c.amount, 0);
+    ok(`${cobros.length} cobros repartidos en varios meses · ${total.toFixed(2)} € en total`);
+    ok('Incluye un pago a medias y notas con punto y coma, para probar el export');
+  }
+
   // ---- Vídeos de técnica ----
   log('\nSubiendo vídeos de técnica…');
   const videoPath = join(__dirname, 'assets', 'demo-technique.mp4');
@@ -715,6 +794,14 @@ async function main() {
   log('   · Carla Otero    → Ficha ▸ Historial, y su gráfica de progreso a 8 semanas');
   log('   · Grupos         → "Talleres López" con 3 personas y programación masiva');
   log('   · Biblioteca     → "Sentadilla con barra (demo)" tiene vídeo de YouTube');
+  log('');
+  log('  COBROS');
+  log('   · Varios meses de historial, para que la evolución mes a mes diga algo');
+  log('   · Sofía sin cuota y Rubén sin haber pagado nunca: no suman');
+  log('   · Elena dejó de pagar hace meses: sale en el histórico, no en la previsión');
+  log('   · Un cobro de Nadia a medias, para ver un importe distinto de la cuota');
+  log('   · Descarga los dos CSV y ábrelos en Excel: hay una nota con punto y');
+  log('     coma dentro, que es justo lo que rompe estos ficheros mal hechos');
   log('');
   log('  COMO CLIENTE (contraseña: ' + DEMO_PASSWORD + ')');
   log(`   · ${emailFor('lucia', coachEmail)}`);
