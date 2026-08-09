@@ -143,7 +143,39 @@ algo que el texto no dice*.
 
 ---
 
+## 3.9 El texto también delata
+
+Esto se me había escapado, y es la mitad del problema: el aspecto de "hecho por
+IA" no es solo visual. Hay un vocabulario que produce el mismo rechazo aunque
+el diseño esté bien. Antes de enseñarle una pantalla a nadie:
+
+- Ninguna frase que empiece por **"Potencia", "Desbloquea", "Transforma"** ni
+  sus equivalentes en inglés.
+- Ningún título de dos sustantivos abstractos encadenados ("Integración
+  fluida", "Gestión inteligente").
+- **Al menos una afirmación concreta con un número.**
+- **Al menos una frase que suene a persona**, no a folleto.
+
+Un texto genérico delata igual que un degradado morado, y la gente no técnica
+lo detecta aunque no sepa explicar por qué.
+
+---
+
 ## 4. Cómo se comprueba
+
+`npm run lint` incluye `scripts/check-design.mjs`, que **falla el build** si
+aparece un color de la paleta por defecto de Tailwind, un degradado, un
+hexadecimal suelto en una plantilla o un valor fuera de la escala
+(`p-[13px]`, `text-[11px]`). Los colores por defecto además ya no compilan,
+porque `tailwind.config.js` declara `colors` fuera de `extend` y eso borra la
+paleta de fábrica.
+
+Es deliberado que rompa en vez de avisar: revisar esto a ojo funciona con lo
+obvio y falla con la deriva lenta, que es la que acaba haciendo que un producto
+parezca genérico. Si la escala no llega a donde necesitas, **el arreglo es
+añadir un escalón en la configuración**, no improvisar un valor.
+
+Y tres preguntas antes de dar una pantalla por buena:
 
 1. **¿Esta pantalla podría ser de otro producto cualquiera?** Si sí, no hay
    ninguna decisión de diseño dentro, solo componentes por defecto.

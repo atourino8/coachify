@@ -180,7 +180,7 @@
       <div>
         <label
           for="ed-date-{s.id}"
-          class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Fecha</label
+          class="block text-3xs uppercase tracking-wider text-text-mute mb-1">Fecha</label
         >
         <input
           id="ed-date-{s.id}"
@@ -193,7 +193,7 @@
       <div>
         <label
           for="ed-time-{s.id}"
-          class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Hora</label
+          class="block text-3xs uppercase tracking-wider text-text-mute mb-1">Hora</label
         >
         <input
           id="ed-time-{s.id}"
@@ -206,7 +206,7 @@
       <div>
         <label
           for="ed-dur-{s.id}"
-          class="block text-[10px] uppercase tracking-wider text-text-mute mb-1">Duración</label
+          class="block text-3xs uppercase tracking-wider text-text-mute mb-1">Duración</label
         >
         <select
           id="ed-dur-{s.id}"
@@ -457,7 +457,7 @@
             <!-- Info compacta de la cita -->
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
-                <span class="text-[11px] px-2 py-0.5 rounded-full flex-shrink-0 {b.cls}"
+                <span class="text-2xs px-2 py-0.5 rounded-full flex-shrink-0 {b.cls}"
                   >{b.label}</span
                 >
                 <span class="font-semibold truncate">{s.client?.full_name ?? 'Cliente'}</span>

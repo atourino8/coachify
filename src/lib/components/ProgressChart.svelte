@@ -63,7 +63,7 @@
     <!-- Escala vertical fuera del dibujo: encima se solapaba con la curva -->
     <div class="flex gap-2">
       <div
-        class="flex flex-col justify-between text-[10px] text-text-mute tabular-nums flex-shrink-0 py-px"
+        class="flex flex-col justify-between text-3xs text-text-mute tabular-nums flex-shrink-0 py-px"
         style="height:{height}px"
       >
         <span>{chart.maxW} kg</span>
@@ -107,7 +107,7 @@
       </svg>
     </div>
 
-    <div class="flex justify-between text-[10px] text-text-mute mt-1 pl-11">
+    <div class="flex justify-between text-3xs text-text-mute mt-1 pl-11">
       <span>{fmtDate(points[0].date)}</span>
       {#if points.length > 1}
         <span>{fmtDate(points[points.length - 1].date)}</span>

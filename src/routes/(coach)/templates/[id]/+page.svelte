@@ -308,7 +308,7 @@
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div>
-                <label for="s-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute"
+                <label for="s-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
                   >Series</label
                 >
                 <input
@@ -321,7 +321,7 @@
                 />
               </div>
               <div>
-                <label for="r-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute"
+                <label for="r-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
                   >Reps</label
                 >
                 <input
@@ -333,7 +333,7 @@
                 />
               </div>
               <div>
-                <label for="w-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute"
+                <label for="w-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
                   >Peso</label
                 >
                 <input
@@ -345,7 +345,7 @@
                 />
               </div>
               <div>
-                <label for="d-{item.id}" class="text-[10px] uppercase tracking-wider text-text-mute"
+                <label for="d-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
                   >Desc. (s)</label
                 >
                 <input

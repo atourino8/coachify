@@ -225,13 +225,11 @@
           <div class="flex-1 min-w-0">
             <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
             <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
-            <div class="text-[11px] text-text-mute mt-0.5">
+            <div class="text-2xs text-text-mute mt-0.5">
               Invitado el {fmtDate(client.invited_at)}
             </div>
           </div>
-          <span
-            class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0"
-          >
+          <span class="text-2xs px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0">
             Pendiente de aceptar
           </span>
           <div class="flex flex-col gap-1.5 flex-shrink-0">
@@ -337,7 +335,7 @@
               class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm font-mono
                      focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
             ></textarea>
-            <p class="text-[11px] text-text-mute mt-1">
+            <p class="text-2xs text-text-mute mt-1">
               Uno por línea (o separados por comas). Puedes poner “Nombre &lt;email&gt;”.
               {#if bulkCount > 0}<span class="text-primary"> · {bulkCount} detectados</span>{/if}
             </p>
@@ -366,7 +364,7 @@
           {/if}
 
           <p
-            class="text-[11px] text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5"
+            class="text-2xs text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5"
           >
             Enviar muchas invitaciones de golpe puede topar con el límite de envío del proveedor de
             correo. Te diremos cuáles salieron y cuáles no.

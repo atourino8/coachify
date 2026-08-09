@@ -43,7 +43,7 @@
         >
           C
         </div>
-        <span class="font-display font-semibold tracking-tight text-[17px]">Coachify</span>
+        <span class="font-display font-semibold tracking-tight text-lg">Coachify</span>
       </a>
 
       <div class="flex items-center gap-4 sm:gap-6 text-sm">

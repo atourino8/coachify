@@ -379,7 +379,7 @@
             <div class="card p-3 space-y-2">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs uppercase tracking-wider text-text-mute">{slot.label}</span>
-                <span class="text-[11px] text-text-mute">
+                <span class="text-2xs text-text-mute">
                   {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
                 </span>
               </div>
@@ -393,7 +393,7 @@
                 ></video>
               {/if}
               <div class="flex items-center justify-between gap-2">
-                <span class="text-[11px] text-text-mute">
+                <span class="text-2xs text-text-mute">
                   {slot.v.duration_seconds ? `${slot.v.duration_seconds}s · ` : ''}{formatBytes(
                     slot.v.size_bytes
                   )}
@@ -402,7 +402,7 @@
                   <input type="hidden" name="video_id" value={slot.v.id} />
                   <button
                     type="submit"
-                    class="text-[11px] text-text-mute hover:text-danger transition-colors"
+                    class="text-2xs text-text-mute hover:text-danger transition-colors"
                   >
                     Eliminar
                   </button>
@@ -411,13 +411,13 @@
 
               {#if slot.v.coach_comment}
                 <div class="text-sm bg-primary/10 border-l-2 border-primary rounded-r px-3 py-2">
-                  <div class="text-[10px] uppercase tracking-wider text-primary mb-1">
+                  <div class="text-3xs uppercase tracking-wider text-primary mb-1">
                     Corrección de tu entrenador
                   </div>
                   {slot.v.coach_comment}
                 </div>
               {:else}
-                <p class="text-[11px] text-text-mute italic">
+                <p class="text-2xs text-text-mute italic">
                   Pendiente de revisar por tu entrenador.
                 </p>
               {/if}
@@ -500,7 +500,7 @@
         >
           {data.techniqueFirst ? 'Subir nuevo vídeo' : 'Grabar / subir vídeo'}
         </button>
-        <p class="text-[11px] text-text-mute text-center">
+        <p class="text-2xs text-text-mute text-center">
           {#if data.techniqueFirst}
             Se guardará como el más reciente y sustituirá al anterior. Tu primer vídeo se conserva
             para comparar.

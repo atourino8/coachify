@@ -2,45 +2,55 @@
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
+    // ---------------------------------------------------------------------
+    // COLORES · fuera de `extend` A PROPÓSITO
+    //
+    // Al declararlos aquí (y no en theme.extend) se BORRA la paleta por
+    // defecto de Tailwind. Eso significa que `bg-indigo-600`, `text-slate-900`
+    // y compañía dejan de compilar: el build falla en vez de colar un color
+    // que no es nuestro.
+    //
+    // Forzar el fallo es justo el objetivo. La paleta por defecto de Tailwind
+    // es lo que aparece en millones de tutoriales, así que es a lo que tira
+    // por defecto cualquier generador de código —y cualquiera con prisa—.
+    // Si no compila, no hay atajo posible.
+    //
+    // Se conservan solo los cuatro universales, que sí usamos: white (texto
+    // sobre acento), black (fondos de modal), transparent y current.
+    // ---------------------------------------------------------------------
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      inherit: 'inherit',
+      white: '#ffffff',
+      black: '#000000',
+
+      bg: 'rgb(var(--c-bg) / <alpha-value>)',
+      surface: 'rgb(var(--c-surface) / <alpha-value>)',
+      'surface-2': 'rgb(var(--c-surface-2) / <alpha-value>)',
+      primary: {
+        DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)',
+        hover: 'rgb(var(--c-primary-hover) / <alpha-value>)'
+      },
+      accent: 'rgb(var(--c-accent) / <alpha-value>)',
+      line: 'rgb(var(--c-line) / <alpha-value>)',
+      'line-strong': 'rgb(var(--c-line-strong) / <alpha-value>)',
+      text: {
+        DEFAULT: 'rgb(var(--c-text) / <alpha-value>)',
+        mute: 'rgb(var(--c-text-mute) / <alpha-value>)'
+      },
+      danger: 'rgb(var(--c-danger) / <alpha-value>)',
+      warning: 'rgb(var(--c-warning) / <alpha-value>)',
+      success: 'rgb(var(--c-success) / <alpha-value>)'
+    },
     extend: {
-      // ---------------------------------------------------------------------
-      // PALETA
-      //
-      // Los colores NO viven aquí: viven en variables CSS (src/app.css). Aquí
-      // solo se declara qué variable usa cada token.
-      //
-      // Por qué el formato "rgb(var(--x) / <alpha-value>)" y no el hexadecimal
-      // directo en la variable: usamos mucho `bg-accent/10`, `border-accent/20`
-      // y similares. Para que Tailwind pueda aplicar esas transparencias
-      // necesita los canales sueltos ("179 68 30"), no un "#B3441E". Con
-      // hexadecimal, todas las opacidades del proyecto dejarían de funcionar
-      // en silencio, que es peor que romperse.
-      //
-      // La ventaja: cambiar la paleta entera —la nuestra, o la de un
-      // entrenador -es reescribir variables en tiempo de ejecución. Ni
-      // recompilar, ni tocar componentes.
-      // ---------------------------------------------------------------------
-      colors: {
-        bg: 'rgb(var(--c-bg) / <alpha-value>)', // papel
-        surface: 'rgb(var(--c-surface) / <alpha-value>)', // fichas y paneles
-        'surface-2': 'rgb(var(--c-surface-2) / <alpha-value>)', // relleno sutil, hover
-        primary: {
-          DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)', // acciones principales
-          hover: 'rgb(var(--c-primary-hover) / <alpha-value>)'
-        },
-        accent: 'rgb(var(--c-accent) / <alpha-value>)', // identidad, nav activo, enlaces
-        // Líneas: separan sin encajonar. Son la base de las listas densas.
-        line: 'rgb(var(--c-line) / <alpha-value>)',
-        'line-strong': 'rgb(var(--c-line-strong) / <alpha-value>)',
-        text: {
-          DEFAULT: 'rgb(var(--c-text) / <alpha-value>)',
-          mute: 'rgb(var(--c-text-mute) / <alpha-value>)'
-        },
-        // Estos tres NO son personalizables: significan algo. Un aviso de error
-        // en el verde de la marca de alguien deja de comunicar que es un error.
-        danger: 'rgb(var(--c-danger) / <alpha-value>)',
-        warning: 'rgb(var(--c-warning) / <alpha-value>)',
-        success: 'rgb(var(--c-success) / <alpha-value>)'
+      // La escala de texto de Tailwind empieza en 12px (text-xs) y el diseño
+      // necesita bajar más. Sin estos escalones aparecían 33 tamaños
+      // inventados a mano (`text-[10px]`, `text-[11px]`…), que es la deriva
+      // típica: si la escala no llega, se improvisa.
+      fontSize: {
+        '3xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }] // 11px
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],

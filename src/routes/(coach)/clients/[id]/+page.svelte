@@ -184,9 +184,9 @@
 
     {#if payStatus !== 'sin_cuota'}
       <div class="text-right flex-shrink-0">
-        <span class="text-[11px] px-2 py-1 rounded-full {payLabel.cls}">{payLabel.text}</span>
+        <span class="text-2xs px-2 py-1 rounded-full {payLabel.cls}">{payLabel.text}</span>
         {#if data.info?.paid_until}
-          <p class="text-[11px] text-text-mute mt-1.5">
+          <p class="text-2xs text-text-mute mt-1.5">
             Pagado hasta {new Date(data.info.paid_until + 'T00:00:00').toLocaleDateString('es-ES')}
           </p>
         {/if}
@@ -339,7 +339,7 @@
               class="w-14 flex-shrink-0 text-center border-r border-text-mute/10 pr-3 flex flex-col justify-center"
             >
               <div
-                class="text-[11px] uppercase tracking-wider {day.isToday
+                class="text-2xs uppercase tracking-wider {day.isToday
                   ? 'text-primary font-semibold'
                   : 'text-text-mute'}"
               >
@@ -353,7 +353,7 @@
                 {day.dayNum}
               </div>
               {#if day.isToday}
-                <div class="text-[9px] font-bold uppercase tracking-wide text-primary">Hoy</div>
+                <div class="text-3xs font-bold uppercase tracking-wide text-primary">Hoy</div>
               {/if}
             </div>
 
@@ -432,8 +432,8 @@
                 <span class="sm:hidden block h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"
                 ></span>
                 <div class="hidden sm:block">
-                  <div class="text-[11px] font-medium truncate">{workout.title ?? 'Entreno'}</div>
-                  <div class="text-[10px] text-text-mute">{workout.itemCount} ej.</div>
+                  <div class="text-2xs font-medium truncate">{workout.title ?? 'Entreno'}</div>
+                  <div class="text-3xs text-text-mute">{workout.itemCount} ej.</div>
                 </div>
               </div>
             {/if}
@@ -868,13 +868,13 @@
               <h2 class="font-semibold">{g.exerciseName}</h2>
               {#if g.pending}
                 <span
-                  class="text-[11px] px-2 py-0.5 rounded-full bg-warning/15 text-warning whitespace-nowrap"
+                  class="text-2xs px-2 py-0.5 rounded-full bg-warning/15 text-warning whitespace-nowrap"
                 >
                   Por revisar
                 </span>
               {:else}
                 <span
-                  class="text-[11px] px-2 py-0.5 rounded-full bg-success/15 text-success whitespace-nowrap"
+                  class="text-2xs px-2 py-0.5 rounded-full bg-success/15 text-success whitespace-nowrap"
                 >
                   Revisado
                 </span>
@@ -890,7 +890,7 @@
                       <span class="text-xs uppercase tracking-wider text-text-mute"
                         >{slot.label}</span
                       >
-                      <span class="text-[11px] text-text-mute">
+                      <span class="text-2xs text-text-mute">
                         {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
                       </span>
                     </div>
@@ -937,7 +937,7 @@
                   >{newest.coach_comment ?? ''}</textarea
                 >
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-[11px] text-text-mute">
+                  <span class="text-2xs text-text-mute">
                     {#if newest.coach_comment_at}
                       Comentado el {new Date(newest.coach_comment_at).toLocaleDateString('es-ES')}
                     {/if}

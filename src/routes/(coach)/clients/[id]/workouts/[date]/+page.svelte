@@ -434,7 +434,7 @@
                 <div>
                   <label
                     for="sets-{item.id}"
-                    class="text-[10px] uppercase tracking-wider text-text-mute">Series</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Series</label
                   >
                   <input
                     id="sets-{item.id}"
@@ -448,7 +448,7 @@
                 <div>
                   <label
                     for="reps-{item.id}"
-                    class="text-[10px] uppercase tracking-wider text-text-mute">Reps</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Reps</label
                   >
                   <input
                     id="reps-{item.id}"
@@ -461,7 +461,7 @@
                 <div>
                   <label
                     for="weight-{item.id}"
-                    class="text-[10px] uppercase tracking-wider text-text-mute">Peso</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Peso</label
                   >
                   <input
                     id="weight-{item.id}"
@@ -474,7 +474,7 @@
                 <div>
                   <label
                     for="rest-{item.id}"
-                    class="text-[10px] uppercase tracking-wider text-text-mute">Desc. (s)</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Desc. (s)</label
                   >
                   <input
                     id="rest-{item.id}"

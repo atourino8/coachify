@@ -11,7 +11,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
-    "lint": "prettier --check ."
+    "lint": "prettier --check . && npm run check:design",
+    "check:design": "node scripts/check-design.mjs"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.3.1",
