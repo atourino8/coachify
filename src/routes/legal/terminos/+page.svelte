@@ -44,8 +44,9 @@
 
     <h2 class="text-2xl font-semibold text-text">6. Contacto</h2>
     <p>
-      Para cualquier consulta: <a href="mailto:hola@treno.app" class="text-primary hover:underline"
-        >hola@treno.app</a
+      Para cualquier consulta: <a
+        href="mailto:hola@coachify.app"
+        class="text-primary hover:underline">hola@coachify.app</a
       >
     </p>
   </div>

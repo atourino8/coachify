@@ -27,7 +27,7 @@
           name: 'Treno',
           url: page.url.origin,
           logo: page.url.origin + '/favicon.svg',
-          email: 'hola@treno.app',
+          email: 'hola@coachify.app',
           areaServed: 'ES'
         },
         {
@@ -389,7 +389,7 @@
       <a href="/legal/terminos" class="hover:text-text transition-colors">Términos</a>
       <a href="/legal/privacidad" class="hover:text-text transition-colors">Privacidad</a>
       <a href="/legal/cookies" class="hover:text-text transition-colors">Cookies</a>
-      <a href="mailto:hola@treno.app" class="hover:text-text transition-colors">Contacto</a>
+      <a href="mailto:hola@coachify.app" class="hover:text-text transition-colors">Contacto</a>
     </nav>
   </div>
 </footer>

@@ -10,8 +10,8 @@
  * visible y dominios. Es reversible con git.
  *
  * Uso:
- *   node scripts/rename-brand.mjs Treno treno.app          # aplica
- *   node scripts/rename-brand.mjs Treno treno.app --dry    # solo muestra
+ *   node scripts/rename-brand.mjs Treno coachify.app          # aplica
+ *   node scripts/rename-brand.mjs Treno coachify.app --dry    # solo muestra
  *
  * Después de ejecutarlo:
  *   1. Revisa el diff con `git diff`
@@ -32,7 +32,7 @@ if (!NEW_NAME) {
 }
 
 const OLD_NAME = 'Treno';
-const OLD_DOMAIN = 'treno.app';
+const OLD_DOMAIN = 'coachify.app';
 
 // Directorios y extensiones a revisar.
 const ROOTS = ['src', 'static', 'scripts', 'supabase'];
@@ -102,7 +102,7 @@ for (const file of files) {
     updated = updated.replaceAll(original_, centinela);
   }
 
-  // Dominio primero: si no, "treno.app" se rompería al cambiar el nombre.
+  // Dominio primero: si no, "coachify.app" se rompería al cambiar el nombre.
   if (NEW_DOMAIN) {
     updated = updated.replaceAll(OLD_DOMAIN, NEW_DOMAIN);
   }

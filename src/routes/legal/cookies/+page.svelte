@@ -96,8 +96,8 @@
     <h2 class="text-2xl font-semibold text-text">8. Contacto</h2>
     <p>
       Para cualquier duda sobre esta política:
-      <a href="mailto:hola@treno.app" class="text-accent hover:underline">hola@treno.app</a>. Puedes
-      consultar también nuestra
+      <a href="mailto:hola@coachify.app" class="text-accent hover:underline">hola@coachify.app</a>.
+      Puedes consultar también nuestra
       <a href="/legal/privacidad" class="text-accent hover:underline">Política de Privacidad</a>.
     </p>
   </div>

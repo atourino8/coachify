@@ -22,7 +22,7 @@
     <p>
       [NOMBRE FISCAL] · [NIF] · [DOMICILIO].<br />
       Contacto:
-      <a href="mailto:hola@treno.app" class="text-primary hover:underline">hola@treno.app</a>.
+      <a href="mailto:hola@coachify.app" class="text-primary hover:underline">hola@coachify.app</a>.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">2. Datos que tratamos</h2>
@@ -118,7 +118,7 @@
     <p>
       Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación y
       portabilidad, así como retirar tu consentimiento en cualquier momento, escribiendo a
-      <a href="mailto:hola@treno.app" class="text-primary hover:underline">hola@treno.app</a>.
+      <a href="mailto:hola@coachify.app" class="text-primary hover:underline">hola@coachify.app</a>.
       También puedes reclamar ante la Agencia Española de Protección de Datos (<a
         href="https://www.aepd.es"
         target="_blank"
