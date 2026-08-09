@@ -92,3 +92,58 @@ Esto **no** significa rediseñarlo todo ahora. El orden acordado es: primero la
 funcionalidad que necesita el caso corporativo, y el rediseño después, cuando
 sepamos qué producto vamos a enseñar. Pero a partir de ya, **lo nuevo se
 construye siguiendo estas reglas** en vez de acumular más deuda visual.
+
+---
+
+## La paleta: dónde vive y cómo se cambia
+
+Los colores **no están en `tailwind.config.js`**. Están en un único bloque
+`:root` de `src/app.css` como variables CSS, y la configuración de Tailwind
+solo dice qué variable usa cada token.
+
+**Para cambiar la paleta entera se tocan esas variables y nada más.** Ningún
+componente menciona un color concreto: todos usan tokens (`bg`, `surface`,
+`accent`, `line`, `text`…). Probar una dirección visual distinta es reescribir
+trece líneas, no treinta archivos.
+
+### Por qué canales RGB y no hexadecimal
+
+Las variables guardan `179 68 30`, no `#B3441E`. Es obligatorio: el proyecto
+usa transparencias por todas partes (`bg-accent/5`, `border-line/50`,
+`bg-surface-2/60`) y Tailwind las compone como `rgb(var(--c-accent) / 0.05)`.
+Con un hexadecimal dentro de la variable, **todas esas opacidades dejarían de
+aplicarse sin dar ningún error**. Es la peor forma de romperse: en silencio.
+
+### Marca por entrenador (pendiente de implementar)
+
+La decisión tomada es que cada entrenador pueda poner su color, y que lo vean
+**tanto él como sus clientes** — es su espacio dentro de la aplicación. Va
+incluido desde el primer plan: pesa más el boca a boca que cobrarlo aparte.
+
+El mecanismo, cuando toque, es directo: redefinir `--c-accent` en un
+contenedor. Las variables CSS cascadean, así que repinta todo lo que hay dentro
+—incluidas las transparencias— sin tocar una sola plantilla.
+
+Tres reglas de esa personalización:
+
+1. **Se deriva una familia de su tono, no se usa su color en todas partes.**
+   Lo que alguien reconoce como "su color" es el tono, no la luminosidad. De su
+   hex se generan una variante clara (fondos, pastillas), la suya tal cual
+   (superficies grandes, elementos decorativos) y una oscurecida para texto
+   pequeño y enlaces, que es lo único obligado a cumplir 4.5:1. Así un celeste
+   o un amarillo funcionan sin pedirle a nadie que cambie de color.
+2. **`danger`, `warning` y `success` no se personalizan.** Comunican
+   significado. Un aviso de error en el verde de la marca de alguien deja de
+   decir que es un error.
+3. **Dentro es su espacio; fuera somos nosotros.** La aplicación va con su
+   marca, incluida la pantalla donde su cliente estrena la contraseña (el
+   enlace de invitación ya identifica al entrenador). La landing y el login
+   genérico siguen siendo de Coachify: ahí no sabemos quién entra, y es nuestro
+   escaparate.
+
+### Deuda anotada
+
+El feedback recibido sobre el papel blanco es que resulta **demasiado simple**.
+Está pendiente de analizar; la sospecha es que no se resuelve solo con color
+—la aplicación no tiene ni una sola imagen— pero el trabajo de modularidad de
+arriba existe precisamente para que probar alternativas salga barato.

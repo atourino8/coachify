@@ -2,9 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============== Variables globales (complementan Tailwind) ============== */
+/* =============================================================================
+   PALETA · el único sitio donde viven los colores
+   =============================================================================
+   Paleta Coachify — "Cuaderno de entrenador": fondo papel, tinta casi negra y
+   un único acento terracota. Deliberadamente fuera del oscuro+neón del sector.
+
+   Se guardan como CANALES RGB SUELTOS, no en hexadecimal. Es obligatorio para
+   que funcionen las transparencias de Tailwind (`bg-accent/10`,
+   `border-line/50`…), que componen el color como rgb(var(--x) / 0.1). Con un
+   hexadecimal aquí, todas esas opacidades dejarían de aplicarse sin dar ningún
+   error, que es la peor forma de romperse.
+
+   CÓMO SE CAMBIA LA PALETA: se reescriben estos valores. Nada más. Ningún
+   componente menciona un color concreto, todos usan los tokens.
+
+   MARCA POR ENTRENADOR (pendiente): el día que se implemente, basta con
+   inyectar un bloque que redefina --c-accent (y las que se deriven de ella)
+   en un contenedor. Las variables cascadean, así que redefinirlas en un div
+   repinta todo lo que hay dentro sin tocar una sola plantilla.
+
+   --c-danger, --c-warning y --c-success quedan FUERA de la personalización:
+   comunican significado, no identidad.
+   ========================================================================== */
 :root {
   color-scheme: light;
+
+  --c-bg: 251 250 247; /* #FBFAF7 · papel */
+  --c-surface: 255 255 255; /* #FFFFFF · fichas y paneles */
+  --c-surface-2: 242 239 231; /* #F2EFE7 · relleno sutil, hover */
+
+  --c-primary: 28 26 22; /* #1C1A16 · tinta */
+  --c-primary-hover: 55 51 44; /* #37332C */
+  --c-accent: 179 68 30; /* #B3441E · terracota */
+
+  --c-line: 229 225 214; /* #E5E1D6 */
+  --c-line-strong: 217 213 202; /* #D9D5CA */
+
+  --c-text: 28 26 22; /* #1C1A16 */
+  --c-text-mute: 107 102 92; /* #6B665C */
+
+  --c-danger: 140 29 24; /* #8C1D18 */
+  --c-warning: 138 90 11; /* #8A5A0B */
+  --c-success: 63 107 43; /* #3F6B2B */
 }
 
 html {
@@ -12,20 +52,21 @@ html {
 }
 
 body {
-  background-color: #fbfaf7;
-  color: #1c1a16;
+  background-color: rgb(var(--c-bg));
+  color: rgb(var(--c-text));
   min-height: 100vh;
 }
 
 /* Selección de texto con el acento de marca */
 ::selection {
-  background-color: rgba(179, 68, 30, 0.18);
-  color: #1c1a16;
+  background-color: rgb(var(--c-accent) / 0.18);
+  color: rgb(var(--c-text));
 }
 
-/* Foco visible accesible */
+/* Foco visible accesible. Usa el acento, así que también sigue a la marca
+   del entrenador el día que cada uno tenga la suya. */
 *:focus-visible {
-  outline: 2px solid #b3441e;
+  outline: 2px solid rgb(var(--c-accent));
   outline-offset: 2px;
   border-radius: 4px;
 }
