@@ -1,6 +1,16 @@
 <script lang="ts">
-  // Landing pública de Coachify. Los CTA apuntan a /login (acceso, auto-enruta
-  // por rol) y /register (alta de entrenador; los clientes entran por invitación).
+  // Landing pública de Coachify.
+  //
+  // DIRECCIÓN (ver DISENO.md): la landing habla el idioma de la herramienta,
+  // no el de las landings. Filas densas, líneas finas y números grandes: lo
+  // mismo que hay dentro del producto. Eso consigue dos cosas:
+  //   · Es imposible que se parezca a otra: nadie más tiene nuestro contenido.
+  //   · Es honesta. Lo que se ve aquí es literalmente lo que hay al entrar.
+  //
+  // Se evitan a propósito los tres patrones que delatan una página generada:
+  // el héroe centrado, las tres tarjetas de características con icono, y la
+  // tabla de precios con el plan del medio elevado y su etiqueta "Popular".
+  // Todo va en rejillas asimétricas que además alternan de lado.
 
   import { page } from '$app/state';
 
@@ -35,69 +45,37 @@
     })
   );
 
-  const features = [
+  // Planes alineados con NEGOCIO.md. Ojo: el precio de Pro sigue pendiente de
+  // confirmar con las primeras conversaciones, así que puede moverse.
+  const planes = [
     {
-      icon: '🎥',
-      title: 'Tus propios vídeos',
-      text: 'Cada ejercicio con tu vídeo de técnica de 1 minuto. Sin marca de YouTube ni sugerencias raras.'
+      nombre: 'Prueba',
+      precio: '0',
+      periodo: '14 días',
+      para: 'Para verlo con un cliente real antes de pagar nada.',
+      cta: 'Empezar',
+      incluye: ['Todo lo de Pro', 'Sin tarjeta', 'Sin límite de clientes']
     },
     {
-      icon: '📅',
-      title: 'Citas y entrenos ligados',
-      text: 'Propón o acepta citas con tus clientes y adjunta el entreno de cada sesión. Ellos lo ven y confirman.'
-    },
-    {
-      icon: '📈',
-      title: 'Progreso real',
-      text: 'Cada cliente ve cuánto levantó el último mes en cada ejercicio. Tú detectas mesetas y haces tu trabajo.'
-    }
-  ];
-
-  const tiers = [
-    {
-      name: 'Free',
-      price: '0',
-      period: 'siempre',
-      description: 'Para probar el producto sin riesgo.',
-      cta: 'Empezar gratis',
-      featured: false,
-      features: [
-        'Hasta 3 clientes activos',
-        'Biblioteca de ejercicios ilimitada',
-        'Constructor de entrenos',
-        'Vista cliente con tracking'
-      ]
-    },
-    {
-      name: 'Pro',
-      price: '19',
-      period: 'mes',
-      description: 'Para coaches que viven de esto.',
-      cta: 'Empezar 14 días gratis',
-      featured: true,
-      features: [
+      nombre: 'Pro',
+      precio: '29',
+      periodo: 'al mes',
+      para: 'Para el entrenador que vive de esto.',
+      cta: 'Empezar los 14 días',
+      incluye: [
         'Clientes ilimitados',
-        'Sistema de citas (propuestas y reservas)',
-        'Entrenamientos reutilizables',
-        'Sincronización con Google Calendar (próximamente)',
-        'Notificaciones push (próximamente)',
-        'Soporte por email'
+        'Citas, entrenos y corrección por vídeo',
+        'Tu marca y tus colores',
+        'Soporte por correo'
       ]
     },
     {
-      name: 'Team',
-      price: '49',
-      period: 'mes',
-      description: 'Para gimnasios y estudios.',
-      cta: 'Hablar con ventas',
-      featured: false,
-      features: [
-        'Todo lo de Pro',
-        'Múltiples coaches en una cuenta',
-        'Marca propia (white-label)',
-        'Analíticas avanzadas',
-        'Soporte prioritario'
-      ]
+      nombre: 'Studio',
+      precio: '79',
+      periodo: 'al mes',
+      para: 'Para estudios y convenios de empresa.',
+      cta: 'Escríbenos',
+      incluye: ['Todo lo de Pro', 'Varios entrenadores', 'Grupos y facturación conjunta']
     }
   ];
 </script>
@@ -109,220 +87,305 @@
   {@html `<script type="application/ld+json">${jsonLd}<\/script>`}
 </svelte:head>
 
-<!-- ============== Header ============== -->
-<header class="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-line">
-  <div class="container-narrow flex items-center justify-between py-4">
-    <a href="/" class="flex items-center gap-2">
-      <div
-        class="w-9 h-9 rounded-lg bg-accent grid place-items-center
-               text-white font-display font-bold text-lg shadow-md"
-      >
+<!-- ============== Cabecera ============== -->
+<header class="sticky top-0 z-50 bg-bg/85 backdrop-blur-md border-b border-line">
+  <div class="container-narrow flex items-center justify-between py-3.5">
+    <a href="/" class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-md bg-accent grid place-items-center text-bg font-bold text-sm">
         C
       </div>
-      <span class="font-semibold text-lg tracking-tight">Coachify</span>
+      <span class="font-semibold tracking-tight">Coachify</span>
     </a>
 
-    <nav class="hidden md:flex items-center gap-6 text-sm text-text-mute">
-      <a href="#features" class="hover:text-text transition-colors">Features</a>
-      <a href="#pricing" class="hover:text-text transition-colors">Precios</a>
-      <a href="/login" class="btn-ghost py-2 px-5 text-sm">Entrar</a>
-      <a href="/register" class="btn-primary py-2 px-5 text-sm">Empieza gratis</a>
+    <nav class="flex items-center gap-5 sm:gap-7 text-sm">
+      <a href="#como" class="hidden sm:inline text-text-mute hover:text-text transition-colors">
+        Cómo funciona
+      </a>
+      <a href="#precio" class="hidden sm:inline text-text-mute hover:text-text transition-colors">
+        Precio
+      </a>
+      <a href="/login" class="text-accent font-medium hover:underline">Entrar</a>
+      <a href="/register" class="btn-primary py-2 px-4 text-sm">Empezar</a>
     </nav>
-
-    <div class="md:hidden flex items-center gap-2">
-      <a href="/login" class="btn-ghost py-2 px-3 text-sm">Entrar</a>
-      <a href="/register" class="btn-primary py-2 px-3 text-sm">Empezar</a>
-    </div>
   </div>
 </header>
 
-<!-- ============== Hero ============== -->
-<section class="relative overflow-hidden py-24 sm:py-32">
-  <div class="container-narrow relative">
-    <div class="max-w-3xl mx-auto text-center">
-      <span class="eyebrow inline-block mb-6">para entrenadores personales</span>
-      <h1
-        class="text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight mb-6 leading-[1.05]"
-      >
-        Entrena a tus clientes <br />
-        con
-        <span class="text-accent">tus propios vídeos</span>
+<!--
+  ============== Héroe ==============
+  Rejilla 5/7 y nada centrado: el texto ocupa MENOS que el material. Es la
+  decisión que más se nota; un bloque centrado es lo que sale por defecto.
+-->
+<section class="container-narrow pt-14 pb-16 sm:pt-24 sm:pb-24">
+  <div class="grid lg:grid-cols-[5fr_7fr] gap-10 lg:gap-14 items-end">
+    <div>
+      <p class="eyebrow">Para entrenadores presenciales</p>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mt-4 mb-5 leading-tight">
+        La semana de tus clientes, montada en diez minutos.
       </h1>
-      <p class="text-lg sm:text-xl text-text-mute leading-relaxed mb-10 max-w-2xl mx-auto">
-        Sin Excel. Sin WhatsApp. Sin caos. Coachify es la app que reúne tu biblioteca de ejercicios,
-        el calendario semanal de tus clientes y su progreso en un solo sitio.
+      <p class="text-text-mute leading-relaxed max-w-md">
+        Programa, cobra y corrige la técnica desde el mismo sitio. Ellos entrenan mirando el móvil;
+        tú ves si han levantado más que el mes pasado.
       </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="/register" class="btn-primary text-base px-8 py-4">
-          Empieza gratis
-          <span class="text-text-mute/70">→</span>
-        </a>
-        <a href="#features" class="btn-ghost text-base px-8 py-4">Ver cómo funciona</a>
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-3 mt-7">
+        <a href="/register" class="btn-primary">Empezar gratis</a>
+        <span class="text-sm text-text-mute">14 días, sin tarjeta</span>
       </div>
-      <p class="mt-6 text-sm text-text-mute">Sin tarjeta · Tu primer cliente en 5 minutos</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============== Acceso por rol ============== -->
-<section id="acceso" class="py-20 sm:py-24 border-t border-text-mute/10 bg-surface/30">
-  <div class="container-narrow">
-    <div class="text-center mb-12 max-w-2xl mx-auto">
-      <span class="eyebrow inline-block mb-4">acceso</span>
-      <h2 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mb-3">
-        ¿Ya usas Coachify?
-      </h2>
-      <p class="text-text-mute">
-        Entra según quién seas. Es el mismo acceso, te llevamos a tu sitio.
-      </p>
     </div>
 
-    <div class="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
-      <!-- Entrenador -->
-      <div class="card flex flex-col">
-        <div class="text-3xl mb-3">🏋️</div>
-        <h3 class="text-lg font-semibold mb-1">Soy entrenador</h3>
-        <p class="text-sm text-text-mute mb-5 flex-1">
-          Gestiona tus clientes, entrenamientos y citas en un solo sitio.
-        </p>
-        <div class="flex flex-col gap-2">
-          <a href="/register" class="btn-primary w-full text-sm">Empezar gratis</a>
-          <a
-            href="/login"
-            class="text-xs text-text-mute hover:text-text text-center transition-colors"
-          >
-            Ya tengo cuenta · Entrar
-          </a>
-        </div>
-      </div>
-
-      <!-- Cliente -->
-      <div class="card flex flex-col">
-        <div class="text-3xl mb-3">💪</div>
-        <h3 class="text-lg font-semibold mb-1">Soy cliente</h3>
-        <p class="text-sm text-text-mute mb-5 flex-1">
-          Tu entrenador te invitó por email. Entra para ver tus entrenos, vídeos y citas.
-        </p>
-        <div class="flex flex-col gap-2">
-          <a href="/login" class="btn-ghost w-full text-sm">Entrar</a>
-          <span class="text-xs text-text-mute/70 text-center">
-            Usa el email con el que te invitaron
+    <!-- Material real del producto: la misma fila, la misma tipografía y los
+         mismos números que se ven al entrar. No es una captura dentro de un
+         marco de navegador, que es el otro cliché. -->
+    <div class="border border-line rounded-lg bg-surface overflow-hidden">
+      <p class="text-3xs uppercase tracking-wider text-text-mute px-4 py-3 border-b border-line">
+        Miércoles · Carla Otero · Fuerza tren inferior
+      </p>
+      <div class="px-4">
+        <div class="row">
+          <span class="text-2xl font-bold tabular-nums tracking-tight w-20 flex-shrink-0">
+            60<span class="text-sm text-text-mute font-semibold">kg</span>
           </span>
+          <span class="flex-1 min-w-0 text-sm">Sentadilla trasera</span>
+          <span class="text-2xs font-bold text-success">4/4 ✓</span>
+        </div>
+        <div class="row">
+          <span class="text-2xl font-bold tabular-nums tracking-tight w-20 flex-shrink-0">
+            45<span class="text-sm text-text-mute font-semibold">kg</span>
+          </span>
+          <span class="flex-1 min-w-0 text-sm">Peso muerto rumano</span>
+          <span class="text-2xs font-bold text-success">4/4 ✓</span>
+        </div>
+        <div class="row">
+          <span class="text-2xl font-bold tabular-nums tracking-tight w-20 flex-shrink-0">
+            20<span class="text-sm text-text-mute font-semibold">kg</span>
+          </span>
+          <span class="flex-1 min-w-0 text-sm">Zancadas</span>
+          <span class="text-2xs text-text-mute">2/4</span>
+        </div>
+        <div class="row border-b-0">
+          <span
+            class="text-2xl font-bold tabular-nums tracking-tight text-accent w-20 flex-shrink-0"
+          >
+            +20<span class="text-sm font-semibold">kg</span>
+          </span>
+          <span class="flex-1 min-w-0 text-sm text-text-mute">en sentadilla desde junio</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============== Features ============== -->
-<section id="features" class="py-24 sm:py-32 border-t border-text-mute/10">
-  <div class="container-narrow">
-    <div class="text-center mb-16 max-w-2xl mx-auto">
-      <span class="eyebrow inline-block mb-4">cómo funciona</span>
-      <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-4">
-        Tres cosas que cambian el día a día
-      </h2>
-      <p class="text-lg text-text-mute">
-        Tres cosas bien hechas valen más que doscientas a medias.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-6">
-      {#each features as f}
-        <div class="card text-center">
-          <div class="text-5xl mb-4">{f.icon}</div>
-          <h3 class="text-xl font-semibold mb-3">{f.title}</h3>
-          <p class="text-text-mute text-sm leading-relaxed">{f.text}</p>
+<!--
+  ============== Cómo funciona ==============
+  Tres franjas, no tres tarjetas. Cada una enseña su función CON el material
+  que la hace, y alternan de lado para que la página no sea una columna.
+-->
+<section id="como" class="border-t border-line">
+  <div class="container-narrow divide-y divide-line">
+    <!-- 1 · Técnica por vídeo -->
+    <div class="grid lg:grid-cols-[7fr_5fr] gap-10 items-center py-16 sm:py-20">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="border border-line rounded-md overflow-hidden">
+          <p
+            class="text-3xs uppercase tracking-wider text-text-mute px-3 py-2 border-b border-line"
+          >
+            Su primer vídeo · 15 jul
+          </p>
+          <div class="h-28 bg-bg grid place-items-center text-line-strong">▶</div>
         </div>
-      {/each}
+        <div class="border border-line rounded-md overflow-hidden">
+          <p
+            class="text-3xs uppercase tracking-wider text-text-mute px-3 py-2 border-b border-line"
+          >
+            Ahora · hace 2 días
+          </p>
+          <div class="h-28 bg-bg grid place-items-center text-line-strong">▶</div>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+          Le corriges la postura sin estar delante.
+        </h2>
+        <p class="text-text-mute leading-relaxed">
+          Tu cliente graba un minuto con el móvil. Tú lo ves al lado del primero que te mandó y le
+          escribes qué cambiar.
+        </p>
+        <p class="text-sm text-text-mute mt-4 border-l-2 border-accent pl-4 leading-relaxed">
+          Se guardan dos por ejercicio: el primero y el último. Ni se te llena la cuenta ni se
+          pierde la comparación.
+        </p>
+      </div>
     </div>
-  </div>
-</section>
 
-<!-- ============== Pricing ============== -->
-<section id="pricing" class="py-24 sm:py-32 border-t border-text-mute/10">
-  <div class="container-narrow">
-    <div class="text-center mb-16 max-w-2xl mx-auto">
-      <span class="eyebrow inline-block mb-4">precios</span>
-      <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-4">
-        Simple. Honesto. Sin sorpresas.
-      </h2>
-      <p class="text-lg text-text-mute">
-        Empieza gratis. Cuando tengas 4 clientes pagándote, considera Pro.
-      </p>
+    <!-- 2 · Progreso · invertida respecto a la anterior -->
+    <div class="grid lg:grid-cols-[5fr_7fr] gap-10 items-center py-16 sm:py-20">
+      <div class="lg:order-2 border border-line rounded-lg bg-surface p-5">
+        <div class="flex items-baseline justify-between gap-4 mb-4">
+          <span class="text-sm font-semibold">Press de banca</span>
+          <span class="text-2xs text-text-mute">8 semanas</span>
+        </div>
+        <div class="flex items-end gap-1.5 h-24">
+          {#each [40, 42.5, 45, 45, 47.5, 52.5, 55, 60] as kg, i (i)}
+            <div class="flex-1 flex flex-col items-center gap-1.5">
+              <div
+                class="w-full rounded-sm {i === 7 ? 'bg-accent' : 'bg-line-strong'}"
+                style="height: {((kg - 35) / 27) * 100}%"
+              ></div>
+            </div>
+          {/each}
+        </div>
+        <div class="flex items-baseline justify-between mt-3 pt-3 border-t border-line">
+          <span class="text-2xs text-text-mute">40 kg en junio</span>
+          <span class="text-lg font-bold tabular-nums text-accent">60 kg hoy</span>
+        </div>
+      </div>
+      <div class="lg:order-1">
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+          Ves el estancamiento antes que él.
+        </h2>
+        <p class="text-text-mute leading-relaxed">
+          Cada serie que registra tu cliente alimenta su curva. Tú entras y ves de un vistazo quién
+          sube, quién lleva tres semanas con el mismo peso y a quién toca cambiarle el plan.
+        </p>
+      </div>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-      {#each tiers as tier}
-        <div class="card relative flex flex-col {tier.featured ? 'border-accent border-2' : ''}">
-          {#if tier.featured}
-            <span
-              class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs
-                     uppercase tracking-wider font-semibold px-3 py-1 rounded-full"
-            >
-              Más elegido
+    <!-- 3 · Agenda -->
+    <div class="grid lg:grid-cols-[7fr_5fr] gap-10 items-center py-16 sm:py-20">
+      <div class="border border-line rounded-lg bg-surface overflow-hidden">
+        <p class="text-3xs uppercase tracking-wider text-text-mute px-4 py-3 border-b border-line">
+          Te han pedido cita
+        </p>
+        <div class="px-4">
+          <div class="row">
+            <span class="flex-1 min-w-0">
+              <span class="font-medium text-sm block">Marcos Vidal</span>
+              <span class="text-2xs text-text-mute">Viernes 7 · 10:00 · presencial</span>
             </span>
-          {/if}
-
-          <h3 class="text-2xl font-display font-semibold mb-2">{tier.name}</h3>
-          <p class="text-sm text-text-mute mb-6">{tier.description}</p>
-
-          <div class="mb-6">
-            <span class="text-5xl font-display font-semibold">{tier.price}€</span>
-            <span class="text-text-mute text-sm">/{tier.period}</span>
+            <span class="action-primary">Confirmar</span>
+            <span class="action-danger">Rechazar</span>
           </div>
-
-          <ul class="space-y-3 mb-8 text-sm flex-1">
-            {#each tier.features as feature}
-              <li class="flex items-start gap-2">
-                <span class="text-success mt-0.5">✓</span>
-                <span class="text-text-mute">{feature}</span>
-              </li>
-            {/each}
-          </ul>
-
-          <a href="/register" class={tier.featured ? 'btn-primary w-full' : 'btn-ghost w-full'}>
-            {tier.cta}
-          </a>
+          <div class="row border-b-0">
+            <span class="flex-1 min-w-0">
+              <span class="font-medium text-sm block">Nadia Ferrer</span>
+              <span class="text-2xs text-text-mute">Sábado 8 · 09:00 · Parque del Oeste</span>
+            </span>
+            <span class="action-primary">Confirmar</span>
+            <span class="action-danger">Rechazar</span>
+          </div>
         </div>
-      {/each}
+      </div>
+      <div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+          Se acabó cuadrar horarios por WhatsApp.
+        </h2>
+        <p class="text-text-mute leading-relaxed">
+          Publicas cuándo puedes y tus clientes piden hueco ahí. Confirmas de un toque, y el entreno
+          de esa sesión ya les aparece preparado.
+        </p>
+      </div>
     </div>
-
-    <p class="text-center text-sm text-text-mute mt-10">
-      Todos los planes incluyen 14 días de prueba en Pro, sin tarjeta.
-    </p>
   </div>
 </section>
 
-<!-- ============== CTA final ============== -->
-<section class="py-24 sm:py-32 border-t border-text-mute/10">
-  <div class="container-text text-center">
-    <h2 class="text-4xl sm:text-5xl font-display font-semibold tracking-tight mb-6">
-      ¿Listo para dejar el Excel?
-    </h2>
-    <p class="text-lg text-text-mute mb-10">
-      En 5 minutos tienes tu primer ejercicio subido y tu primer cliente invitado.
-    </p>
-    <a href="/register" class="btn-primary text-base px-8 py-4">
-      Empieza gratis
-      <span class="text-text-mute/70">→</span>
-    </a>
+<!--
+  ============== Precio ==============
+  En filas y sin plan destacado. La tabla de tres tarjetas con la del medio
+  elevada y su etiqueta "Popular" es de los patrones más reconocibles que hay.
+-->
+<section id="precio" class="border-t border-line py-16 sm:py-24">
+  <div class="container-narrow">
+    <div class="grid lg:grid-cols-[5fr_7fr] gap-10">
+      <div>
+        <p class="eyebrow">Precio</p>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight mt-4 mb-3">
+          Una cuota fija, no un peaje por cliente.
+        </h2>
+        <p class="text-text-mute leading-relaxed">
+          El resto cobra más según cuánta gente lleves, justo cuando más te cuesta llegar. Aquí
+          pagas lo mismo con cinco clientes que con treinta.
+        </p>
+      </div>
+
+      <div class="border-t border-line">
+        {#each planes as plan (plan.nombre)}
+          <div class="py-6 border-b border-line grid sm:grid-cols-[auto_1fr_auto] gap-x-6 gap-y-3">
+            <div class="sm:w-32">
+              <p class="font-semibold">{plan.nombre}</p>
+              <p class="mt-1">
+                <span class="text-3xl font-bold tabular-nums tracking-tight">{plan.precio}€</span>
+                <span class="text-sm text-text-mute"> / {plan.periodo}</span>
+              </p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm text-text-mute mb-2">{plan.para}</p>
+              <ul class="text-sm space-y-1">
+                {#each plan.incluye as item (item)}
+                  <li class="text-text-mute">· {item}</li>
+                {/each}
+              </ul>
+            </div>
+            <div class="sm:self-center">
+              <a href="/register" class="btn-ghost whitespace-nowrap">{plan.cta}</a>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ============== Footer ============== -->
-<footer class="border-t border-text-mute/10 py-12 text-sm text-text-mute">
+<!-- ============== Acceso ============== -->
+<section class="border-t border-line py-16 sm:py-20">
+  <div class="container-narrow grid lg:grid-cols-[5fr_7fr] gap-10">
+    <div>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">¿Y si soy el cliente?</h2>
+    </div>
+    <div class="border-t border-line">
+      <div class="row">
+        <span class="flex-1 min-w-0">
+          <span class="font-medium block">Soy entrenador</span>
+          <span class="text-sm text-text-mute">Creas tu cuenta y empiezas con tus clientes.</span>
+        </span>
+        <a href="/register" class="action-primary">Crear cuenta</a>
+      </div>
+      <div class="row border-b-0">
+        <span class="flex-1 min-w-0">
+          <span class="font-medium block">Soy cliente de un entrenador</span>
+          <span class="text-sm text-text-mute">
+            No te registras aquí: tu entrenador te invita por correo y entras con ese enlace.
+          </span>
+        </span>
+        <a href="/login" class="action-neutral">Ya tengo cuenta</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Cierre ============== -->
+<section class="border-t border-line py-16 sm:py-24">
+  <div class="container-narrow grid lg:grid-cols-[5fr_7fr] gap-10 items-center">
+    <div>
+      <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">Tu primer entreno, hoy.</h2>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <a href="/register" class="btn-primary">Empezar gratis</a>
+      <p class="text-sm text-text-mute">
+        Cargamos 48 ejercicios el primer día. Invitas a un cliente y le programas la semana.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== Pie ============== -->
+<footer class="border-t border-line py-10 text-sm text-text-mute">
   <div class="container-narrow flex flex-col sm:flex-row items-center justify-between gap-6">
     <div class="flex items-center gap-2">
-      <div
-        class="w-7 h-7 rounded-md bg-accent grid place-items-center
-               text-white font-display font-bold text-sm"
-      >
+      <div class="w-6 h-6 rounded-md bg-accent grid place-items-center text-bg font-bold text-2xs">
         C
       </div>
       <span>© {new Date().getFullYear()} Coachify</span>
     </div>
-    <nav class="flex flex-wrap items-center gap-x-6 gap-y-2">
+    <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
       <a href="/legal/terminos" class="hover:text-text transition-colors">Términos</a>
       <a href="/legal/privacidad" class="hover:text-text transition-colors">Privacidad</a>
       <a href="/legal/cookies" class="hover:text-text transition-colors">Cookies</a>
