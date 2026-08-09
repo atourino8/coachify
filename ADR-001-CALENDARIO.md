@@ -14,13 +14,13 @@ hacer, y antes de construirlo conviene separar **dos problemas distintos** que
 la frase mezcla:
 
 1. **Ver.** El entrenador ya vive en un calendario (Google, Apple, el del
-   móvil). Si las citas de Coachify no están ahí, tiene dos agendas y una
+   móvil). Si las citas de Treno no están ahí, tiene dos agendas y una
    miente. Es incomodidad constante y de baja intensidad.
 
 2. **No chocar.** Que la aplicación no le ofrezca a un cliente un hueco que él
    ya tiene ocupado por algo ajeno (el dentista, recoger a un crío, otro
    trabajo). Esto no es incomodidad: es una cita mal dada que hay que deshacer
-   por WhatsApp, justo la fricción que Coachify dice eliminar.
+   por WhatsApp, justo la fricción que Treno dice eliminar.
 
 El segundo duele mucho más. Y es el único que obliga a **leer** el calendario
 personal del entrenador, que es donde está todo el coste.
@@ -69,7 +69,7 @@ suficientes para que la verificación de Google merezca la pena.
 ### Opción A · Feed iCal de suscripción
 
 Publicamos una URL secreta con un `.ics` que el entrenador añade a su
-calendario. Sus citas de Coachify le aparecen ahí y se actualizan solas.
+calendario. Sus citas de Treno le aparecen ahí y se actualizan solas.
 
 | Dimensión               | Valoración                                              |
 | ----------------------- | ------------------------------------------------------- |
@@ -143,13 +143,13 @@ Además de escribir, leemos su calendario para no ofrecer huecos ocupados.
   entrenadores tienen que reconectar cada semana.
 - El tope de 100 usuarios no se reinicia nunca: gastarlo en pruebas es
   hipotecar el proyecto de Google.
-- Leemos eventos ajenos a Coachify (médicos, familia). Eso cambia la política
+- Leemos eventos ajenos a Treno (médicos, familia). Eso cambia la política
   de privacidad, exige base legal y minimización, y es justo el tipo de dato
   que no queremos tocar mientras seamos dos.
 - Invertir 3-4 semanas antes de validar el precio de 29 € es apostar fuerte
   sobre una hipótesis sin comprobar.
 
-### Opción D · Bloqueos puntuales dentro de Coachify (complemento)
+### Opción D · Bloqueos puntuales dentro de Treno (complemento)
 
 La tabla `availability_slots` ya soporta `kind = 'specific'` con
 `specific_date`, pero **la interfaz solo crea huecos recurrentes**: el código

@@ -77,5 +77,5 @@ export const GET: RequestHandler = async ({ url, locals: { supabase, user } }) =
     filas
   );
 
-  return respuestaCSV(`coachify-cobros-${anio}.csv`, csv);
+  return respuestaCSV(`treno-cobros-${anio}.csv`, csv);
 };

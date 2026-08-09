@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head>
-  <title>Ejercicios · Coachify</title>
+  <title>Ejercicios · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

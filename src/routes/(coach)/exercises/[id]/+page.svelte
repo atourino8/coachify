@@ -35,7 +35,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.exercise.name} · Coachify</title>
+  <title>{data.exercise.name} · Treno</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto space-y-8">

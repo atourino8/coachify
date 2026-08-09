@@ -1,4 +1,4 @@
-# Coachify · BETA PRIVADA
+# Treno · BETA PRIVADA
 # Mientras estemos en pruebas, NO permitimos que ningún crawler indexe el sitio.
 #
 # EL DÍA DEL LANZAMIENTO, dos cambios (los dos, o no sirve de nada):

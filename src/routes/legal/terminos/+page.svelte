@@ -1,5 +1,5 @@
 <svelte:head>
-  <title>Términos · Coachify</title>
+  <title>Términos · Treno</title>
 </svelte:head>
 
 <div class="container-text py-20">
@@ -19,11 +19,11 @@
     </p>
 
     <h2 class="text-2xl font-semibold text-text">1. Aceptación</h2>
-    <p>Al usar Coachify aceptas estos términos. Si no estás de acuerdo, no uses el servicio.</p>
+    <p>Al usar Treno aceptas estos términos. Si no estás de acuerdo, no uses el servicio.</p>
 
     <h2 class="text-2xl font-semibold text-text">2. Servicio</h2>
     <p>
-      Coachify es una herramienta SaaS para entrenadores personales. Nos esforzamos por mantener el
+      Treno es una herramienta SaaS para entrenadores personales. Nos esforzamos por mantener el
       servicio disponible pero no garantizamos uptime del 100%.
     </p>
 
@@ -32,8 +32,8 @@
 
     <h2 class="text-2xl font-semibold text-text">4. Contenido</h2>
     <p>
-      Los vídeos, rutinas y datos que subes a Coachify son de tu propiedad. No los usaremos para
-      nada que no sea prestarte el servicio.
+      Los vídeos, rutinas y datos que subes a Treno son de tu propiedad. No los usaremos para nada
+      que no sea prestarte el servicio.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">5. Pagos</h2>
@@ -44,9 +44,8 @@
 
     <h2 class="text-2xl font-semibold text-text">6. Contacto</h2>
     <p>
-      Para cualquier consulta: <a
-        href="mailto:hola@coachify.app"
-        class="text-primary hover:underline">hola@coachify.app</a
+      Para cualquier consulta: <a href="mailto:hola@treno.app" class="text-primary hover:underline"
+        >hola@treno.app</a
       >
     </p>
   </div>

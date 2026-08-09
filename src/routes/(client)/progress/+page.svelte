@@ -29,7 +29,7 @@
 </script>
 
 <svelte:head>
-  <title>Progreso · Coachify</title>
+  <title>Progreso · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

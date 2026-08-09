@@ -26,7 +26,7 @@
 </script>
 
 <svelte:head>
-  <title>Nuevo ejercicio · Coachify</title>
+  <title>Nuevo ejercicio · Treno</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto space-y-8">

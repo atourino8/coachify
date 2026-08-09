@@ -33,7 +33,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.group.name} · Coachify</title>
+  <title>{data.group.name} · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

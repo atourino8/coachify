@@ -1,4 +1,4 @@
-// Tipos de la base de datos de Coachify (manualmente).
+// Tipos de la base de datos de Treno (manualmente).
 // En el futuro se generará con `supabase gen types typescript`.
 
 export type Role = 'coach' | 'client';

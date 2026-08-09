@@ -1,4 +1,4 @@
-# Principios de diseño · Coachify
+# Principios de diseño · Treno
 
 Documento de obligado cumplimiento al construir o modificar interfaz en este
 proyecto.
@@ -71,7 +71,7 @@ La primera dirección de este proyecto fue "cuaderno de entrenador": fondo
 papel, tinta y una serif con carácter. Nació de una intención correcta —salir
 del oscuro con neón del sector— y **estaba mal por dos motivos**:
 
-1. **Contradecía la promesa del producto.** Coachify se vende como "deja el
+1. **Contradecía la promesa del producto.** Treno se vende como "deja el
    Excel, el WhatsApp y la libreta". Diseñar algo que parece una libreta le
    recuerda al entrenador exactamente lo que quiere abandonar.
 2. **El feedback de entrenadores reales fue unánime:** el blanco chirriaba, en
@@ -223,7 +223,7 @@ plantilla.
    significado, no identidad.
 3. **Dentro es su espacio; fuera somos nosotros.** La aplicación va con su
    marca, incluida la pantalla donde su cliente estrena la contraseña. La
-   landing y el login genérico siguen siendo de Coachify.
+   landing y el login genérico siguen siendo de Treno.
 
 Efecto secundario valioso: si el color fuerte lo pone cada entrenador,
 **dos instalaciones no pueden parecerse**. Es una defensa estructural contra

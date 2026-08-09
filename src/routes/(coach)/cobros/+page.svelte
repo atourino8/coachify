@@ -23,7 +23,7 @@
 </script>
 
 <svelte:head>
-  <title>Cobros · Coachify</title>
+  <title>Cobros · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

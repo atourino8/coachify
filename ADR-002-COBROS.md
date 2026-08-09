@@ -204,7 +204,7 @@ el primer día, nunca como subida sorpresa.
 
 **Se vuelve más difícil**
 
-- El soporte. Cuando un cobro falle, el entrenador **llamará a Coachify, no a
+- El soporte. Cuando un cobro falle, el entrenador **llamará a Treno, no a
   Stripe**. Es exactamente el coste que `NEGOCIO.md` §7 identifica como el
   único que escala mal con un fundador solo.
 - Los términos de servicio: pasan a describir una relación de tres partes.

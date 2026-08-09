@@ -110,7 +110,7 @@ por ahora.
 3. **FatSecret Platform API** — tiene programa de socios accesible, a
    diferencia de MFP.
 4. **Apple Health / Health Connect** — MyFitnessPal sí vuelca ahí. Pero leer de
-   esas fuentes exige app nativa, y Coachify es web. Solo viable si algún día
+   esas fuentes exige app nativa, y Treno es web. Solo viable si algún día
    hay app móvil.
 
 **Decisión:** aparcado. Si un cliente lo pide, empezar por un campo simple de

@@ -72,7 +72,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.isToday ? 'Hoy' : dateLabel} · Coachify</title>
+  <title>{data.isToday ? 'Hoy' : dateLabel} · Treno</title>
 </svelte:head>
 
 <div class="space-y-6">

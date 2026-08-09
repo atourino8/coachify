@@ -57,7 +57,7 @@
 </script>
 
 <svelte:head>
-  <title>Inicio · Coachify</title>
+  <title>Inicio · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

@@ -161,7 +161,7 @@
 </script>
 
 <svelte:head>
-  <title>Agenda · Coachify</title>
+  <title>Agenda · Treno</title>
 </svelte:head>
 
 {#snippet rescheduleBlock(s: (typeof data.pending)[number])}

@@ -105,7 +105,7 @@
 </script>
 
 <svelte:head>
-  <title>{name || 'Entrenamiento'} · Coachify</title>
+  <title>{name || 'Entrenamiento'} · Treno</title>
 </svelte:head>
 
 <div class="space-y-6">

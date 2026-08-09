@@ -6,9 +6,9 @@
 
   let { data, children } = $props();
 
-  const TITULO = 'Coachify · La app de entrenamiento personal para coaches modernos';
+  const TITULO = 'Treno · La app de entrenamiento personal para coaches modernos';
   const DESCRIPCION =
-    'Coachify es la app para entrenadores personales: gestiona clientes, arma rutinas con vídeos propios y sigue el progreso. Sin Excel, sin WhatsApp, sin caos.';
+    'Treno es la app para entrenadores personales: gestiona clientes, arma rutinas con vídeos propios y sigue el progreso. Sin Excel, sin WhatsApp, sin caos.';
 
   const urlActual = $derived(page.url.origin + page.url.pathname);
   const imagenOG = $derived(page.url.origin + '/og-image.png');
@@ -34,7 +34,7 @@
        origen de la petición en vez de escribirla a mano: así funciona igual en
        local, en las previsualizaciones de Vercel y en el dominio final. -->
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Coachify" />
+  <meta property="og:site_name" content="Treno" />
   <meta property="og:locale" content="es_ES" />
   <meta property="og:title" content={TITULO} />
   <meta property="og:description" content={DESCRIPCION} />
@@ -44,7 +44,7 @@
   <meta property="og:image:height" content="630" />
   <meta
     property="og:image:alt"
-    content="Coachify · tus clientes, tus entrenos y tu agenda en un sitio"
+    content="Treno · tus clientes, tus entrenos y tu agenda en un sitio"
   />
 
   <meta name="twitter:card" content="summary_large_image" />

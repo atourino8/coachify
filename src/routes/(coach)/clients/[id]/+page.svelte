@@ -168,7 +168,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.client.full_name} · Coachify</title>
+  <title>{data.client.full_name} · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

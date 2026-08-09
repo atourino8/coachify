@@ -18,7 +18,7 @@
 </script>
 
 <svelte:head>
-  <title>Grupos · Coachify</title>
+  <title>Grupos · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

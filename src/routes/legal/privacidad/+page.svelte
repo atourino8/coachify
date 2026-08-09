@@ -1,5 +1,5 @@
 <svelte:head>
-  <title>Privacidad · Coachify</title>
+  <title>Privacidad · Treno</title>
 </svelte:head>
 
 <div class="container-text py-20">
@@ -22,7 +22,7 @@
     <p>
       [NOMBRE FISCAL] · [NIF] · [DOMICILIO].<br />
       Contacto:
-      <a href="mailto:hola@coachify.app" class="text-primary hover:underline">hola@coachify.app</a>.
+      <a href="mailto:hola@treno.app" class="text-primary hover:underline">hola@treno.app</a>.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">2. Datos que tratamos</h2>
@@ -51,7 +51,7 @@
     <ul class="list-disc pl-6 space-y-2">
       <li>
         <strong class="text-text">Base legal:</strong> tu <em>consentimiento explícito</em>, que se
-        te solicita antes de tu primer envío. Es voluntario: puedes usar Coachify sin subir ningún
+        te solicita antes de tu primer envío. Es voluntario: puedes usar Treno sin subir ningún
         vídeo.
       </li>
       <li>
@@ -110,7 +110,7 @@
 
     <h2 class="text-2xl font-semibold text-text">8. Menores</h2>
     <p>
-      Coachify no está dirigido a menores de 18 años. No se permite crear cuentas ni enviar vídeos a
+      Treno no está dirigido a menores de 18 años. No se permite crear cuentas ni enviar vídeos a
       menores sin el consentimiento verificable de su padre, madre o tutor legal.
     </p>
 
@@ -118,7 +118,7 @@
     <p>
       Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación y
       portabilidad, así como retirar tu consentimiento en cualquier momento, escribiendo a
-      <a href="mailto:hola@coachify.app" class="text-primary hover:underline">hola@coachify.app</a>.
+      <a href="mailto:hola@treno.app" class="text-primary hover:underline">hola@treno.app</a>.
       También puedes reclamar ante la Agencia Española de Protección de Datos (<a
         href="https://www.aepd.es"
         target="_blank"

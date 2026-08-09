@@ -112,7 +112,7 @@ async function sendInvite(
   if (error) {
     let message = error.message;
     if (message.includes('already')) {
-      message = 'Este email ya tiene cuenta en Coachify. Pídele que entre y se vincule a ti.';
+      message = 'Este email ya tiene cuenta en Treno. Pídele que entre y se vincule a ti.';
     }
     return { error: message };
   }

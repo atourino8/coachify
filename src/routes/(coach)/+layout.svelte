@@ -42,9 +42,9 @@
         <div
           class="w-7 h-7 rounded-md bg-accent grid place-items-center text-white font-display font-bold text-sm"
         >
-          C
+          T
         </div>
-        <span class="font-display font-semibold tracking-tight text-lg">Coachify</span>
+        <span class="font-display font-semibold tracking-tight text-lg">Treno</span>
       </a>
 
       <div class="flex items-center gap-4 sm:gap-6 text-sm">

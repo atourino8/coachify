@@ -40,9 +40,9 @@
           class="w-8 h-8 rounded-md bg-accent grid place-items-center
                  text-white font-display font-bold text-sm"
         >
-          C
+          T
         </div>
-        <span class="font-display font-semibold tracking-tight">Coachify</span>
+        <span class="font-display font-semibold tracking-tight">Treno</span>
       </a>
 
       <div class="flex items-center gap-4 sm:gap-6 text-sm">

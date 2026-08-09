@@ -22,7 +22,7 @@
   const subtitle = $derived(
     isRecovery
       ? 'Define una contraseña nueva para tu cuenta.'
-      : 'Define una contraseña para entrar a Coachify cada vez que quieras.'
+      : 'Define una contraseña para entrar a Treno cada vez que quieras.'
   );
   const submitLabel = $derived(isRecovery ? 'Guardar contraseña' : 'Definir contraseña y entrar');
 
@@ -86,7 +86,7 @@
 </script>
 
 <svelte:head>
-  <title>Define tu contraseña · Coachify</title>
+  <title>Define tu contraseña · Treno</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-6">
@@ -96,7 +96,7 @@
         class="w-14 h-14 mx-auto mb-6 rounded-xl bg-accent
                grid place-items-center text-white font-display font-bold text-2xl"
       >
-        C
+        T
       </div>
       <h1 class="text-3xl font-display font-semibold mb-2">{title}</h1>
       <p class="text-text-mute">{subtitle}</p>

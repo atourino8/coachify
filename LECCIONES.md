@@ -6,7 +6,7 @@ en futuros proyectos. Dos partes: **técnica** (cómo construir) y **comercial**
 
 Proyectos cubiertos:
 - **Can Ficus** (web estática + Decap CMS, junio 2026).
-- **Coachify** (SaaS B2B con SvelteKit + Supabase + Vercel, junio 2026).
+- **Treno** (SaaS B2B con SvelteKit + Supabase + Vercel, junio 2026).
 
 Última revisión: 24 de junio de 2026.
 
@@ -343,11 +343,11 @@ Cosas que merecería la pena codificar en plantillas reutilizables algún día:
 
 ## PARTE 6 · LECCIONES DE COACHIFY (Tier 2 — apps con backend)
 
-Coachify es SvelteKit + Supabase + Vercel. Las lecciones aquí solo aplican a
+Treno es SvelteKit + Supabase + Vercel. Las lecciones aquí solo aplican a
 apps con autenticación real, base de datos y deploy serverless. Para webs
 estáticas, las de Can Ficus siguen siendo la guía.
 
-### 6.1 Errores cometidos en Coachify
+### 6.1 Errores cometidos en Treno
 
 | Error | Síntoma | Causa raíz | Cómo evitarlo |
 | --- | --- | --- | --- |
@@ -359,7 +359,7 @@ estáticas, las de Can Ficus siguen siendo la guía.
 | **Vercel sirve último deploy verde como Production** | Producción muestra versión muy antigua aunque hay commits nuevos | Si todos los deploys recientes han fallado, Vercel mantiene activo el último verde, que puede ser de hace semanas. | Verificar **qué commit está en Production**, no asumir que es el último push. Si Production está obsoleto: arreglar errores, redeploy, "Promote to Production" si hace falta. |
 | **Typo en nombre de env var** | App buildea verde pero falla silenciosamente en runtime | `PUBASE_SUPABASE_ANON_KEY` en lugar de `PUBLIC_...`. SvelteKit con `dynamic` no rompe el build si falta, la var queda como undefined y el cliente Supabase no conecta. | Copy-paste de los nombres desde el `.env.local` al panel de Vercel. **Nunca escribirlos a mano**. Y verificar el listado tras añadirlos. |
 | **Recursión infinita en RLS de profiles** | Login devuelve `42P17 infinite recursion detected in policy for relation "profiles"` | Una policy de `profiles` hacía subquery a `profiles` → bucle. Postgres evalúa todas las policies SELECT, basta con que UNA recurra para que ROMPA toda la query. | Usar **helper functions con `SECURITY DEFINER`** (`current_user_coach_id()`) que leen profiles bypassando RLS. Las policies llaman a la función en vez de subquery directo. |
-| **Trigger no leía coach_id desde metadata** | Al invitar cliente con `inviteUserByEmail({ data: { coach_id } })`, el profile creado tenía `coach_id = NULL` | El trigger `handle_new_user` solo leía `role` y `full_name` de `raw_user_meta_data`. | Ampliar el trigger para leer también `coach_id`. Migración 0004 en Coachify. |
+| **Trigger no leía coach_id desde metadata** | Al invitar cliente con `inviteUserByEmail({ data: { coach_id } })`, el profile creado tenía `coach_id = NULL` | El trigger `handle_new_user` solo leía `role` y `full_name` de `raw_user_meta_data`. | Ampliar el trigger para leer también `coach_id`. Migración 0004 en Treno. |
 | **Cliente invitado entra sin contraseña y queda atascado** | Tras aceptar email de invitación va directo al dashboard. Si cierra sesión y vuelve, "credenciales incorrectas" porque nunca puso password. | Magic link de invite establece sesión pero no contraseña. Asumí que Supabase forzaría el flujo. | Crear página intermedia `/set-password`. En la action `invite`, pasar `?invite=1` en el `redirectTo`. El callback detecta ese flag y redirige a `/set-password` antes del dashboard. |
 | **Callback server-side no veía tokens de invitación** | Tras aceptar link de invite: `/login?error=missing-code#access_token=...` | Supabase usa DOS flujos distintos: PKCE (signup) manda `?code=` en query, implicit (invitaciones) manda `#access_token=` en el HASH. Los hashes nunca llegan al servidor. Mi callback server-side solo veía PKCE. | Convertir el callback a **client-side** (`+page.svelte` en vez de `+server.ts`). El cliente browser ve tanto query como hash, y con `detectSessionInUrl: true` (default en `createBrowserClient`) procesa automáticamente el hash. |
 | **Rate limit en emails de Supabase free** | "email rate limit exceeded" al invitar al 3º o 4º cliente | Free tier permite ~4 emails/hora. Crítico durante desarrollo (testeas re-invitando). | Para desarrollo: usar emails reales que tengas a mano (no quemar inboxes). Para producción: configurar **SMTP propio** (Resend, AWS SES, Mailgun) en Supabase → Authentication → SMTP Settings. Quita el rate limit. |

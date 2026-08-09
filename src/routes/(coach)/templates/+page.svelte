@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-  <title>Entrenamientos · Coachify</title>
+  <title>Entrenamientos · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

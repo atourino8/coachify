@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Landing pública de Coachify.
+  // Landing pública de Treno.
   //
   // DIRECCIÓN (ver DISENO.md): la landing habla el idioma de la herramienta,
   // no el de las landings. Filas densas, líneas finas y números grandes: lo
@@ -24,15 +24,15 @@
         {
           '@type': 'Organization',
           '@id': page.url.origin + '/#organizacion',
-          name: 'Coachify',
+          name: 'Treno',
           url: page.url.origin,
           logo: page.url.origin + '/favicon.svg',
-          email: 'hola@coachify.app',
+          email: 'hola@treno.app',
           areaServed: 'ES'
         },
         {
           '@type': 'SoftwareApplication',
-          name: 'Coachify',
+          name: 'Treno',
           applicationCategory: 'HealthApplication',
           operatingSystem: 'Web',
           inLanguage: 'es-ES',
@@ -92,9 +92,9 @@
   <div class="container-narrow flex items-center justify-between py-3.5">
     <a href="/" class="flex items-center gap-2.5">
       <div class="w-7 h-7 rounded-md bg-accent grid place-items-center text-bg font-bold text-sm">
-        C
+        T
       </div>
-      <span class="font-semibold tracking-tight">Coachify</span>
+      <span class="font-semibold tracking-tight">Treno</span>
     </a>
 
     <nav class="flex items-center gap-5 sm:gap-7 text-sm">
@@ -381,15 +381,15 @@
   <div class="container-narrow flex flex-col sm:flex-row items-center justify-between gap-6">
     <div class="flex items-center gap-2">
       <div class="w-6 h-6 rounded-md bg-accent grid place-items-center text-bg font-bold text-2xs">
-        C
+        T
       </div>
-      <span>© {new Date().getFullYear()} Coachify</span>
+      <span>© {new Date().getFullYear()} Treno</span>
     </div>
     <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
       <a href="/legal/terminos" class="hover:text-text transition-colors">Términos</a>
       <a href="/legal/privacidad" class="hover:text-text transition-colors">Privacidad</a>
       <a href="/legal/cookies" class="hover:text-text transition-colors">Cookies</a>
-      <a href="mailto:hola@coachify.app" class="hover:text-text transition-colors">Contacto</a>
+      <a href="mailto:hola@treno.app" class="hover:text-text transition-colors">Contacto</a>
     </nav>
   </div>
 </footer>

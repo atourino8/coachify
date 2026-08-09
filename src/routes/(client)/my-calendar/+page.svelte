@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-  <title>Citas · Coachify</title>
+  <title>Citas · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">

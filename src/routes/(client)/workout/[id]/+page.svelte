@@ -153,7 +153,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.item.exercise.name} · Coachify</title>
+  <title>{data.item.exercise.name} · Treno</title>
 </svelte:head>
 
 <div class="space-y-6">

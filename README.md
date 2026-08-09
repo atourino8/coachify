@@ -1,4 +1,4 @@
-# Coachify
+# Treno
 
 SaaS B2B para entrenadores personales. Construido con **SvelteKit** + **Supabase**
 + **Cloudinary**. Hosting en **Vercel**.
@@ -100,7 +100,7 @@ fases. **`.env.local` NUNCA se commitea** (está en `.gitignore`).
 ## Despliegue
 
 Push a `main` → Vercel desplegará automáticamente. La URL del proyecto será del tipo
-`coachify-xxx.vercel.app` hasta que se conecte un dominio propio.
+`treno-xxx.vercel.app` hasta que se conecte un dominio propio.
 
 ---
 

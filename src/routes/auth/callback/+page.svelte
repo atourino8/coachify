@@ -110,7 +110,7 @@
 </script>
 
 <svelte:head>
-  <title>Procesando · Coachify</title>
+  <title>Procesando · Treno</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-6">
@@ -118,7 +118,7 @@
     <div
       class="w-16 h-16 mx-auto rounded-xl bg-accent grid place-items-center text-white font-display font-bold text-2xl animate-pulse"
     >
-      C
+      T
     </div>
     <p class="text-text-mute">{status}</p>
     <div class="flex justify-center gap-1.5">

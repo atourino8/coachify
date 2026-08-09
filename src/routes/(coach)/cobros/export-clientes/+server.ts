@@ -121,5 +121,5 @@ export const GET: RequestHandler = async ({ locals: { supabase, user } }) => {
     filas
   );
 
-  return respuestaCSV(`coachify-clientes-${hoy}.csv`, csv);
+  return respuestaCSV(`treno-clientes-${hoy}.csv`, csv);
 };

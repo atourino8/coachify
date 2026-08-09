@@ -65,7 +65,7 @@
 </script>
 
 <svelte:head>
-  <title>Entrar · Coachify</title>
+  <title>Entrar · Treno</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-6">
@@ -75,10 +75,10 @@
         class="w-14 h-14 mx-auto mb-6 rounded-xl bg-accent
                grid place-items-center text-white font-display font-bold text-2xl"
       >
-        C
+        T
       </div>
       <h1 class="text-3xl font-display font-semibold mb-2">Bienvenido de nuevo</h1>
-      <p class="text-text-mute">Entra a tu cuenta de Coachify</p>
+      <p class="text-text-mute">Entra a tu cuenta de Treno</p>
     </div>
 
     <form onsubmit={handleSubmit} class="card space-y-5">

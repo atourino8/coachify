@@ -54,7 +54,7 @@
 </script>
 
 <svelte:head>
-  <title>Disponibilidad · Coachify</title>
+  <title>Disponibilidad · Treno</title>
 </svelte:head>
 
 <div class="space-y-8 max-w-2xl">

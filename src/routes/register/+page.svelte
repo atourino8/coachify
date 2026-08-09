@@ -57,7 +57,7 @@
 </script>
 
 <svelte:head>
-  <title>Crear cuenta · Coachify</title>
+  <title>Crear cuenta · Treno</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center p-6">
@@ -67,7 +67,7 @@
         class="w-14 h-14 mx-auto mb-6 rounded-xl bg-accent
                grid place-items-center text-white font-display font-bold text-2xl"
       >
-        C
+        T
       </div>
       <h1 class="text-3xl font-display font-semibold mb-2">Empieza gratis</h1>
       <p class="text-text-mute">14 días Pro de regalo. Sin tarjeta.</p>

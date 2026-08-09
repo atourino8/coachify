@@ -57,7 +57,7 @@
 </script>
 
 <svelte:head>
-  <title>Clientes · Coachify</title>
+  <title>Clientes · Treno</title>
 </svelte:head>
 
 <svelte:window

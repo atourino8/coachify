@@ -1,8 +1,8 @@
 <svelte:head>
-  <title>Cookies · Coachify</title>
+  <title>Cookies · Treno</title>
   <meta
     name="description"
-    content="Coachify solo usa cookies estrictamente necesarias para mantener la sesión iniciada. Sin publicidad ni analítica de terceros."
+    content="Treno solo usa cookies estrictamente necesarias para mantener la sesión iniciada. Sin publicidad ni analítica de terceros."
   />
 </svelte:head>
 
@@ -24,7 +24,7 @@
 
     <h2 class="text-2xl font-semibold text-text">1. Resumen</h2>
     <p>
-      Coachify usa <strong class="text-text">únicamente cookies estrictamente necesarias</strong>
+      Treno usa <strong class="text-text">únicamente cookies estrictamente necesarias</strong>
       para que puedas iniciar sesión y seguir dentro mientras navegas. No usamos cookies de publicidad,
       ni de analítica, ni de redes sociales, ni compartimos nada con terceros con fines comerciales.
     </p>
@@ -96,8 +96,8 @@
     <h2 class="text-2xl font-semibold text-text">8. Contacto</h2>
     <p>
       Para cualquier duda sobre esta política:
-      <a href="mailto:hola@coachify.app" class="text-accent hover:underline">hola@coachify.app</a>.
-      Puedes consultar también nuestra
+      <a href="mailto:hola@treno.app" class="text-accent hover:underline">hola@treno.app</a>. Puedes
+      consultar también nuestra
       <a href="/legal/privacidad" class="text-accent hover:underline">Política de Privacidad</a>.
     </p>
   </div>

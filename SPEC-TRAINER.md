@@ -5,7 +5,7 @@ de entrenamiento con vídeos propios, agendar sesiones presenciales/online y
 seguir el progreso del cliente.
 
 > **Nombre provisional**: `[NOMBRE_APP]`. Candidatos en discusión: Liftify,
-> Coachify, Tempo, Stride. Pendiente verificar disponibilidad de dominio.
+> Treno, Tempo, Stride. Pendiente verificar disponibilidad de dominio.
 
 ---
 
@@ -947,7 +947,7 @@ single-tenant vs multi-tenant.
 
 ### 16.1 Decisión
 
-Coachify se construye y se mantiene como **SaaS multi-tenant** (todos los
+Treno se construye y se mantiene como **SaaS multi-tenant** (todos los
 coaches en una única instancia de Supabase + Vercel, aislamiento por RLS).
 Es el modelo correcto para captar coaches individuales pagando 19 €/mes.
 
@@ -993,7 +993,7 @@ Enterprise NO es un proyecto distinto. Es **el mismo código desplegado en
 otra cuenta Supabase + otro Vercel** con env vars distintas. La arquitectura
 actual (multi-tenant) ya lo permite trivialmente:
 
-- Repo: el mismo `coachify` (o un fork si se necesita custom feature).
+- Repo: el mismo `treno` (o un fork si se necesita custom feature).
 - Supabase: cuenta nueva, ejecutar las migraciones SQL en orden.
 - Vercel: proyecto nuevo apuntando a ese Supabase, dominio propio del cliente.
 - CI: cuando arregles un bug en el repo, GitHub Actions deploya a todos los
@@ -1033,7 +1033,7 @@ configuración + onboarding personal. Se cobra como **setup fee** de
 - [ ] Migraciones SQL siempre versionadas y reproducibles (ya hecho).
 - [ ] Componentes del frontend con paleta vía CSS variables (ya hecho) —
   el día de Enterprise, el cliente pasa 5 colores y los inyectamos.
-- [ ] Mantener cualquier referencia a "Coachify" como variable o constante,
+- [ ] Mantener cualquier referencia a "Treno" como variable o constante,
   no hardcodear (revisar antes de v3).
 
 ## 17. Epico futuro - Marketplace de entrenadores (a evaluar)
@@ -1048,7 +1048,7 @@ filtros, quiza mapa); auto-registro de cliente y estado "cliente sin coach";
 contacto/solicitud de vinculacion cliente->coach; moderacion; implicaciones
 legales nuevas.
 
-Decision pendiente antes de construir: definir si Coachify es herramienta B2B
+Decision pendiente antes de construir: definir si Treno es herramienta B2B
 (el coach con SUS clientes, actual) o marketplace B2C (clientes buscan coach).
 Son productos distintos. No mezclar sin decidirlo.
 

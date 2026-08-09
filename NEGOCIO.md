@@ -1,4 +1,4 @@
-# Coachify · Modelo de negocio
+# Treno · Modelo de negocio
 
 Documento de trabajo. Decisiones tomadas, escenarios con números y lo que
 queda por validar.
@@ -15,7 +15,7 @@ No el coach 100% online (ese ya tiene a Dupla y a los americanos).
 se cae y el entrenador pierde ese ingreso. Viajes, niños, trabajo, una lesión
 leve. Es una fuga constante e invisible.
 
-**Lo que hace Coachify:** convierte la cancelación en continuidad. El cliente
+**Lo que hace Treno:** convierte la cancelación en continuidad. El cliente
 no va, pero tiene su entreno en casa, lo registra y manda su vídeo de técnica.
 El vínculo no se rompe y el entrenador no pierde el mes.
 
@@ -25,7 +25,7 @@ ingresos y le sube el valor de cada cliente. No le vendemos "gestiona rutinas",
 le vendemos previsibilidad en su facturación.
 
 > **Frase de venta:** *Una sola sesión recuperada al mes ya paga la
-> suscripción.* A 40-50 € la sesión, Coachify a 29 €/mes se amortiza con
+> suscripción.* A 40-50 € la sesión, Treno a 29 €/mes se amortiza con
 > menos de una cancelación rescatada.
 
 ---
@@ -150,7 +150,7 @@ Preguntas concretas para las primeras 10 conversaciones:
 
 ## 8. Decisiones pendientes
 
-- [ ] Nombre definitivo (Coachify tiene conflicto; Entrenify es el favorito)
+- [ ] Nombre definitivo (Treno tiene conflicto; Entrenify es el favorito)
 - [ ] Confirmar precio 29 € tras las primeras conversaciones
 - [ ] Canal de captación principal para los primeros 25
 - [ ] Si el plan Studio se lanza ya o se deja para más adelante
