@@ -2,6 +2,7 @@
 // huecos que su coach ha publicado (availability_slots).
 
 import { fail, redirect } from '@sveltejs/kit';
+import { accesoDeCliente } from '$lib/access.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type AvailabilitySlot = {
@@ -155,6 +156,20 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
 export const actions: Actions = {
   request: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
+
+    // Pedir hueco es lo ÚNICO que se cierra aquí. Ver sus citas y cancelarlas
+    // sigue abierto aunque esté en pausa: cerrarle eso no consigue que pague,
+    // consigue que se plante en una sesión que ya no tocaba o que deje
+    // colgado al entrenador sin poder avisar.
+    //
+    // Reservar es distinto: es ocupar una hora de la agenda del entrenador,
+    // que es exactamente lo que está pendiente de pagar.
+    if ((await accesoDeCliente(user.id)).pausado) {
+      return fail(403, {
+        error: 'Tu acceso está en pausa. Habla con tu entrenador para volver a pedir cita.'
+      });
+    }
+
     // En actions no hay parent(); leemos el coach_id del perfil directamente.
     const { data: profile } = await supabase
       .from('profiles')

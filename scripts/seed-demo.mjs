@@ -138,7 +138,10 @@ const DEMO_CLIENTS = [
       level: 'principiante',
       height_cm: 162,
       fee_amount: 45,
-      paid_until: day(-11) // vencido hace 11 días
+      // Vencida hace 11 días: pasados los 7 de gracia, así que es la única
+      // que queda EN PAUSA si activas el bloqueo desde Cobros. Entra con su
+      // usuario para ver la pantalla que le sale.
+      paid_until: day(-11)
     }
   },
   {
@@ -150,7 +153,10 @@ const DEMO_CLIENTS = [
       level: 'intermedio',
       height_cm: 175,
       fee_amount: 45,
-      paid_until: day(15)
+      // Vencida hace 3 días: DENTRO de los 7 de gracia. Es el caso que hay que
+      // ver antes de activar nada, porque enseña el aviso amarillo con la
+      // cuenta atrás y demuestra que a este NO se le corta todavía.
+      paid_until: day(-3)
     }
   },
   {
@@ -844,6 +850,14 @@ async function main() {
   log('   · Un cobro de Nadia a medias, para ver un importe distinto de la cuota');
   log('   · Descarga los dos CSV y ábrelos en Excel: hay una nota con punto y');
   log('     coma dentro, que es justo lo que rompe estos ficheros mal hechos');
+  log('');
+  log('  ACCESO DE QUIEN NO PAGA (Cobros, abajo del todo)');
+  log('   · Está apagado. Antes de activarlo, mira la lista de a quién afecta');
+  log('   · Nadia (vencida hace 11 días) es la única que se pausaría');
+  log('   · Iván (hace 3) está en gracia: ve el aviso amarillo, no se le corta');
+  log('   · Sofía no tiene cuota y Ana/Beatriz/Diana son del grupo: nunca se pausan');
+  log('   · Entra como Nadia con el bloqueo activado y prueba /today y /progress:');
+  log('     los entrenos se cierran, su historial NO');
   log('');
   log('  MARCA');
   log('   · Mi marca → tu color es un azul marino que NO se lee sobre el fondo:');

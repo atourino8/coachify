@@ -4,10 +4,11 @@
 // Existe porque `client_info.paid_until` es un estado y la contabilidad
 // necesita hechos. Todo lo de aquí sale de `client_payments` (migración 0013).
 
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { todayISOLocal } from '$lib/week';
+import { accesoDelCliente, DIAS_DE_GRACIA } from '$lib/access';
 import type { PaymentMethod } from '$lib/supabase/types';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
 type PagoRow = {
   id: string;
@@ -37,8 +38,17 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
       .lte('paid_on', `${anio}-12-31`)
       .order('paid_on', { ascending: false }),
     supabase.from('profiles').select('id, full_name').eq('coach_id', user.id).eq('archived', false),
-    supabase.from('client_info').select('client_id, fee_amount').eq('coach_id', user.id)
+    supabase.from('client_info').select('client_id, fee_amount, paid_until').eq('coach_id', user.id)
   ]);
+
+  // Su propio interruptor de pausa por impago. Se lee aparte para que, si la
+  // migración 0015 no está aplicada, falle solo esta consulta y no la página
+  // de cobros entera.
+  const { data: perfilCoach } = await supabase
+    .from('profiles')
+    .select('block_on_overdue')
+    .eq('id', user.id)
+    .maybeSingle();
 
   const pagos = (pagosRaw ?? []) as PagoRow[];
   const clientes = (clientesRaw ?? []) as { id: string; full_name: string | null }[];
@@ -60,7 +70,11 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
 
   // Previsión: lo que entraría este mes si todos pagasen su cuota. No es una
   // promesa, es el techo; sirve para comparar contra lo cobrado de verdad.
-  const cuotas = (cuotasRaw ?? []) as { client_id: string; fee_amount: number | null }[];
+  const cuotas = (cuotasRaw ?? []) as {
+    client_id: string;
+    fee_amount: number | null;
+    paid_until: string | null;
+  }[];
   const activos = new Set(clientes.map((c) => c.id));
   const prevision = cuotas
     .filter((c) => activos.has(c.client_id) && c.fee_amount !== null)
@@ -68,6 +82,25 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
 
   const mesActual = hoy.slice(0, 7);
   const cobradoEsteMes = porMes.get(mesActual)?.total ?? 0;
+
+  // A quién afecta la pausa HOY, y a quién afectaría si la activara.
+  //
+  // Se calcula siempre, esté o no encendida, porque activar esto a ciegas es
+  // la peor forma de usarlo: el entrenador tiene que ver los nombres antes de
+  // darle al interruptor, no enterarse cuando alguien le escriba enfadado.
+  //
+  // Se usa la MISMA función que decide el corte de verdad. Si aquí se
+  // recalculara con otro criterio, la lista diría una cosa y la aplicación
+  // haría otra, que es la manera de perder la confianza en la pantalla.
+  const afectados = cuotas
+    .filter((c) => activos.has(c.client_id))
+    .map((c) => ({
+      nombre: nombrePorId.get(c.client_id) ?? 'Cliente',
+      paidUntil: c.paid_until,
+      acceso: accesoDelCliente(true, c, hoy)
+    }))
+    .filter((c) => c.acceso.pausado)
+    .sort((a, b) => (a.paidUntil ?? '').localeCompare(b.paidUntil ?? ''));
 
   return {
     anio,
@@ -81,6 +114,25 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
       ...p,
       amount: Number(p.amount),
       cliente: nombrePorId.get(p.client_id) ?? 'Cliente'
-    }))
+    })),
+    bloqueoActivado: perfilCoach?.block_on_overdue ?? false,
+    afectados,
+    diasDeGracia: DIAS_DE_GRACIA
   };
+};
+
+export const actions: Actions = {
+  // Activar o desactivar la pausa por impago para todos sus clientes.
+  bloqueo: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const activar = (await request.formData()).get('activar') === 'si';
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ block_on_overdue: activar } as never)
+      .eq('id', user.id);
+
+    if (error) return fail(500, { error: error.message });
+    return { success: true, bloqueo: activar };
+  }
 };

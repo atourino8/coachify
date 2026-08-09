@@ -74,6 +74,29 @@
     </div>
   </header>
 
+  <!--
+    Aviso durante los siete días de gracia. Va aquí y no en una sola pantalla
+    porque el objetivo es que no le pille por sorpresa: si el corte llega sin
+    que lo haya visto venir, el cliente se enfada con la aplicación y con su
+    entrenador a la vez.
+
+    Sin importes y sin la palabra "deuda". Puede que ya haya pagado y que el
+    entrenador no lo haya apuntado todavía, que con contabilidad manual es el
+    caso más probable.
+  -->
+  {#if data.acceso.estado === 'aviso'}
+    <div class="container-narrow pt-4">
+      <p
+        class="text-sm text-warning bg-warning/5 border border-warning/25 rounded-md p-3"
+        role="status"
+      >
+        Tienes una cuota pendiente de confirmar. Si ya la has pagado, avisa a {data.marca.nombre};
+        si no, el acceso a tus entrenos se pausará en {data.acceso.diasRestantes}
+        {data.acceso.diasRestantes === 1 ? 'día' : 'días'}.
+      </p>
+    </div>
+  {/if}
+
   <main class="container-narrow py-6 sm:py-10">
     {@render children()}
   </main>

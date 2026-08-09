@@ -257,6 +257,32 @@ Va con las preguntas de la beta cerrada de `NEGOCIO.md` §6:
 
 ---
 
+## Anexo · Pausar el acceso a quien no ha pagado (agosto de 2026)
+
+Implementado como **interruptor del entrenador, apagado de fábrica**, con siete
+días de gracia. Se pausan sus entrenos y sus vídeos; su historial de progreso y
+sus citas siguen abiertos.
+
+El motivo de que no sea automático está en esta misma ADR: **hoy no hay
+pasarela**. `client_info.paid_until` es lo que el entrenador apuntó a mano, no
+un cobro verificado. Un bloqueo automático le cerraría la puerta a un cliente
+que ya pagó cada vez que el entrenador tarde dos días en registrarlo, y el que
+queda mal delante de su cliente es él. La gracia de siete días existe sobre
+todo por eso: no protege al moroso, protege al entrenador despistado.
+
+El historial se queda fuera del bloqueo por una razón distinta: son datos
+personales del cliente, y el derecho de acceso del RGPD no se puede
+condicionar a que pague una deuda con un tercero. La palanca está en el
+trabajo del entrenador, no en los pesos que ha levantado el cliente.
+
+**Qué revisar cuando llegue la fase 1 de esta ADR:** con el cobro por Stripe,
+`paid_until` deja de depender de que alguien lo apunte. Ahí tiene sentido
+plantear el bloqueo automático y reducir la gracia, y probablemente convertir
+esto en una preferencia con más matices (por cliente, o exención para grupos
+corporativos que facturan aparte).
+
+---
+
 ## Fuentes
 
 - [Risk and liability management with Connect · Stripe](https://docs.stripe.com/connect/risk-management)

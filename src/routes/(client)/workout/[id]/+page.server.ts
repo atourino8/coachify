@@ -2,6 +2,7 @@
 
 import { error, fail, redirect } from '@sveltejs/kit';
 import { BUCKET } from '$lib/technique';
+import { accesoDeCliente } from '$lib/access.server';
 import type {
   WorkoutItemWithWorkout,
   SetLog,
@@ -13,7 +14,12 @@ import type { PageServerLoad, Actions } from './$types';
 export const load: PageServerLoad = async ({ params, locals: { supabase, user }, parent }) => {
   if (!user) redirect(303, '/login');
 
-  const { profile } = await parent();
+  const { profile, acceso } = await parent();
+
+  // Se corta antes de firmar ninguna URL de vídeo. Firmar y luego no pintar el
+  // reproductor no serviría de nada: la URL firmada vale una hora y viaja en
+  // el HTML.
+  if (acceso.pausado) redirect(303, '/pausa');
 
   const { data: itemRaw, error: itemError } = await supabase
     .from('workout_items')
@@ -68,6 +74,14 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user },
 export const actions: Actions = {
   logSet: async ({ request, params, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
+
+    // El mismo corte que en la `load`, repetido porque una acción no pasa por
+    // el layout: un POST directo a ?/logSet llega aquí sin haber visto la
+    // pantalla de pausa. Sin esto, el bloqueo sería solo visual.
+    if ((await accesoDeCliente(user.id)).pausado) {
+      return fail(403, { error: 'Tu acceso está en pausa. Habla con tu entrenador.' });
+    }
+
     const formData = await request.formData();
     const set_number = Number(formData.get('set_number'));
     const reps_done = formData.get('reps_done') ? Number(formData.get('reps_done')) : null;
@@ -126,6 +140,15 @@ export const actions: Actions = {
   // explícitamente para no dejar huérfanos ocupando espacio.
   deleteVideo: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
+
+    // Borrar es destructivo e irreversible: se lleva el archivo del bucket.
+    // Estando en pausa el cliente no debería poder llegar aquí por la
+    // interfaz, así que una petición que sí llegue es exactamente el caso que
+    // no queremos ejecutar a ciegas.
+    if ((await accesoDeCliente(user.id)).pausado) {
+      return fail(403, { error: 'Tu acceso está en pausa. Habla con tu entrenador.' });
+    }
+
     const videoId = (await request.formData()).get('video_id') as string;
     if (!videoId) return fail(400, { error: 'Falta el vídeo.' });
 

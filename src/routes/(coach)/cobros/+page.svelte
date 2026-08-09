@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { enhance } from '$app/forms';
   import { PAYMENT_METHOD_LABELS } from '$lib/supabase/types';
 
-  let { data } = $props();
+  let { data, form } = $props();
 
   const eur = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
 
@@ -156,4 +157,74 @@
       </div>
     </section>
   {/if}
+
+  <!-- ============ Pausar el acceso a quien no ha pagado ============ -->
+  <section class="space-y-4 border-t border-line pt-8">
+    <div>
+      <h2 class="text-lg font-display font-semibold tracking-tight">Acceso de quien no paga</h2>
+      <p class="text-sm text-text-mute mt-1 max-w-2xl">
+        Si lo activas, el cliente con la cuota vencida más de {data.diasDeGracia} días deja de ver sus
+        entrenos y sus vídeos de técnica hasta que lo actualices. Su historial de progreso y sus citas
+        siguen abiertos: eso son datos suyos.
+      </p>
+    </div>
+
+    {#if form?.error}
+      <p
+        role="alert"
+        class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+      >
+        {form.error}
+      </p>
+    {/if}
+
+    <!--
+      La lista va ANTES del interruptor, y a propósito. Activar esto a ciegas
+      es la peor forma de usarlo: si el entrenador ve primero los nombres,
+      decide; si lo ve después, se entera cuando alguien le escriba enfadado.
+
+      Y son los nombres de verdad, calculados con la misma función que hace el
+      corte. Un resumen que dijera "2 clientes" no serviría: lo que hace parar
+      a alguien es leer un nombre que sabe que sí le pagó.
+    -->
+    {#if data.afectados.length > 0}
+      <div class="border border-warning/25 bg-warning/5 rounded-md p-4 space-y-3">
+        <p class="text-sm font-medium text-warning">
+          {#if data.bloqueoActivado}
+            Ahora mismo {data.afectados.length === 1 ? 'está en pausa' : 'están en pausa'}
+          {:else}
+            Al activarlo, {data.afectados.length === 1 ? 'se pausaría' : 'se pausarían'}
+          {/if}
+        </p>
+        <div>
+          {#each data.afectados as a, i (a.nombre + i)}
+            <div class="row text-sm {i === data.afectados.length - 1 ? 'border-b-0' : ''}">
+              <span class="flex-1 min-w-0 font-medium">{a.nombre}</span>
+              <span class="text-text-mute tabular-nums">
+                {a.paidUntil ? 'venció el ' + fecha(a.paidUntil) : 'sin fecha de pago'}
+              </span>
+            </div>
+          {/each}
+        </div>
+        <p class="text-2xs text-text-mute">
+          Si alguno de estos ya te ha pagado y no lo has apuntado, actualízalo antes de activarlo.
+        </p>
+      </div>
+    {:else}
+      <p class="text-sm text-text-mute">Ahora mismo no hay nadie a quien esto afectaría.</p>
+    {/if}
+
+    <form method="POST" action="?/bloqueo" use:enhance>
+      <input type="hidden" name="activar" value={data.bloqueoActivado ? 'no' : 'si'} />
+      <button type="submit" class={data.bloqueoActivado ? 'action-danger' : 'action-primary'}>
+        {data.bloqueoActivado ? 'Desactivar la pausa' : 'Activar la pausa'}
+      </button>
+    </form>
+
+    <p class="text-2xs text-text-mute max-w-2xl">
+      Está apagado de fábrica porque <code class="font-mono">pagado hasta</code> es lo que tú apuntas,
+      no un cobro verificado. Mientras no haya pasarela, un retraso tuyo en registrar un pago le cierra
+      la puerta a alguien que ya pagó, y quien queda mal delante de él eres tú.
+    </p>
+  </section>
 </div>

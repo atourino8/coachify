@@ -16,7 +16,13 @@ const DEFAULT_TZ = 'Europe/Madrid';
 export const load: PageServerLoad = async ({ url, locals: { supabase, user }, parent }) => {
   if (!user) redirect(303, '/login');
 
-  const { profile } = await parent();
+  const { profile, acceso } = await parent();
+
+  // Cuota vencida y su entrenador tiene activado el bloqueo: aquí no hay nada
+  // que enseñar. Se corta ANTES de consultar los entrenos, no escondiendo el
+  // botón después: una plantilla que no pinta algo sigue habiéndolo mandado.
+  if (acceso.pausado) redirect(303, '/pausa');
+
   const tz = profile?.timezone || DEFAULT_TZ;
   const today = todayISOInTZ(tz);
   const viewDate = url.searchParams.get('date') ?? today;
