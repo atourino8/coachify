@@ -90,6 +90,15 @@ body {
   min-height: 100vh;
 }
 
+/* Los desplegables nativos <details> los usamos con nuestra propia cabecera,
+   así que se quita el triangulito del navegador. `list-style: none` basta en
+   Chrome y Firefox; Safari necesita además su pseudoelemento propio, y sin
+   esta línea aparece un triángulo suelto solo en iPhone, que es justo donde
+   menos se prueba. */
+summary::-webkit-details-marker {
+  display: none;
+}
+
 /* Selección de texto con el acento de marca */
 ::selection {
   background-color: rgb(var(--c-accent) / 0.18);

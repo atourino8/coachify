@@ -126,35 +126,61 @@
       </div>
     </section>
 
-    <!-- Detalle -->
+    <!-- Detalle
+         Un año de cobros son cientos de filas, y a esta pantalla se viene a
+         ver el resumen, no a leerlas una a una: el detalle se abre cuando se
+         busca algo concreto.
+
+         Con <details> nativo y no con un estado en Svelte a propósito: abre y
+         cierra sin JavaScript, el navegador ya le da el rol y el teclado, y
+         Ctrl+F del navegador lo despliega solo al encontrar una coincidencia
+         dentro. Un desplegable hecho a mano con una variable pierde las tres
+         cosas. -->
     <section>
-      <h2 class="text-lg font-display font-semibold mb-2">Todos los cobros</h2>
-      <div class="border-t border-line">
-        {#each data.pagos as p (p.id)}
-          <div class="row">
-            <span class="w-16 text-sm text-text-mute tabular-nums flex-shrink-0">
-              {fecha(p.paid_on)}
-            </span>
-            <span class="flex-1 min-w-0">
-              <a
-                href="/clients/{p.client_id}"
-                class="font-medium hover:text-accent transition-colors"
+      <details class="group">
+        <summary
+          class="flex flex-wrap items-center gap-x-3 gap-y-1 cursor-pointer list-none
+                 border-b border-line pb-2 rounded-md
+                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <h2 class="text-lg font-display font-semibold">Todos los cobros</h2>
+          <span class="text-sm text-text-mute">
+            {data.pagos.length}
+            {data.pagos.length === 1 ? 'cobro' : 'cobros'} en {data.anio}
+          </span>
+          <span class="ml-auto text-sm text-accent">
+            <span class="group-open:hidden">Ver</span>
+            <span class="hidden group-open:inline">Ocultar</span>
+          </span>
+        </summary>
+
+        <div>
+          {#each data.pagos as p (p.id)}
+            <div class="row">
+              <span class="w-16 text-sm text-text-mute tabular-nums flex-shrink-0">
+                {fecha(p.paid_on)}
+              </span>
+              <span class="flex-1 min-w-0">
+                <a
+                  href="/clients/{p.client_id}"
+                  class="font-medium hover:text-accent transition-colors"
+                >
+                  {p.cliente}
+                </a>
+                {#if p.notes}
+                  <span class="text-2xs text-text-mute block">{p.notes}</span>
+                {/if}
+              </span>
+              <span class="pill-mute flex-shrink-0"
+                >{PAYMENT_METHOD_LABELS[p.method] ?? p.method}</span
               >
-                {p.cliente}
-              </a>
-              {#if p.notes}
-                <span class="text-2xs text-text-mute block">{p.notes}</span>
-              {/if}
-            </span>
-            <span class="pill-mute flex-shrink-0"
-              >{PAYMENT_METHOD_LABELS[p.method] ?? p.method}</span
-            >
-            <span class="text-base font-bold tabular-nums flex-shrink-0 w-20 text-right">
-              {eur.format(p.amount)}
-            </span>
-          </div>
-        {/each}
-      </div>
+              <span class="text-base font-bold tabular-nums flex-shrink-0 w-20 text-right">
+                {eur.format(p.amount)}
+              </span>
+            </div>
+          {/each}
+        </div>
+      </details>
     </section>
   {/if}
 
