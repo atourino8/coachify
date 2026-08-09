@@ -63,6 +63,38 @@ export interface ClientInfo {
 
 export type PaymentStatus = 'sin_cuota' | 'al_dia' | 'vence_pronto' | 'vencido';
 
+/** Cómo se cobró. 'stripe' queda preparado para la fase 1 del ADR-002. */
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'bizum' | 'tarjeta' | 'stripe' | 'otro';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+  bizum: 'Bizum',
+  tarjeta: 'Tarjeta',
+  stripe: 'Stripe',
+  otro: 'Otro'
+};
+
+/**
+ * Un cobro recibido. Es un HECHO con su fecha y su importe, a diferencia de
+ * `client_info.paid_until`, que es solo el estado resultante.
+ */
+export interface ClientPayment {
+  id: string;
+  client_id: string;
+  coach_id: string;
+  paid_on: string;
+  amount: number;
+  currency: string;
+  method: PaymentMethod;
+  covers_from: string | null;
+  covers_until: string | null;
+  external_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Estado de pago a partir de la cuota y la fecha pagada hasta. */
 export function paymentStatus(
   info: { fee_amount: number | null; paid_until: string | null } | null | undefined,

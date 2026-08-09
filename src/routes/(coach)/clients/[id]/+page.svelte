@@ -13,7 +13,7 @@
     currentMonthISO,
     formatHumanDate
   } from '$lib/week';
-  import { paymentStatus } from '$lib/supabase/types';
+  import { paymentStatus, PAYMENT_METHOD_LABELS } from '$lib/supabase/types';
   import ProgressChart from '$lib/components/ProgressChart.svelte';
 
   let { data, form } = $props();
@@ -61,6 +61,7 @@
     sin_cuota: { text: 'Sin cuota', cls: 'bg-surface-2 text-text-mute' }
   };
   const payLabel = $derived(PAY_LABELS[payStatus]);
+  let registrandoCobro = $state(false);
 
   // --- Ficha del cliente ---
   const LEVELS = [
@@ -190,12 +191,100 @@
             Pagado hasta {new Date(data.info.paid_until + 'T00:00:00').toLocaleDateString('es-ES')}
           </p>
         {/if}
-        <form method="POST" action="?/markPaid" use:enhance class="mt-1.5">
-          <button type="submit" class="action-neutral">Registrar un mes</button>
-        </form>
+        <button
+          type="button"
+          onclick={() => (registrandoCobro = !registrandoCobro)}
+          class="action-neutral mt-1.5"
+        >
+          {registrandoCobro ? 'Cancelar' : 'Registrar cobro'}
+        </button>
       </div>
     {/if}
   </div>
+
+  <!-- Registrar un cobro.
+       Importe y fecha vienen rellenos con la cuota y con hoy, así que en el
+       caso normal sigue siendo un clic. Se pueden cambiar porque en la vida
+       real se paga tarde, se paga de menos o se pagan dos meses juntos. -->
+  {#if registrandoCobro}
+    <form
+      method="POST"
+      action="?/markPaid"
+      use:enhance={() => {
+        return async ({ update }) => {
+          await update();
+          registrandoCobro = false;
+        };
+      }}
+      class="card space-y-4"
+    >
+      <div>
+        <h2 class="font-semibold">Registrar un cobro</h2>
+        <p class="text-xs text-text-mute mt-0.5">
+          Queda apuntado con su fecha e importe, y avanza un mes el «pagado hasta».
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div>
+          <label
+            for="pay-amount"
+            class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          >
+            Importe
+          </label>
+          <input
+            id="pay-amount"
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0"
+            value={data.info?.fee_amount ?? ''}
+            placeholder="45"
+            class="w-full px-3 py-2.5 bg-bg border border-line rounded-md focus:border-accent focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
+        <div>
+          <label for="pay-date" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+            Fecha del cobro
+          </label>
+          <input
+            id="pay-date"
+            name="paid_on"
+            type="date"
+            value={todayISOLocal()}
+            class="w-full px-3 py-2.5 bg-bg border border-line rounded-md focus:border-accent focus:ring-2 focus:ring-accent/20"
+          />
+        </div>
+        <div>
+          <label
+            for="pay-method"
+            class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          >
+            Cómo
+          </label>
+          <select
+            id="pay-method"
+            name="method"
+            class="w-full px-3 py-2.5 bg-bg border border-line rounded-md focus:border-accent"
+          >
+            {#each Object.entries(PAYMENT_METHOD_LABELS) as [valor, etiqueta] (valor)}
+              {#if valor !== 'stripe'}
+                <option value={valor}>{etiqueta}</option>
+              {/if}
+            {/each}
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="submit" class="btn-primary">Registrar cobro</button>
+        <a href="/cobros" class="text-sm text-text-mute hover:text-text transition-colors">
+          Ver todos los cobros →
+        </a>
+      </div>
+    </form>
+  {/if}
 
   <!-- Pestañas -->
   <div class="flex gap-1 border-b border-line overflow-x-auto">

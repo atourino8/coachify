@@ -173,6 +173,13 @@ cuenta de Stripe; nosotros generamos el cobro o el enlace de pago contra *su*
 cuenta. El dinero nunca pasa por nosotros. Es la opción A en su versión mínima
 y no compromete a nada: si se decide no seguir, no hay nada que deshacer.
 
+> **Ya adelantado (agosto de 2026):** la migración 0013 crea
+> `client_payments`, donde cada cobro es un hecho con fecha e importe. Nació
+> para poder exportar la contabilidad, pero es **la misma tabla** que recibirá
+> los cobros de Stripe: tiene `method` (con `'stripe'` ya contemplado) y
+> `external_id` con índice único, para que el reintento de un webhook no
+> duplique la fila. Cuando llegue esta fase, el modelo de datos ya está.
+
 **Fase 2 · suscripción domiciliada.** Mandato SEPA y cobro recurrente
 automático. Aquí es donde aparece de verdad el riesgo de las 8 semanas, y
 donde hay que tener escrita la política de devoluciones **antes** de activarlo.

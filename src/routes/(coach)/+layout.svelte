@@ -8,7 +8,8 @@
     { href: '/dashboard', label: 'Inicio', match: ['/dashboard'] },
     { href: '/exercises', label: 'Biblioteca', match: ['/exercises', '/templates'] },
     { href: '/clients', label: 'Clientes', match: ['/clients', '/groups'] },
-    { href: '/agenda', label: 'Agenda', match: ['/agenda', '/availability'] }
+    { href: '/agenda', label: 'Agenda', match: ['/agenda', '/availability'] },
+    { href: '/cobros', label: 'Cobros', match: ['/cobros'] }
   ];
 
   function isActive(match: string[]): boolean {

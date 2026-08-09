@@ -377,34 +377,73 @@ export const actions: Actions = {
 
   // Registra un mes de pago: empuja paid_until un mes hacia delante desde hoy
   // (o desde la fecha ya pagada, si aún no ha vencido, para no perder días).
-  markPaid: async ({ params, locals: { supabase, user } }) => {
+  // Registra un cobro REAL y, de paso, avanza el "pagado hasta".
+  //
+  // Antes esto solo empujaba la fecha, así que no quedaba constancia de cuándo
+  // ni de cuánto: imposible hacer contabilidad con eso. Ahora cada cobro deja
+  // una fila en client_payments, que es de donde salen el export y el
+  // histórico. El importe y la fecha se pueden ajustar porque en la vida real
+  // se paga tarde y a veces no se paga la cuota exacta.
+  markPaid: async ({ request, params, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
+
+    const fd = await request.formData();
+    const today = todayISOLocal();
 
     const { data: infoRaw } = await supabase
       .from('client_info')
-      .select('paid_until, fee_amount')
+      .select('paid_until, fee_amount, fee_currency')
       .eq('client_id', params.id)
       .maybeSingle();
-    const info = infoRaw as { paid_until: string | null; fee_amount: number | null } | null;
+    const info = infoRaw as {
+      paid_until: string | null;
+      fee_amount: number | null;
+      fee_currency: string | null;
+    } | null;
 
-    const today = todayISOLocal();
-    const base = info?.paid_until && info.paid_until > today ? info.paid_until : today;
-    const next = new Date(base + 'T00:00:00');
-    next.setMonth(next.getMonth() + 1);
-    const nextISO = formatDateISO(next);
+    // Sin datos en el formulario se comporta como antes: cuota pactada y hoy.
+    const importeCrudo = String(fd.get('amount') ?? '').replace(',', '.');
+    const amount = importeCrudo ? Number(importeCrudo) : (info?.fee_amount ?? null);
+    const paidOn = String(fd.get('paid_on') ?? '') || today;
+    const method = String(fd.get('method') ?? '') || 'efectivo';
+    const notes = String(fd.get('notes') ?? '').trim() || null;
+
+    if (amount === null || Number.isNaN(amount) || amount < 0) {
+      return fail(400, { error: 'Indica un importe válido para el cobro.' });
+    }
+
+    // El periodo cubierto arranca donde acababa lo pagado, para que un cobro
+    // atrasado siga cuadrando con el mes al que corresponde.
+    const desde = info?.paid_until && info.paid_until > today ? info.paid_until : today;
+    const hasta = new Date(desde + 'T00:00:00');
+    hasta.setMonth(hasta.getMonth() + 1);
+    const hastaISO = formatDateISO(hasta);
+
+    const { error: payErr } = await supabase.from('client_payments').insert({
+      client_id: params.id,
+      coach_id: user.id,
+      paid_on: paidOn,
+      amount,
+      currency: info?.fee_currency ?? 'EUR',
+      method,
+      covers_from: desde,
+      covers_until: hastaISO,
+      notes
+    } as never);
+    if (payErr) return fail(500, { error: 'No se pudo registrar el cobro.' });
 
     const { error: upErr } = await supabase.from('client_info').upsert(
       {
         client_id: params.id,
         coach_id: user.id,
         fee_amount: info?.fee_amount ?? null,
-        paid_until: nextISO
+        paid_until: hastaISO
       } as never,
       { onConflict: 'client_id' }
     );
     if (upErr) return fail(500, { error: upErr.message });
 
-    return { success: true, paidUntil: nextISO };
+    return { success: true, paidUntil: hastaISO, amount };
   },
 
   // Guarda la corrección del coach sobre un vídeo de técnica.
