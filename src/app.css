@@ -5,8 +5,18 @@
 /* =============================================================================
    PALETA · el único sitio donde viven los colores
    =============================================================================
-   Paleta Coachify — "Cuaderno de entrenador": fondo papel, tinta casi negra y
-   un único acento terracota. Deliberadamente fuera del oscuro+neón del sector.
+   Paleta Coachify — "Grafito cálido". Fondo casi negro CON TEMPERATURA (tiene
+   marrón dentro, no azul) y un acento naranja quemado.
+
+   El matiz de la temperatura no es capricho: el casi-negro azulado con acento
+   neón es lo que usa el sector fitness entero, y es de lo que hay que
+   separarse. Además, un fondo cálido convive mejor con la variedad de colores
+   de marca que traerá cada entrenador.
+
+   Sustituye a la dirección "cuaderno" (papel y tinta), descartada porque
+   contradecía la promesa del producto —"deja el Excel y la libreta"— y porque
+   el blanco chirriaba a los entrenadores en las tres superficies. El motivo
+   completo está en DISENO.md §2.
 
    Se guardan como CANALES RGB SUELTOS, no en hexadecimal. Es obligatorio para
    que funcionen las transparencias de Tailwind (`bg-accent/10`,
@@ -26,25 +36,34 @@
    comunican significado, no identidad.
    ========================================================================== */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --c-bg: 251 250 247; /* #FBFAF7 · papel */
-  --c-surface: 255 255 255; /* #FFFFFF · fichas y paneles */
-  --c-surface-2: 242 239 231; /* #F2EFE7 · relleno sutil, hover */
+  --c-bg: 23 21 15; /* #17150F · grafito cálido */
+  --c-surface: 31 28 20; /* #1F1C14 · fichas y paneles, un punto por encima */
+  --c-surface-2: 42 38 25; /* #2A2619 · relleno sutil, hover */
 
-  --c-primary: 28 26 22; /* #1C1A16 · tinta */
-  --c-primary-hover: 55 51 44; /* #37332C */
-  --c-accent: 179 68 30; /* #B3441E · terracota */
+  /* `primary` significa "máximo contraste sobre el fondo", no "oscuro".
+     En claro era tinta; en oscuro es hueso. Gracias a eso los 148 usos de
+     bg-primary / text-primary / border-primary siguen funcionando sin tocar
+     una sola plantilla: un botón primario es claro sobre fondo oscuro, y un
+     borde de foco es claro y se ve. */
+  --c-primary: 240 237 230; /* #F0EDE6 · hueso */
+  --c-primary-hover: 216 211 199; /* #D8D3C7 */
+  --c-accent: 232 98 42; /* #E8622A · naranja quemado */
 
-  --c-line: 229 225 214; /* #E5E1D6 */
-  --c-line-strong: 217 213 202; /* #D9D5CA */
+  /* Los separadores son la base de las listas densas, así que aquí tienen que
+     verse. Por debajo de 1.5:1 sobre el fondo desaparecen. */
+  --c-line: 66 60 45; /* #423C2D · 1.67:1 */
+  --c-line-strong: 85 77 59; /* #554D3B · 2.18:1 */
 
-  --c-text: 28 26 22; /* #1C1A16 */
-  --c-text-mute: 107 102 92; /* #6B665C */
+  --c-text: 240 237 230; /* #F0EDE6 · 15.6:1 */
+  --c-text-mute: 168 160 146; /* #A8A092 · 7.05:1 */
 
-  --c-danger: 140 29 24; /* #8C1D18 */
-  --c-warning: 138 90 11; /* #8A5A0B */
-  --c-success: 63 107 43; /* #3F6B2B */
+  /* Versiones para fondo oscuro: las de la paleta clara eran demasiado
+     oscuras y se habrían perdido contra el grafito. */
+  --c-danger: 255 107 87; /* #FF6B57 · 6.51:1 */
+  --c-warning: 245 185 66; /* #F5B942 · 10.34:1 */
+  --c-success: 143 203 107; /* #8FCB6B · 9.49:1 */
 }
 
 html {

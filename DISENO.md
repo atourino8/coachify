@@ -197,13 +197,47 @@ Efecto secundario valioso: si el color fuerte lo pone cada entrenador,
 **dos instalaciones no pueden parecerse**. Es una defensa estructural contra
 el aspecto genérico.
 
-### Dirección visual: pendiente de decidir
+### Dirección visual vigente: grafito cálido
 
-Descartado el papel, hay tres candidatas sobre la mesa (grafito cálido, negro
-técnico, arena profunda). **Mientras no se decida, no se toca la paleta.**
-Cuando se decida, se anota aquí con el motivo.
+Elegida en agosto de 2026 entre tres candidatas (grafito cálido, negro técnico,
+arena profunda). **Reversible**: cambiarla son trece variables.
 
-Pendiente también: sustituir Inter y eliminar la serif.
+Fondo casi negro **con temperatura** —tiene marrón dentro, no azul— y acento
+naranja quemado. El matiz importa por dos razones: el casi-negro azulado con
+acento neón es lo que usa el sector fitness entero, y un fondo cálido convive
+mejor con la variedad de colores de marca que traerá cada entrenador.
+
+Al pasar de claro a oscuro, `primary` cambió de significado: ya no es "tinta",
+es **"máximo contraste sobre el fondo"** (tinta sobre papel, hueso sobre
+grafito). Gracias a eso los 148 usos de `bg-primary`, `text-primary` y
+`border-primary` siguieron funcionando sin tocar una plantilla: un botón
+primario es claro sobre fondo oscuro y un borde de foco se ve.
+
+Contrastes verificados sobre la paleta actual: texto 15.6:1, texto atenuado
+7.05:1, acento 5.40:1, y las cuatro pastillas por encima de 4.5:1. Los
+separadores se subieron a propósito hasta 1.67:1 porque por debajo de 1.5
+desaparecen, y las listas densas se sostienen sobre ellos.
+
+Pendiente: sustituir Inter y eliminar la serif Fraunces, que era parte del
+disfraz de cuaderno.
+
+### Degradados: la excepción de marca
+
+La sección 1 prohíbe los degradados, y sigue en pie **para nosotros**: el
+degradado morado-azul es la firma del diseño generado por defecto.
+
+La excepción es el entrenador. Si su marca tiene un degradado, su cliente debe
+verlo — es lo que hace que la aplicación se sienta su espacio, y es lo que
+justifica que quiera pagar por él. Dos condiciones:
+
+- **El degradado vive en superficies grandes de marca** (banda de cabecera,
+  pantalla de bienvenida), nunca en elementos funcionales.
+- **Botones, enlaces y pastillas van en sólido**, derivado del tono dominante.
+  No es purismo: sobre un degradado el contraste cambia según dónde caiga cada
+  letra, y ahí la legibilidad deja de poder garantizarse.
+
+La diferencia entre las dos cosas: un degradado nuestro es pereza; el de un
+entrenador es identidad.
 
 ---
 

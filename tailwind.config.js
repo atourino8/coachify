@@ -56,10 +56,10 @@ export default {
         full: '9999px'
       },
       boxShadow: {
-        sm: '0 1px 2px rgba(28,26,22,.06)',
-        md: '0 4px 16px -6px rgba(28,26,22,.10)',
-        lg: '0 16px 40px -12px rgba(28,26,22,.14)',
-        glow: '0 4px 16px -6px rgba(28,26,22,.14)'
+        sm: '0 1px 2px rgba(0,0,0,.35)',
+        md: '0 4px 16px -6px rgba(0,0,0,.45)',
+        lg: '0 16px 40px -12px rgba(0,0,0,.55)',
+        glow: '0 4px 16px -6px rgba(0,0,0,.5)'
       }
     }
   },
