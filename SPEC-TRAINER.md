@@ -100,7 +100,7 @@ Listado completo de funcionalidades de v1:
 - Plataforma de cobros directos coach ↔ cliente final (Stripe Connect).
 - Marketplace de plantillas (coaches venden sus rutinas a otros coaches).
 - White-label (coach con dominio propio).
-- Multi-coach por organización ("Team plan" para gimnasios).
+- Multi-coach por organización ("Team plan" para gimnasios) → **ADR-003**.
 - Chat ligero coach ↔ cliente.
 - IA: "genera una rutina full-body de 4 días para principiante."
 - Cronómetro inteligente de descanso (descartado v1 por feedback explícito).
