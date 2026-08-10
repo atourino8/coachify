@@ -1,7 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { SvelteSet } from 'svelte/reactivity';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
-  import type { Exercise } from '$lib/supabase/types';
   let { data, form } = $props();
 
   let seeding = $state(false);
@@ -29,6 +29,61 @@
   const filtered = $derived(
     filterGroup ? data.exercises.filter((e) => e.muscle_group === filterGroup) : data.exercises
   );
+
+  const equipmentLabels: Record<string, string> = {
+    barbell: 'Barra',
+    dumbbell: 'Mancuerna',
+    machine: 'Máquina',
+    bodyweight: 'Peso corporal',
+    kettlebell: 'Kettlebell',
+    band: 'Goma',
+    other: 'Otro'
+  };
+
+  // ---- Selección múltiple ----
+  // Un Set y no un array de booleanos por ejercicio: la pertenencia se
+  // comprueba en cada fila al pintar, y con cincuenta ejercicios un indexOf
+  // por fila es trabajo tonto en cada pulsación.
+  let marcados = $state(new SvelteSet<string>());
+  let trabajando = $state(false);
+  let grupoNuevo = $state('');
+  let materialNuevo = $state('');
+
+  const visibles = $derived(filtered.map((e) => e.id));
+  const marcadosVisibles = $derived(visibles.filter((id) => marcados.has(id)));
+  // "Todos" se refiere SIEMPRE a lo que se está viendo. Si hay un filtro de
+  // grupo activo y "seleccionar todo" marcara también lo oculto, el entrenador
+  // archivaría cuarenta ejercicios creyendo que archiva ocho.
+  const todosMarcados = $derived(
+    visibles.length > 0 && marcadosVisibles.length === visibles.length
+  );
+
+  function alternar(id: string) {
+    if (marcados.has(id)) marcados.delete(id);
+    else marcados.add(id);
+  }
+
+  function alternarTodos() {
+    if (todosMarcados) visibles.forEach((id) => marcados.delete(id));
+    else visibles.forEach((id) => marcados.add(id));
+  }
+
+  function limpiar() {
+    marcados.clear();
+    grupoNuevo = '';
+    materialNuevo = '';
+  }
+
+  // Tras cualquier acción en lote la lista cambia debajo: hay que soltar la
+  // selección o quedan marcados ids que ya no existen.
+  function trasLaAccion() {
+    trabajando = true;
+    return async ({ update }: { update: () => Promise<void> }) => {
+      await update();
+      limpiar();
+      trabajando = false;
+    };
+  }
 </script>
 
 <svelte:head>
@@ -103,6 +158,83 @@
     </p>
   {/if}
 
+  {#if form?.error}
+    <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
+      {form.error}
+    </p>
+  {/if}
+
+  {#if form?.success && form?.cambiados}
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
+      {form.cambiados}
+      {form.cambiados === 1 ? 'ejercicio actualizado' : 'ejercicios actualizados'}.
+    </p>
+  {/if}
+
+  <!--
+    Aviso con deshacer. Existe porque nada más en la aplicación desarchiva un
+    ejercicio: sin este botón, marcar cuarenta y ocho casillas y darle a
+    archivar sería un error sin retorno desde ninguna pantalla.
+
+    El deshacer es un formulario normal con los mismos ids: si el aviso
+    desaparece al recargar, no se pierde nada raro, solo la oportunidad.
+  -->
+  {#if form?.success && (form?.archivados || form?.borrados || form?.archivadosPorUso)}
+    <div
+      aria-live="polite"
+      class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm
+             bg-surface-2 border border-line rounded-md p-3"
+    >
+      <span class="flex-1 min-w-0">
+        {#if form.archivados}
+          {form.archivados}
+          {form.archivados === 1 ? 'ejercicio archivado' : 'ejercicios archivados'}.
+        {:else}
+          {#if form.borrados}
+            {form.borrados} {form.borrados === 1 ? 'borrado' : 'borrados'}.
+          {/if}
+          {#if form.archivadosPorUso}
+            <span class="text-warning">
+              {form.archivadosPorUso}
+              {form.archivadosPorUso === 1 ? 'no se pudo borrar' : 'no se pudieron borrar'} porque
+              {form.archivadosPorUso === 1 ? 'está' : 'están'} dentro de entrenos ya hechos: dentro hay
+              series con pesos reales de tus clientes.
+              {form.archivadosPorUso === 1 ? 'Se ha archivado' : 'Se han archivado'}.
+            </span>
+          {/if}
+        {/if}
+      </span>
+
+      {#if form.idsParaDeshacer && form.idsParaDeshacer.length > 0}
+        <form method="POST" action="?/desarchivarVarios" use:enhance={trasLaAccion}>
+          {#each form.idsParaDeshacer as id (id)}
+            <input type="hidden" name="ids" value={id} />
+          {/each}
+          <button
+            type="submit"
+            class="text-accent hover:underline font-medium"
+            disabled={trabajando}
+          >
+            Deshacer
+          </button>
+        </form>
+      {/if}
+    </div>
+  {/if}
+
+  {#if form?.success && form?.restaurados}
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
+      {form.restaurados}
+      {form.restaurados === 1 ? 'ejercicio restaurado' : 'ejercicios restaurados'}.
+    </p>
+  {/if}
+
   {#if data.exercises.length === 0}
     <!-- Estado vacío útil: explica qué gana y da el atajo, en vez de decorar. -->
     <div class="card max-w-2xl space-y-5">
@@ -162,18 +294,166 @@
       </div>
     {/if}
 
+    <!-- Cabecera de selección. La casilla de "todos" va aquí y no flotando,
+         para que se lea junto a la cuenta de lo que hay debajo. -->
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line pt-3">
+      <label class="flex items-center gap-2.5 text-sm cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={todosMarcados}
+          indeterminate={marcadosVisibles.length > 0 && !todosMarcados}
+          onchange={alternarTodos}
+          class="w-4 h-4 rounded border-line bg-surface-2 accent-accent"
+        />
+        {#if marcadosVisibles.length > 0}
+          <span class="font-medium">{marcadosVisibles.length} marcados</span>
+        {:else}
+          <span class="text-text-mute">
+            Marcar {filterGroup ? 'los ' + filtered.length + ' de este grupo' : 'todos'}
+          </span>
+        {/if}
+      </label>
+      {#if marcadosVisibles.length > 0}
+        <button onclick={limpiar} class="text-sm text-text-mute hover:text-text transition-colors">
+          Quitar selección
+        </button>
+      {/if}
+    </div>
+
+    <!-- Barra de acciones. Aparece solo con algo marcado: una fila de botones
+         permanentemente deshabilitados es ruido en todas las visitas para
+         servir a una minoría de ellas. -->
+    {#if marcadosVisibles.length > 0}
+      {@const seleccion = marcadosVisibles}
+      <div class="card space-y-4">
+        <!-- Cambiar campos -->
+        <form
+          method="POST"
+          action="?/cambiarVarios"
+          use:enhance={trasLaAccion}
+          class="flex flex-wrap items-end gap-3"
+        >
+          {#each seleccion as id (id)}
+            <input type="hidden" name="ids" value={id} />
+          {/each}
+          <div class="min-w-0">
+            <label for="grupo-lote" class="block text-2xs uppercase tracking-wider text-text-mute">
+              Grupo muscular
+            </label>
+            <select
+              id="grupo-lote"
+              name="muscle_group"
+              bind:value={grupoNuevo}
+              class="mt-1 bg-surface-2 border border-line rounded-md px-3 py-2 text-sm
+                     focus:outline-none focus:border-accent"
+            >
+              <option value="">Sin cambios</option>
+              {#each Object.entries(muscleLabels) as [valor, texto] (valor)}
+                <option value={valor}>{texto}</option>
+              {/each}
+            </select>
+          </div>
+          <div class="min-w-0">
+            <label
+              for="material-lote"
+              class="block text-2xs uppercase tracking-wider text-text-mute"
+            >
+              Material
+            </label>
+            <select
+              id="material-lote"
+              name="equipment"
+              bind:value={materialNuevo}
+              class="mt-1 bg-surface-2 border border-line rounded-md px-3 py-2 text-sm
+                     focus:outline-none focus:border-accent"
+            >
+              <option value="">Sin cambios</option>
+              {#each Object.entries(equipmentLabels) as [valor, texto] (valor)}
+                <option value={valor}>{texto}</option>
+              {/each}
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="action-primary"
+            disabled={trabajando || (!grupoNuevo && !materialNuevo)}
+          >
+            Aplicar a {seleccion.length}
+          </button>
+        </form>
+
+        <!-- Quitar de en medio -->
+        <div class="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+          <form method="POST" action="?/archivarVarios" use:enhance={trasLaAccion}>
+            {#each seleccion as id (id)}
+              <input type="hidden" name="ids" value={id} />
+            {/each}
+            <button type="submit" class="action-neutral" disabled={trabajando}>
+              Archivar {seleccion.length}
+            </button>
+          </form>
+
+          <!-- El borrado va con confirmación y el archivado no, y no es
+               inconsistencia: archivar se puede deshacer desde el aviso que
+               sale justo después; borrar, no. -->
+          <form
+            method="POST"
+            action="?/borrarVarios"
+            use:enhance={({ cancel }) => {
+              if (
+                !confirm(
+                  `¿Borrar ${seleccion.length} ejercicio(s)? Los que estén dentro de un entreno ya hecho no se borran: se archivan, para no romper el historial de tus clientes.`
+                )
+              ) {
+                cancel();
+                return async () => {};
+              }
+              return trasLaAccion();
+            }}
+          >
+            {#each seleccion as id (id)}
+              <input type="hidden" name="ids" value={id} />
+            {/each}
+            <button type="submit" class="action-danger" disabled={trabajando}>
+              Borrar {seleccion.length}
+            </button>
+          </form>
+
+          <p class="text-2xs text-text-mute flex-1 min-w-0">
+            Archivar los quita de la biblioteca y del constructor, pero no toca ningún entreno ya
+            programado.
+          </p>
+        </div>
+      </div>
+    {/if}
+
     <!-- Filas densas en vez de tarjetas: no hay miniatura real que enseñar
          (el hueco se rellenaba con un emoji), y una rejilla de 48 tarjetas
-         con un placeholder de 190px es scroll infinito en el móvil. -->
+         con un placeholder de 190px es scroll infinito en el móvil.
+
+         La fila ya no es un enlace entero: una casilla dentro de un <a> no es
+         HTML válido y además haría imposible marcar sin navegar. Ahora la
+         casilla y el enlace son hermanos, y el área táctil del enlace sigue
+         ocupando todo lo demás. -->
     <div class="border-t border-line">
       {#each filtered as ex (ex.id)}
-        <a href="/exercises/{ex.id}" class="row-link">
-          <span class="flex-1 min-w-0">
-            <span class="font-medium block truncate">{ex.name}</span>
+        {@const marcado = marcados.has(ex.id)}
+        <div class="row {marcado ? 'bg-surface-2/60' : ''}">
+          <input
+            type="checkbox"
+            checked={marcado}
+            onchange={() => alternar(ex.id)}
+            aria-label="Marcar {ex.name}"
+            class="w-4 h-4 flex-shrink-0 rounded border-line bg-surface-2 accent-accent cursor-pointer"
+          />
+          <a href="/exercises/{ex.id}" class="flex-1 min-w-0 group">
+            <span class="font-medium block truncate group-hover:text-accent transition-colors">
+              {ex.name}
+            </span>
             {#if !ex.video_url}
               <span class="text-xs text-warning">sin vídeo</span>
             {/if}
-          </span>
+          </a>
           {#if ex.muscle_group}
             <span class="pill-mute flex-shrink-0">
               {muscleLabels[ex.muscle_group] ?? ex.muscle_group}
@@ -182,8 +462,8 @@
           {#if ex.video_url}
             <span class="text-xs text-text-mute flex-shrink-0" title="Tiene vídeo">▶</span>
           {/if}
-          <span class="text-xs text-accent flex-shrink-0">Editar</span>
-        </a>
+          <a href="/exercises/{ex.id}" class="text-xs text-accent flex-shrink-0">Editar</a>
+        </div>
       {/each}
     </div>
   {/if}
