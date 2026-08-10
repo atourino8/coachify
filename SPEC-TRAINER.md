@@ -107,6 +107,17 @@ Listado completo de funcionalidades de v1:
 - Mapa corporal de dolor (interesante pero no prioritario).
 - Sistema de referidos.
 - API pública + webhooks.
+- **Clientes avanzados: que puedan tener ejercicios propios.** Hoy la
+  biblioteca es del entrenador y el cliente solo consume lo que le asignan.
+  Un cliente veterano que entrena solo dos días por su cuenta acaba
+  apuntándolos en otro sitio, y ese registro se pierde para el entrenador.
+
+  Preguntas abiertas antes de estimarlo: ¿los ve el entrenador o son
+  privados? ¿Cuentan para las gráficas de progreso, que hoy asumen
+  prescripción suya? ¿Quién decide que un cliente es "avanzado", él o su
+  entrenador? Y la de fondo: si el cliente se programa solo, ¿para qué paga?
+  Puede ser una función que retiene o una que canibaliza; conviene
+  preguntárselo a un entrenador antes de construirla.
 
 ---
 
