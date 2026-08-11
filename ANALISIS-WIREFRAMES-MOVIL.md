@@ -282,21 +282,54 @@ cliente sube un vídeo y el entrenador lo comenta.
 
 ---
 
-## 6. Orden de trabajo
+## 6. Orden de trabajo · estado
 
-1. **Grupos musculares y equipamiento múltiples.** Bloquea las cinco pantallas
-   de biblioteca; hacerlo después es rehacerlas. Migración más los cuatro
-   sitios que dependen: filtro, reclasificación en lote, buscador del
-   constructor y cuentas de la vista por grupos.
-2. **Cajón lateral.** Barato, independiente de todo lo demás y arregla lo peor
-   del móvil de hoy.
-3. **Biblioteca nueva**: vista por grupos, conmutador lista/rejilla, y decidir
-   qué manda en móvil entre los tres puntos y las casillas (§3.4).
-4. **Vídeo e imagen, subidos o enlazados.** Va con las pruebas de rendimiento
-   de subida que ya estaban previstas; es el mismo trabajo.
-5. **Inicio nuevo**: próximas sesiones con su ubicación y peticiones
-   pendientes, con el ✓ y la ✕ separados (§3.1).
-6. **Notificaciones** derivadas, con marcas de lectura.
+| # | Qué                                        | Estado                        |
+| - | ------------------------------------------ | ----------------------------- |
+| 1 | Grupos musculares y material múltiples      | Hecho · migración 0016        |
+| 2 | Cajón lateral en móvil                      | Hecho                         |
+| 3 | Biblioteca por grupos + lista/rejilla       | Hecho                         |
+| 4 | Vídeo e imagen, subidos o enlazados         | Hecho · migración 0017        |
+| 5 | Inicio: sesiones y peticiones               | Hecho                         |
+| 6 | Avisos derivados, con campana               | Hecho · migración 0018        |
+| — | Menú de cuenta en escritorio                | Hecho (no estaba en el lote)  |
+| — | Vocabulario propio del entrenador           | Hecho · migración 0019        |
 
-Lo de color y tipografía va en paralelo, pero conviene cerrar §4 antes de que
-se dibujen más pantallas.
+### Donde nos separamos del wireframe, y por qué
+
+1. **El ✓ y la ✕ de las peticiones no van pegados.** Aceptar es lo que se hace
+   casi siempre y rechazar le llega al cliente; a ocho píxeles, con el pulgar
+   y con prisa, el fallo es cuestión de tiempo. Aceptar es grande y lleva el
+   color, rechazar es pequeño y va aparte, y hay «deshacer».
+2. **No hay menú de tres puntos por fila en la biblioteca.** Con las casillas
+   ya se puede actuar sobre uno marcándolo, y el enlace de la fila lleva a la
+   ficha. Meter además un menú en una fila estrecha de móvil es llenarla para
+   duplicar caminos que ya existen.
+3. **La sección sigue llamándose «Cobros» y no «Pagos».** Para un autónomo
+   español, cobros es el dinero que entra y pagos el que sale, y esa pantalla
+   exporta a la gestoría.
+4. **La flecha de cerrar el cajón va a la izquierda.** El botón que lo abre se
+   queda visible por encima del panel —es la única forma de cerrar que no
+   depende de JavaScript— así que a la derecha se solapaban.
+5. **Se añadió un cuarto tipo de aviso: clientes sin entreno.** Es el único
+   que avisa de algo que NO ha pasado, y así el inicio puede quedarse como el
+   wireframe sin perder nada.
+
+---
+
+## 7. Lo que queda
+
+**Cerrar §4: color y tipografía.** Es lo único que bloquea de verdad. Mientras
+no esté, cada pantalla nueva se hace con la paleta actual y habrá que repasarla
+después. Y sigue pendiente la incoherencia tipográfica de siempre: la portada
+ya no usa serif y la aplicación sí.
+
+**La aplicación del cliente no se ha tocado.** Todo este lote era la del
+entrenador. Su cliente ve hoy la marca de su entrenador y la imagen del
+ejercicio, pero la arquitectura de sus tres pantallas es la de antes.
+
+**Medir la decisión 5.** Se sacaron «técnica por corregir» y el estado de
+cobros del inicio. Si tras el cambio los vídeos tardan más en corregirse, la
+campana no está funcionando y hay que devolver un aviso al inicio. Se sabe
+mirando el tiempo entre que un cliente sube un vídeo y el entrenador lo
+comenta.
