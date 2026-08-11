@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fechaCorta } from '$lib/formato';
   import { idDeYoutube, urlDeEmbebido, miniaturaDeYoutube } from '$lib/coach-media';
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
@@ -405,7 +406,7 @@
               <div class="flex items-center justify-between gap-2">
                 <span class="text-xs uppercase tracking-wider text-text-mute">{slot.label}</span>
                 <span class="text-2xs text-text-mute">
-                  {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
+                  {fechaCorta(slot.v.created_at)}
                 </span>
               </div>
               {#if data.techniqueUrls[slot.k]}

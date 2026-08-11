@@ -13,6 +13,7 @@
 
 import { paymentStatus } from '$lib/supabase/types';
 import { todayISOInTZ, addDays, formatDateISO } from '$lib/week';
+import { dia } from '$lib/formato';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TipoAviso = 'cita' | 'revision' | 'pago' | 'sin_entreno';
@@ -38,10 +39,6 @@ export const ETIQUETAS_AVISO: Record<TipoAviso, string> = {
 };
 
 const TZ = 'Europe/Madrid';
-
-function fechaCorta(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
 
 /**
  * Todos los avisos del entrenador.
@@ -108,7 +105,7 @@ export async function avisosDelCoach(
       tipo: 'cita',
       id: c.id,
       titulo: c.client?.full_name ?? 'Cliente',
-      detalle: `Te ha pedido cita para el ${fechaCorta(c.starts_at)}`,
+      detalle: `Te ha pedido cita para el ${dia(c.starts_at)}`,
       href: '/agenda',
       fecha: c.starts_at,
       leido: visto('cita', c.id)
@@ -126,7 +123,7 @@ export async function avisosDelCoach(
       tipo: 'revision',
       id: v.id,
       titulo: nombrePorId.get(v.client_id) ?? 'Cliente',
-      detalle: `${v.exercise?.name ?? 'Ejercicio'} · sin corregir desde el ${fechaCorta(v.created_at)}`,
+      detalle: `${v.exercise?.name ?? 'Ejercicio'} · sin corregir desde el ${dia(v.created_at)}`,
       href: `/clients/${v.client_id}`,
       fecha: v.created_at,
       leido: visto('revision', v.id)
@@ -157,7 +154,7 @@ export async function avisosDelCoach(
       tipo: 'pago',
       id: q.client_id,
       titulo: nombrePorId.get(q.client_id) ?? 'Cliente',
-      detalle: q.paid_until ? `Vencido desde el ${fechaCorta(q.paid_until)}` : 'Sin ningún pago',
+      detalle: q.paid_until ? `Vencido desde el ${dia(q.paid_until)}` : 'Sin ningún pago',
       href: `/clients/${q.client_id}`,
       fecha: q.paid_until ?? '1970-01-01',
       leido: visto('pago', q.client_id)

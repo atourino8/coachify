@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { dia } from '$lib/formato';
   import ProgressChart from '$lib/components/ProgressChart.svelte';
 
   let { data } = $props();
@@ -8,13 +9,6 @@
   let selectedId = $state<string | null>(data.exercises[0]?.id ?? null);
 
   const selected = $derived(data.exercises.find((e) => e.id === selectedId) ?? null);
-
-  function fmtDate(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
-  }
 
   // El diccionario viene del layout: incluye el vocabulario base MÁS las
   // etiquetas que se haya inventado el entrenador (migración 0019). Estaba
@@ -109,7 +103,7 @@
           <div class="space-y-1.5 max-h-48 overflow-y-auto">
             {#each [...selected.points].reverse() as p (p.date)}
               <div class="flex items-center justify-between text-sm">
-                <span class="text-text-mute">{fmtDate(p.date)}</span>
+                <span class="text-text-mute">{dia(p.date)}</span>
                 <span class="font-semibold">{p.maxWeight} kg</span>
                 <span class="text-xs text-text-mute">{p.totalReps} reps</span>
               </div>

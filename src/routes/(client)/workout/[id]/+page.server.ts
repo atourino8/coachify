@@ -54,12 +54,18 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user },
   const videos = (videosRaw ?? []) as unknown as TechniqueVideo[];
 
   // URLs firmadas temporales (el bucket es privado: nunca enlaces públicos).
+  // En lote: son como mucho dos, pero pedirlas de una en una son dos viajes en
+  // serie por nada, y el patrón es el mismo que en la ficha del cliente.
   const signed: Record<string, string> = {};
-  for (const v of videos) {
-    const { data: s } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(v.storage_path, 60 * 60); // 1 hora
-    if (s?.signedUrl) signed[v.kind] = s.signedUrl;
+  if (videos.length > 0) {
+    const { data: lote } = await supabase.storage.from(BUCKET).createSignedUrls(
+      videos.map((v) => v.storage_path),
+      60 * 60
+    );
+    for (const v of videos) {
+      const f = (lote ?? []).find((x) => x.path === v.storage_path);
+      if (f?.signedUrl) signed[v.kind] = f.signedUrl;
+    }
   }
 
   // Material del entrenador para este ejercicio. El cubo es privado y la

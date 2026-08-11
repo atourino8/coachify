@@ -137,12 +137,23 @@ export const actions: Actions = {
       .contains(columna, [slug]);
 
     const afectados = (afectadosRaw ?? []) as unknown as Record<string, unknown>[];
+
+    // Se agrupan los que acaban con el MISMO array y se manda una consulta por
+    // grupo, no una por ejercicio. Con la etiqueta puesta en cuarenta
+    // ejercicios eso es la diferencia entre dos consultas y cuarenta, y es el
+    // mismo patrón que usa la reclasificación en lote de la biblioteca.
+    const porResultado = new Map<string, string[]>();
     for (const ex of afectados) {
       const restante = ((ex[columna] as string[]) ?? []).filter((v) => v !== slug);
+      const clave = JSON.stringify(restante);
+      porResultado.set(clave, [...(porResultado.get(clave) ?? []), ex.id as string]);
+    }
+
+    for (const [clave, ids] of porResultado) {
       const { error: errQuitar } = await supabase
         .from('exercises')
-        .update({ [columna]: restante } as never)
-        .eq('id', ex.id as string)
+        .update({ [columna]: JSON.parse(clave) } as never)
+        .in('id', ids)
         .eq('coach_id', user.id);
       if (errQuitar) return fail(500, { error: errQuitar.message });
     }

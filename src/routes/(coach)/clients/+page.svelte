@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import { paymentStatus } from '$lib/supabase/types';
@@ -46,14 +47,9 @@
     return { text: 'Vencido', cls: 'pill-danger' };
   }
 
-  function fmtDate(iso: string | null) {
-    if (!iso) return '—';
-    return new Date(iso).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  }
+  // El guion cuando no hay fecha se queda aquí: es decisión de esta pantalla,
+  // no del formateo.
+  const fmtDate = (iso: string | null) => (iso ? diaConAnio(iso) : '—');
 </script>
 
 <svelte:head>

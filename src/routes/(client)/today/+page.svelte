@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { diaLargo, diaConSemana } from '$lib/formato';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
   import type { WorkoutItemWithRelations } from '$lib/supabase/types';
@@ -22,13 +23,7 @@
   }
   const profile = $derived(page.data.profile);
 
-  const dateLabel = $derived(
-    new Date(data.date + 'T00:00:00').toLocaleDateString('es-ES', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long'
-    })
-  );
+  const dateLabel = $derived(diaLargo(data.date));
 
   function setsCompleted(item: WorkoutItemWithRelations) {
     return item.set_logs?.length ?? 0;
@@ -60,14 +55,6 @@
     } catch {
       copied = false;
     }
-  }
-
-  function upcomingLabel(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short'
-    });
   }
 </script>
 
@@ -308,7 +295,7 @@
         {#each data.upcoming as w (w.id)}
           <a href="/today?date={w.date}" class="row-link">
             <span class="w-24 text-sm text-text-mute capitalize flex-shrink-0"
-              >{upcomingLabel(w.date)}</span
+              >{diaConSemana(w.date)}</span
             >
             <span class="flex-1 min-w-0 truncate">
               <span class="font-medium">{w.title ?? 'Entreno'}</span>

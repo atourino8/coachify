@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { diaConSemana } from '$lib/formato';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -129,15 +130,6 @@
     editingId = s.id;
   }
 
-  // Fecha corta y legible para el desplegable de entrenos: "sáb 25 jul".
-  function shortDate(iso: string): string {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short'
-    });
-  }
-
   // Etiqueta autogenerada de un entreno: "sáb 25 jul, Paco Paquez" y, si el
   // coach le puso título (ej. "día 1"), se añade detrás: "… · día 1".
   // El título que escribe el coach se guarda tal cual; esto es solo la etiqueta
@@ -147,7 +139,7 @@
     clientName: string | null | undefined,
     title: string | null
   ): string {
-    const base = `${shortDate(date)}, ${clientName ?? 'Cliente'}`;
+    const base = `${diaConSemana(date)}, ${clientName ?? 'Cliente'}`;
     return title && title.trim() ? `${base} · ${title.trim()}` : base;
   }
 

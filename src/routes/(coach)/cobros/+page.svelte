@@ -1,23 +1,9 @@
 <script lang="ts">
+  import { euros, mesLargo, dia } from '$lib/formato';
   import { enhance } from '$app/forms';
   import { PAYMENT_METHOD_LABELS } from '$lib/supabase/types';
 
   let { data, form } = $props();
-
-  const eur = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
-
-  function mesLargo(iso: string) {
-    return new Date(iso + '-01T00:00:00').toLocaleDateString('es-ES', {
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-  function fecha(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
-  }
 
   // El mes más alto del año marca la escala de las barras.
   const techo = $derived(Math.max(...data.meses.map((m) => m.total), data.prevision, 1));
@@ -52,13 +38,13 @@
   <div class="grid grid-cols-3 gap-2 sm:gap-4 border-y border-line py-5">
     <div>
       <p class="text-2xl sm:text-3xl font-bold tabular-nums tracking-tight">
-        {eur.format(data.cobradoEsteMes)}
+        {euros(data.cobradoEsteMes)}
       </p>
       <p class="text-2xs uppercase tracking-wider text-text-mute mt-1">cobrado este mes</p>
     </div>
     <div>
       <p class="text-2xl sm:text-3xl font-bold tabular-nums tracking-tight text-text-mute">
-        {eur.format(data.prevision)}
+        {euros(data.prevision)}
       </p>
       <p class="text-2xs uppercase tracking-wider text-text-mute mt-1">
         si cobras todas las cuotas
@@ -66,7 +52,7 @@
     </div>
     <div>
       <p class="text-2xl sm:text-3xl font-bold tabular-nums tracking-tight">
-        {eur.format(data.totalAnio)}
+        {euros(data.totalAnio)}
       </p>
       <p class="text-2xs uppercase tracking-wider text-text-mute mt-1">en {data.anio}</p>
     </div>
@@ -119,7 +105,7 @@
               {m.cobros === 1 ? 'cobro' : 'cobros'}
             </span>
             <span class="text-base font-bold tabular-nums flex-shrink-0 w-24 text-right">
-              {eur.format(m.total)}
+              {euros(m.total)}
             </span>
           </div>
         {/each}
@@ -158,7 +144,7 @@
           {#each data.pagos as p (p.id)}
             <div class="row">
               <span class="w-16 text-sm text-text-mute tabular-nums flex-shrink-0">
-                {fecha(p.paid_on)}
+                {dia(p.paid_on)}
               </span>
               <span class="flex-1 min-w-0">
                 <a
@@ -175,7 +161,7 @@
                 >{PAYMENT_METHOD_LABELS[p.method] ?? p.method}</span
               >
               <span class="text-base font-bold tabular-nums flex-shrink-0 w-20 text-right">
-                {eur.format(p.amount)}
+                {euros(p.amount)}
               </span>
             </div>
           {/each}
@@ -227,7 +213,7 @@
             <div class="row text-sm {i === data.afectados.length - 1 ? 'border-b-0' : ''}">
               <span class="flex-1 min-w-0 font-medium">{a.nombre}</span>
               <span class="text-text-mute tabular-nums">
-                {a.paidUntil ? 'venció el ' + fecha(a.paidUntil) : 'sin fecha de pago'}
+                {a.paidUntil ? 'venció el ' + dia(a.paidUntil) : 'sin fecha de pago'}
               </span>
             </div>
           {/each}

@@ -205,11 +205,23 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     }
   > = {};
 
+  // Las URL se firman TODAS DE UNA VEZ.
+  //
+  // Antes era una llamada a Storage por vídeo dentro del bucle. Con un cliente
+  // veterano que ha subido técnica de quince ejercicios son treinta viajes en
+  // serie antes de poder pintar la página, y cada uno con su latencia. La
+  // versión en lote hace uno.
+  const rutas = tvRows.map((v) => v.storage_path);
+  const firmadas = new Map<string, string>();
+  if (rutas.length > 0) {
+    const { data: lote } = await supabase.storage.from(BUCKET).createSignedUrls(rutas, 60 * 60);
+    for (const f of lote ?? []) {
+      if (f.path && f.signedUrl) firmadas.set(f.path, f.signedUrl);
+    }
+  }
+
   for (const v of tvRows) {
-    const { data: s } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(v.storage_path, 60 * 60);
-    const withUrl = { ...v, url: s?.signedUrl ?? null };
+    const withUrl = { ...v, url: firmadas.get(v.storage_path) ?? null };
     const key = v.exercise_id;
     techniqueByExercise[key] ??= {
       exerciseId: v.exercise_id,

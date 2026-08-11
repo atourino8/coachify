@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fechaCorta } from '$lib/formato';
   import { goto } from '$app/navigation';
   import { navigating, page } from '$app/state';
   import { enhance } from '$app/forms';
@@ -179,7 +180,7 @@
         {data.client.full_name}
       </h1>
       <p class="text-text-mute text-sm mt-1">
-        Cliente desde {new Date(data.client.created_at).toLocaleDateString('es-ES')}
+        Cliente desde {fechaCorta(data.client.created_at)}
       </p>
     </div>
 
@@ -188,7 +189,7 @@
         <span class="text-2xs px-2 py-1 rounded-full {payLabel.cls}">{payLabel.text}</span>
         {#if data.info?.paid_until}
           <p class="text-2xs text-text-mute mt-1.5">
-            Pagado hasta {new Date(data.info.paid_until + 'T00:00:00').toLocaleDateString('es-ES')}
+            Pagado hasta {fechaCorta(data.info.paid_until)}
           </p>
         {/if}
         <button
@@ -980,7 +981,7 @@
                         >{slot.label}</span
                       >
                       <span class="text-2xs text-text-mute">
-                        {new Date(slot.v.created_at).toLocaleDateString('es-ES')}
+                        {fechaCorta(slot.v.created_at)}
                       </span>
                     </div>
                     {#if slot.v.url}
@@ -1028,7 +1029,7 @@
                 <div class="flex items-center justify-between gap-3">
                   <span class="text-2xs text-text-mute">
                     {#if newest.coach_comment_at}
-                      Comentado el {new Date(newest.coach_comment_at).toLocaleDateString('es-ES')}
+                      Comentado el {fechaCorta(newest.coach_comment_at)}
                     {/if}
                   </span>
                   <button type="submit" class="action-primary">Guardar corrección</button>

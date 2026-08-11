@@ -1,18 +1,8 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { hora, diaConSemana } from '$lib/formato';
 
   let { data, form } = $props();
-
-  function hora(iso: string) {
-    return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  }
-  function fecha(iso: string) {
-    return new Date(iso).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      weekday: 'short'
-    });
-  }
 </script>
 
 <svelte:head>
@@ -87,7 +77,7 @@
               <span class="block text-sm text-text-mute capitalize">{s.modalidad}</span>
             {/if}
             <span class="block text-sm text-text-mute tabular-nums mt-1">
-              {hora(s.cuando)} · {fecha(s.cuando)}
+              {hora(s.cuando)} · {diaConSemana(s.cuando)}
             </span>
           </a>
         {/each}
@@ -112,7 +102,7 @@
             <div class="flex-1 min-w-0">
               <span class="block font-semibold truncate">{p.nombre}</span>
               <span class="block text-sm text-text-mute tabular-nums">
-                {fecha(p.cuando)} · {hora(p.cuando)}
+                {diaConSemana(p.cuando)} · {hora(p.cuando)}
               </span>
               {#if p.donde}
                 <span class="block text-sm text-text-mute truncate">{p.donde}</span>

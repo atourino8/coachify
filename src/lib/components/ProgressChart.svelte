@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { dia } from '$lib/formato';
   // Gráfica de progresión de peso de un ejercicio.
   //
   // La usan las dos partes: el cliente en su /progress y el entrenador en la
@@ -49,13 +50,6 @@
 
     return { coords, line, area, minW, maxW };
   });
-
-  function fmtDate(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
-  }
 </script>
 
 {#if chart}
@@ -108,9 +102,9 @@
     </div>
 
     <div class="flex justify-between text-3xs text-text-mute mt-1 pl-11">
-      <span>{fmtDate(points[0].date)}</span>
+      <span>{dia(points[0].date)}</span>
       {#if points.length > 1}
-        <span>{fmtDate(points[points.length - 1].date)}</span>
+        <span>{dia(points[points.length - 1].date)}</span>
       {/if}
     </div>
   </div>
