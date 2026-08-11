@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { SvelteSet } from 'svelte/reactivity';
+  import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
   import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
   let { data, form } = $props();
@@ -11,6 +12,9 @@
   // una decía "Pierna" donde otra decía "Piernas".
   const muscleLabels = MUSCLE_GROUP_LABELS;
 
+  /** Clave interna del cajón de los que no tienen ningún grupo puesto. */
+  const SIN_GRUPO = '__sin_grupo__';
+
   // Filtro por grupo muscular (mismo patrón que el de categorías en
   // Entrenamientos, para que la biblioteca se comporte igual en las dos pestañas).
   let filterGroup = $state('');
@@ -20,12 +24,50 @@
     )
   );
   const filtered = $derived(
-    filterGroup
-      ? data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
-      : data.exercises
+    filterGroup === ''
+      ? data.exercises
+      : filterGroup === SIN_GRUPO
+        ? data.exercises.filter((e) => (e.muscle_groups ?? []).length === 0)
+        : data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
   );
 
+  // En vista por grupos, la rejilla manda hasta que se abre uno.
+  const mostrandoRejilla = $derived(vista === 'grupos' && filterGroup === '');
+
   const equipmentLabels = EQUIPMENT_LABELS;
+
+  // ---- Vista: por grupos o lista plana ----
+  //
+  // El valor inicial se decide por tamaño y no por gusto: con la biblioteca
+  // base son casi cincuenta ejercicios y recorrerlos en una lista plana desde
+  // un móvil no es viable, pero a quien tiene seis la rejilla le mete un clic
+  // de más para ver lo que le cabía en pantalla.
+  const UMBRAL_REJILLA = 12;
+  let vista = $state<'grupos' | 'lista'>(
+    untrack(() => data.exercises.length) > UMBRAL_REJILLA ? 'grupos' : 'lista'
+  );
+
+  // Cuenta por grupo. Un ejercicio con varios grupos cuenta en CADA uno, así
+  // que la suma de las tarjetas es mayor que el total. Se avisa en pantalla en
+  // vez de disimularlo: un número que no cuadra y no se explica hace
+  // desconfiar de toda la pantalla.
+  const conteoPorGrupo = $derived.by(() => {
+    const mapa = new Map<string, number>();
+    for (const ex of data.exercises) {
+      const grupos = ex.muscle_groups ?? [];
+      if (grupos.length === 0) mapa.set(SIN_GRUPO, (mapa.get(SIN_GRUPO) ?? 0) + 1);
+      for (const g of grupos) mapa.set(g, (mapa.get(g) ?? 0) + 1);
+    }
+    return [...mapa.entries()]
+      .map(([grupo, total]) => ({ grupo, total }))
+      .sort((a, b) => b.total - a.total);
+  });
+
+  const hayMultiples = $derived(data.exercises.some((e) => (e.muscle_groups ?? []).length > 1));
+
+  function etiquetaGrupo(g: string) {
+    return g === SIN_GRUPO ? 'Sin clasificar' : (muscleLabels[g] ?? g);
+  }
 
   // ---- Selección múltiple ----
   // Un Set y no un array de booleanos por ejercicio: la pertenencia se
@@ -124,6 +166,38 @@
           {seeding ? 'Cargando…' : 'Cargar biblioteca base'}
         </button>
       </form>
+      <!-- Conmutador de vista. Dos botones visibles en vez de un icono que
+           alterna: con un solo icono nunca sabes si te enseña el estado actual
+           o lo que pasaría al pulsarlo. -->
+      {#if data.exercises.length > 0}
+        <div
+          class="flex rounded-md border border-line overflow-hidden"
+          role="group"
+          aria-label="Vista"
+        >
+          <button
+            onclick={() => {
+              vista = 'grupos';
+              filterGroup = '';
+            }}
+            aria-pressed={vista === 'grupos'}
+            class="px-3 py-1.5 text-sm transition-colors {vista === 'grupos'
+              ? 'bg-primary text-bg font-medium'
+              : 'text-text-mute hover:text-text'}"
+          >
+            Grupos
+          </button>
+          <button
+            onclick={() => (vista = 'lista')}
+            aria-pressed={vista === 'lista'}
+            class="px-3 py-1.5 text-sm border-l border-line transition-colors {vista === 'lista'
+              ? 'bg-primary text-bg font-medium'
+              : 'text-text-mute hover:text-text'}"
+          >
+            Lista
+          </button>
+        </div>
+      {/if}
       <a href="/exercises/new" class="btn-primary whitespace-nowrap">+ Nuevo ejercicio</a>
     </div>
   </div>
@@ -256,10 +330,47 @@
         </a>
       </form>
     </div>
+  {:else if mostrandoRejilla}
+    <!-- Rejilla por grupo. Es la forma de recorrer cincuenta ejercicios sin
+           desplazarse: se elige el grupo y solo entonces aparecen los suyos. -->
+    <div class="grid grid-cols-2 gap-3">
+      {#each conteoPorGrupo as g (g.grupo)}
+        <button
+          onclick={() => (filterGroup = g.grupo)}
+          class="card text-left hover:border-line-strong transition-colors"
+        >
+          <span class="block font-semibold">{etiquetaGrupo(g.grupo)}</span>
+          <span class="block text-sm text-text-mute tabular-nums">
+            {g.total}
+            {g.total === 1 ? 'ejercicio' : 'ejercicios'}
+          </span>
+        </button>
+      {/each}
+    </div>
+
+    {#if hayMultiples}
+      <!-- La suma de las tarjetas es MAYOR que el total, y hay que decirlo.
+             Un número que no cuadra y no se explica hace desconfiar del resto
+             de la pantalla. -->
+      <p class="text-2xs text-text-mute">
+        Tienes {data.exercises.length} ejercicios. Los que trabajan varios grupos cuentan en cada uno,
+        así que estas cifras suman más.
+      </p>
+    {/if}
   {:else}
-    <!-- Filtro por grupo muscular: con la biblioteca base son casi 50, y en un
-         móvil recorrerlos todos a mano no es viable. -->
-    {#if presentGroups.length > 1}
+    {#if vista === 'grupos'}
+      <!-- Dentro de un grupo. La vuelta atrás es un enlace de verdad y no un
+             icono suelto: se ve a qué se vuelve. -->
+      <button
+        onclick={() => (filterGroup = '')}
+        class="flex items-center gap-2 text-lg font-display font-semibold hover:text-accent transition-colors"
+      >
+        <span aria-hidden="true">←</span>
+        {etiquetaGrupo(filterGroup)}
+        <span class="text-sm font-normal text-text-mute tabular-nums">({filtered.length})</span>
+      </button>
+    {:else if presentGroups.length > 1}
+      <!-- Vista lista: filtro por pastillas, que es lo de siempre. -->
       <div class="flex flex-wrap gap-2">
         <button
           onclick={() => (filterGroup = '')}
