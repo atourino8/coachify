@@ -10,7 +10,11 @@
 
   // Las etiquetas viven en types.ts: estaban copiadas en cuatro pantallas y
   // una decía "Pierna" donde otra decía "Piernas".
-  const muscleLabels = MUSCLE_GROUP_LABELS;
+  // Alias tipado con clave `string`, no `MuscleGroup`: lo que llega de la base
+  // es un text[] y se indexa con cadenas sueltas. Quien garantiza que solo hay
+  // valores válidos es la restricción de la migración 0016 y el saneado de
+  // exercise-tags.ts, no el tipo de esta tabla de etiquetas.
+  const muscleLabels: Record<string, string> = MUSCLE_GROUP_LABELS;
 
   /** Clave interna del cajón de los que no tienen ningún grupo puesto. */
   const SIN_GRUPO = '__sin_grupo__';
@@ -31,10 +35,7 @@
         : data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
   );
 
-  // En vista por grupos, la rejilla manda hasta que se abre uno.
-  const mostrandoRejilla = $derived(vista === 'grupos' && filterGroup === '');
-
-  const equipmentLabels = EQUIPMENT_LABELS;
+  const equipmentLabels: Record<string, string> = EQUIPMENT_LABELS;
 
   // ---- Vista: por grupos o lista plana ----
   //
@@ -64,6 +65,9 @@
   });
 
   const hayMultiples = $derived(data.exercises.some((e) => (e.muscle_groups ?? []).length > 1));
+
+  // En vista por grupos, la rejilla manda hasta que se abre uno.
+  const mostrandoRejilla = $derived(vista === 'grupos' && filterGroup === '');
 
   function etiquetaGrupo(g: string) {
     return g === SIN_GRUPO ? 'Sin clasificar' : (muscleLabels[g] ?? g);
