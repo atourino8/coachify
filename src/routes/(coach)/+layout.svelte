@@ -32,6 +32,39 @@
   });
 </script>
 
+{#snippet campana(clases: string)}
+  <!-- La campana. Sin número cuando no hay nada: un contador a cero enseña a
+       ignorarlo, y entonces tampoco se mira el día que sí hay algo. -->
+  <a
+    href="/avisos"
+    class="relative {clases}"
+    aria-label={data.sinVer > 0 ? `Avisos, ${data.sinVer} sin ver` : 'Avisos'}
+  >
+    <svg
+      class="w-6 h-6"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    </svg>
+    {#if data.sinVer > 0}
+      <span
+        class="absolute -top-1 -right-1 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full
+               bg-accent text-bg text-3xs font-bold grid place-items-center tabular-nums"
+        aria-hidden="true"
+      >
+        {data.sinVer > 9 ? '9+' : data.sinVer}
+      </span>
+    {/if}
+  </a>
+{/snippet}
+
 <div style={data.marca.estilo}>
   <!--
     El desenfoque solo desde `sm`, y no es estético: `backdrop-filter` hace
@@ -73,6 +106,7 @@
               </a>
             {/each}
           </nav>
+          {@render campana('text-text-mute hover:text-text transition-colors')}
           <span class="text-line-strong">|</span>
           <a
             href="/ajustes"
@@ -99,110 +133,114 @@
           cargado —una 4G mala en un gimnasio es el caso normal, no el raro—,
           la navegación sigue funcionando.
         -->
-        <details bind:this={cajon} class="sm:hidden">
-          <!-- z por encima del panel: sin esto el cajón abierto tapa el propio
+        <div class="flex items-center gap-1 sm:hidden">
+          {@render campana('text-text-mute p-2')}
+
+          <details bind:this={cajon}>
+            <!-- z por encima del panel: sin esto el cajón abierto tapa el propio
                botón que lo abrió, y sin JavaScript no habría forma de
                cerrarlo, porque volver a pulsar el <summary> es la única que no
                depende de un guion. -->
-          <summary
-            aria-label="Menú"
-            class="relative z-[60] list-none cursor-pointer p-2 -mr-2 rounded-md
+            <summary
+              aria-label="Menú"
+              class="relative z-[60] list-none cursor-pointer p-2 -mr-2 rounded-md
                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <svg
-              class="w-6 h-6"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              aria-hidden="true"
             >
-              <path d="M3 6h18M3 12h18M3 18h18" />
-            </svg>
-          </summary>
+              <svg
+                class="w-6 h-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            </summary>
 
-          <!-- El velo cierra el cajón al tocar fuera. Es un <button> y no un
+            <!-- El velo cierra el cajón al tocar fuera. Es un <button> y no un
                <div> con onclick para que exista para el teclado y para un
                lector de pantalla, en vez de ser una trampa invisible. -->
-          <button
-            type="button"
-            aria-label="Cerrar menú"
-            onclick={() => cajon && (cajon.open = false)}
-            class="fixed inset-0 z-40 bg-bg/70 backdrop-blur-sm cursor-default"
-          ></button>
+            <button
+              type="button"
+              aria-label="Cerrar menú"
+              onclick={() => cajon && (cajon.open = false)}
+              class="fixed inset-0 z-40 bg-bg/70 backdrop-blur-sm cursor-default"
+            ></button>
 
-          <nav
-            class="fixed top-0 right-0 bottom-0 z-50 w-[17rem] max-w-[85vw]
+            <nav
+              class="fixed top-0 right-0 bottom-0 z-50 w-[17rem] max-w-[85vw]
                    bg-surface border-l border-line
                    flex flex-col overflow-y-auto"
-          >
-            <div class="flex items-center justify-end p-3">
-              <button
-                type="button"
-                aria-label="Cerrar menú"
-                onclick={() => cajon && (cajon.open = false)}
-                class="p-2 rounded-md text-text-mute hover:text-text
+            >
+              <div class="flex items-center justify-end p-3">
+                <button
+                  type="button"
+                  aria-label="Cerrar menú"
+                  onclick={() => cajon && (cajon.open = false)}
+                  class="p-2 rounded-md text-text-mute hover:text-text
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  aria-hidden="true"
                 >
-                  <path d="M5 12h14M12 5l-7 7 7 7" />
-                </svg>
-              </button>
-            </div>
-
-            <a href="/ajustes" class="flex items-center gap-3 px-5 pb-5">
-              <div aria-hidden="true" class="marca-cuadro w-12 h-12 text-lg flex-shrink-0">
-                {data.marca.inicial}
-              </div>
-              <span class="min-w-0">
-                <span class="block font-semibold truncate">
-                  {data.profile.full_name ?? 'Tu nombre'}
-                </span>
-                <span class="block text-sm text-text-mute">Ver ajustes</span>
-              </span>
-            </a>
-
-            <div class="px-3">
-              {#each links as link (link.href)}
-                <a
-                  href={link.href}
-                  aria-current={isActive(link.match) ? 'page' : undefined}
-                  class="block px-2 py-3.5 border-b border-line text-lg font-medium transition-colors
-                         {isActive(link.match) ? 'text-accent' : 'hover:text-accent'}"
-                >
-                  {link.label}
-                </a>
-              {/each}
-            </div>
-
-            <!-- Configuración y salir, abajo y separados del resto: no son
-                 destinos de trabajo y no compiten con ellos. -->
-            <div class="mt-auto px-3 pb-4 pt-8">
-              <a
-                href="/ajustes"
-                aria-current={isActive(['/ajustes', '/marca']) ? 'page' : undefined}
-                class="block px-2 py-3 text-lg font-medium transition-colors
-                       {isActive(['/ajustes', '/marca']) ? 'text-accent' : 'hover:text-accent'}"
-              >
-                Ajustes
-              </a>
-              <form method="POST" action="/logout" class="px-2 pt-2">
-                <button type="submit" class="text-text-mute hover:text-danger transition-colors">
-                  Salir
+                  <svg
+                    class="w-5 h-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14M12 5l-7 7 7 7" />
+                  </svg>
                 </button>
-              </form>
-            </div>
-          </nav>
-        </details>
+              </div>
+
+              <a href="/ajustes" class="flex items-center gap-3 px-5 pb-5">
+                <div aria-hidden="true" class="marca-cuadro w-12 h-12 text-lg flex-shrink-0">
+                  {data.marca.inicial}
+                </div>
+                <span class="min-w-0">
+                  <span class="block font-semibold truncate">
+                    {data.profile.full_name ?? 'Tu nombre'}
+                  </span>
+                  <span class="block text-sm text-text-mute">Ver ajustes</span>
+                </span>
+              </a>
+
+              <div class="px-3">
+                {#each links as link (link.href)}
+                  <a
+                    href={link.href}
+                    aria-current={isActive(link.match) ? 'page' : undefined}
+                    class="block px-2 py-3.5 border-b border-line text-lg font-medium transition-colors
+                         {isActive(link.match) ? 'text-accent' : 'hover:text-accent'}"
+                  >
+                    {link.label}
+                  </a>
+                {/each}
+              </div>
+
+              <!-- Configuración y salir, abajo y separados del resto: no son
+                 destinos de trabajo y no compiten con ellos. -->
+              <div class="mt-auto px-3 pb-4 pt-8">
+                <a
+                  href="/ajustes"
+                  aria-current={isActive(['/ajustes', '/marca']) ? 'page' : undefined}
+                  class="block px-2 py-3 text-lg font-medium transition-colors
+                       {isActive(['/ajustes', '/marca']) ? 'text-accent' : 'hover:text-accent'}"
+                >
+                  Ajustes
+                </a>
+                <form method="POST" action="/logout" class="px-2 pt-2">
+                  <button type="submit" class="text-text-mute hover:text-danger transition-colors">
+                    Salir
+                  </button>
+                </form>
+              </div>
+            </nav>
+          </details>
+        </div>
       </div>
     </div>
   </header>

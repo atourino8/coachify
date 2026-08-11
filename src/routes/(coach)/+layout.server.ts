@@ -2,6 +2,7 @@
 
 import { redirect } from '@sveltejs/kit';
 import { identidadDeMarca } from '$lib/brand';
+import { avisosDelCoach, cuentaSinVer } from '$lib/avisos.server';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetSession } }) => {
@@ -39,5 +40,18 @@ export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetS
     profile.brand_accent_2 ?? null
   );
 
-  return { profile, marca };
+  // Contador de la campana. Sale de la MISMA función que la pantalla de
+  // avisos: si se contara por separado, un día el número y la lista dirían
+  // cosas distintas y no habría forma de saber cuál está mal.
+  //
+  // Si algo falla —por ejemplo, la migración 0018 sin aplicar— la cabecera se
+  // queda sin número en vez de tumbar todas las pantallas del entrenador.
+  let sinVer = 0;
+  try {
+    sinVer = cuentaSinVer(await avisosDelCoach(supabase, user.id));
+  } catch {
+    sinVer = 0;
+  }
+
+  return { profile, marca, sinVer };
 };
