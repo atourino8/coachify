@@ -639,6 +639,7 @@ async function main() {
       starts_at: at(2, 10),
       status: 'requested',
       modality: 'presencial',
+      location: 'Gimnasio Pepe',
       notes: '¿Podríamos empezar media hora antes?',
       requested_by: ids.marcos
     },
@@ -665,6 +666,7 @@ async function main() {
       starts_at: at(-7, 19),
       status: 'completed',
       modality: 'presencial',
+      location: 'Sala 2',
       requested_by: coachId
     },
     {
@@ -672,6 +674,7 @@ async function main() {
       starts_at: at(-14, 19),
       status: 'cancelled',
       modality: 'presencial',
+      location: 'Parque del Oeste',
       notes: 'Se puso mala.',
       requested_by: ids.carla
     },
@@ -863,6 +866,12 @@ async function main() {
   log('   · Sofía no tiene cuota y Ana/Beatriz/Diana son del grupo: nunca se pausan');
   log('   · Entra como Nadia con el bloqueo activado y prueba /today y /progress:');
   log('     los entrenos se cierran, su historial NO');
+  log('');
+  log('  INICIO');
+  log('   · Proximas sesiones: tira horizontal, con el sitio de cada una');
+  log('   · Peticiones pendientes: Marcos te ha pedido cita');
+  log('   · Rechaza una y prueba "Deshacer": el ✓ y la ✕ estan a un pulgar');
+  log('   · Lo demas (tecnica, cuotas, sin entreno) esta en la campana');
   log('');
   log('  MARCA');
   log('   · Mi marca → tu color es un azul marino que NO se lee sobre el fondo:');

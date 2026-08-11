@@ -3,406 +3,166 @@
 
   let { data, form } = $props();
 
-  function fmtTime(iso: string) {
+  function hora(iso: string) {
     return new Date(iso).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
-  function fmtDay(iso: string) {
+  function fecha(iso: string) {
     return new Date(iso).toLocaleDateString('es-ES', {
-      weekday: 'short',
       day: 'numeric',
-      month: 'short'
+      month: 'short',
+      weekday: 'short'
     });
   }
-  function fmtDate(iso: string) {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
-  }
-  // "hace 2 días" en vez de una fecha: para un vídeo pendiente, lo que importa
-  // es cuánto lleva esperando el cliente.
-  function hace(iso: string) {
-    const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-    if (dias <= 0) return 'hoy';
-    if (dias === 1) return 'ayer';
-    return `hace ${dias} días`;
-  }
-
-  const modalityLabel: Record<string, string> = {
-    presencial: 'Presencial',
-    online: 'Online',
-    remoto: 'Remoto'
-  };
-
-  const hoy = new Date().toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  });
-
-  // Comparar con el primer vídeo es útil pero ocasional: si estuviera siempre
-  // abierto, un solo pendiente ocuparía más que el resto del panel junto.
-  let comparando = $state<string[]>([]);
-  function toggleCompare(id: string) {
-    comparando = comparando.includes(id) ? comparando.filter((x) => x !== id) : [...comparando, id];
-  }
-
-  // Contador de todo lo que espera una decisión tuya.
-  const pendientes = $derived(
-    data.pendingRequests.length +
-      data.pendingVideoCount +
-      data.paymentAlerts.length +
-      data.clientsWithoutWorkout.length
-  );
 </script>
 
 <svelte:head>
   <title>Inicio · Treno</title>
 </svelte:head>
 
-<div class="space-y-8">
-  <!-- Cabecera: la jerarquía la marca el tipo, no la decoración.
-       Fecha y resumen van en la misma línea para no gastar tres alturas de
-       texto en decir poco. -->
-  <div>
-    <p class="eyebrow">
-      <span class="capitalize">{hoy}</span>
-      {#if data.hasClients}
-        <span class="text-text-mute normal-case tracking-normal">
-          ·
-          {#if pendientes === 0}
-            nada pendiente
-          {:else}
-            {pendientes} {pendientes === 1 ? 'cosa espera' : 'cosas esperan'} por ti
-          {/if}
-        </span>
-      {/if}
-    </p>
-    <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-1">
-      Hola{data.firstName ? ', ' + data.firstName : ''}
-    </h1>
-  </div>
-
-  <!-- Acciones: tira compacta de texto, sin tarjetas ni iconos decorativos -->
-  <nav class="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-line py-3 text-sm">
-    <span class="text-xs uppercase tracking-wider text-text-mute">Crear</span>
-    <a href="/agenda?propose=1" class="font-medium hover:text-accent transition-colors">Cita</a>
-    <a href="/templates?new=1" class="font-medium hover:text-accent transition-colors"
-      >Entrenamiento</a
-    >
-    <a href="/exercises/new" class="font-medium hover:text-accent transition-colors">Ejercicio</a>
-    <a href="/clients?invite=1" class="font-medium hover:text-accent transition-colors"
-      >Invitar cliente</a
-    >
-    <a href="/groups" class="font-medium hover:text-accent transition-colors">Grupo</a>
-  </nav>
-
+<div class="space-y-10">
   {#if form?.error}
     <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.confirmed}
-    <p
+
+  <!-- Deshacer el rechazo. Aparece justo después y solo entonces: rechazar es
+       lo único de esta pantalla que le llega al cliente, y el ✓ y la ✕ están a
+       un pulgar de distancia en un móvil. -->
+  {#if form?.success && form?.rechazada}
+    <div
       aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+      class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm bg-surface-2 border border-line rounded-md p-3"
     >
-      Cita confirmada. Ya le aparece al cliente en sus citas.
-    </p>
-  {/if}
-  {#if form?.success && form?.rejected}
-    <p
-      aria-live="polite"
-      class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3"
-    >
-      Cita rechazada.
-    </p>
-  {/if}
-  {#if form?.success && form?.commented}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Corrección enviada. Tu cliente la verá en ese ejercicio.
-    </p>
+      <span class="flex-1 min-w-0">Cita rechazada. Tu cliente ya lo ve.</span>
+      <form method="POST" action="?/deshacerRechazo" use:enhance>
+        <input type="hidden" name="session_id" value={form.sessionId} />
+        <button type="submit" class="text-accent hover:underline font-medium">Deshacer</button>
+      </form>
+    </div>
   {/if}
 
-  {#if !data.hasClients}
-    <!-- Arranque en frío: qué gana y por dónde empezar, sin adornos -->
-    <div class="card max-w-2xl space-y-4">
-      <h2 class="text-2xl font-display font-semibold">Monta tu primer entreno en cinco minutos</h2>
-      <p class="text-sm text-text-mute">
-        El orden que funciona: carga la biblioteca de ejercicios, arma un entrenamiento con ellos y
-        luego invita a tu primer cliente para asignárselo.
-      </p>
-      <div class="flex flex-wrap gap-3">
-        <a href="/exercises" class="btn-primary">Cargar biblioteca base</a>
-        <a href="/clients?invite=1" class="btn-ghost">Invitar cliente</a>
-      </div>
+  <!-- ============== Próximas sesiones ============== -->
+  <section class="space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-xl sm:text-2xl font-display font-semibold tracking-tight">
+        Próximas sesiones
+      </h1>
+      <a href="/agenda" class="action-primary">+ Añadir</a>
     </div>
-  {:else}
-    <!-- ===== HOY ===== -->
-    <section>
-      <div class="flex items-baseline justify-between gap-4 mb-2">
-        <h2 class="text-lg font-display font-semibold">Hoy</h2>
-        <a href="/agenda" class="text-xs text-text-mute hover:text-accent transition-colors"
-          >Ver agenda →</a
-        >
+
+    {#if data.proximas.length === 0}
+      <div class="card space-y-3">
+        {#if data.hayClientes}
+          <p class="text-text-mute">
+            No tienes ninguna sesión confirmada. Propón una desde la agenda, o abre huecos para que
+            te la pidan ellos.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="/agenda" class="btn-primary">Ir a la agenda</a>
+            <a href="/availability" class="btn-ghost">Abrir huecos</a>
+          </div>
+        {:else}
+          <p class="text-text-mute">
+            Todavía no tienes clientes. En cuanto invites al primero podrás programarle entrenos y
+            citas.
+          </p>
+          <a href="/clients" class="btn-primary">Invitar a mi primer cliente</a>
+        {/if}
       </div>
-      {#if data.todaySessions.length === 0}
-        <p class="text-sm text-text-mute border-t border-line pt-3">
-          Sin citas confirmadas para hoy.
-          <a href="/agenda?propose=1" class="text-accent hover:underline">Proponer una</a>.
-        </p>
-      {:else}
-        <div class="border-t border-line">
-          {#each data.todaySessions as s (s.id)}
-            <div class="row">
-              <span class="w-14 tabular-nums font-display font-semibold flex-shrink-0">
-                {fmtTime(s.starts_at)}
+    {:else}
+      <!-- Tira horizontal, como en el wireframe. La tarjeta cortada del borde
+           es lo que indica que hay más: sin ella parecería que se acaban ahí.
+           snap-x para que el arrastre no deje una tarjeta a medias. -->
+      <div class="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
+        {#each data.proximas as s (s.id)}
+          <a
+            href="/clients/{s.clientId}"
+            class="card snap-start flex-shrink-0 w-64 hover:border-line-strong transition-colors"
+          >
+            <span class="block font-semibold truncate">{s.nombre}</span>
+            {#if s.donde}
+              <span class="block text-sm text-text-mute truncate">{s.donde}</span>
+            {:else}
+              <span class="block text-sm text-text-mute capitalize">{s.modalidad}</span>
+            {/if}
+            <span class="block text-sm text-text-mute tabular-nums mt-1">
+              {hora(s.cuando)} · {fecha(s.cuando)}
+            </span>
+          </a>
+        {/each}
+      </div>
+
+      <a href="/agenda" class="inline-block text-sm underline hover:text-accent transition-colors">
+        Ver todas las citas
+      </a>
+    {/if}
+  </section>
+
+  <!-- ============== Peticiones pendientes ============== -->
+  {#if data.totalPeticiones > 0}
+    <section class="space-y-3">
+      <h2 class="text-xl sm:text-2xl font-display font-semibold tracking-tight">
+        Peticiones pendientes
+      </h2>
+
+      <div class="space-y-3">
+        {#each data.peticiones as p (p.id)}
+          <div class="card flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <span class="block font-semibold truncate">{p.nombre}</span>
+              <span class="block text-sm text-text-mute tabular-nums">
+                {fecha(p.cuando)} · {hora(p.cuando)}
               </span>
-              <div class="flex-1 min-w-0">
-                <div class="font-medium truncate">{s.client?.full_name ?? 'Cliente'}</div>
-                <div class="text-xs text-text-mute">{modalityLabel[s.modality] ?? s.modality}</div>
-              </div>
-              {#if s.workout}
-                <a
-                  href="/clients/{s.client_id}/workouts/{s.workout.date}"
-                  class="text-xs text-accent hover:underline flex-shrink-0"
-                >
-                  {s.workout.title ?? 'Ver entreno'} →
-                </a>
-              {:else}
-                <a
-                  href="/clients/{s.client_id}/workouts/{data.today}"
-                  class="text-xs text-accent hover:underline flex-shrink-0"
-                >
-                  Montar entreno →
-                </a>
+              {#if p.donde}
+                <span class="block text-sm text-text-mute truncate">{p.donde}</span>
               {/if}
-              <a
-                href="/clients/{s.client_id}"
-                class="text-xs text-text-mute hover:text-text flex-shrink-0">Ficha</a
-              >
             </div>
-          {/each}
-        </div>
+
+            <!--
+              Aceptar y rechazar SEPARADOS y con tamaños distintos.
+
+              El wireframe los pone pegados, uno encima del otro, en el borde
+              derecho. Aceptar es lo que se hace casi siempre y rechazar le
+              llega al cliente: a ocho píxeles de distancia, con el pulgar y
+              con prisa, el fallo es cuestión de tiempo. Aceptar es grande y
+              lleva el color; rechazar es pequeño, va aparte, y encima tiene
+              "deshacer" arriba.
+            -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <form method="POST" action="?/confirmar" use:enhance>
+                <input type="hidden" name="session_id" value={p.id} />
+                <button
+                  type="submit"
+                  class="btn-primary"
+                  aria-label="Aceptar la cita de {p.nombre}"
+                >
+                  Aceptar
+                </button>
+              </form>
+              <form method="POST" action="?/rechazar" use:enhance>
+                <input type="hidden" name="session_id" value={p.id} />
+                <button
+                  type="submit"
+                  class="action-neutral"
+                  aria-label="Rechazar la cita de {p.nombre}"
+                >
+                  Rechazar
+                </button>
+              </form>
+            </div>
+          </div>
+        {/each}
+      </div>
+
+      {#if data.totalPeticiones > data.peticiones.length}
+        <a
+          href="/agenda"
+          class="inline-block text-sm underline hover:text-accent transition-colors"
+        >
+          Ver otras {data.totalPeticiones - data.peticiones.length} citas pendientes
+        </a>
       {/if}
     </section>
-
-    <!-- ===== CITAS QUE ESPERAN TU RESPUESTA (se resuelven aquí) ===== -->
-    {#if data.pendingRequests.length > 0}
-      <section>
-        <h2 class="text-lg font-display font-semibold mb-2">Te han pedido cita</h2>
-        <div class="border-t border-line">
-          {#each data.pendingRequests as s (s.id)}
-            <div class="row">
-              <div class="flex-1 min-w-0">
-                <div class="font-medium truncate">{s.client?.full_name ?? 'Cliente'}</div>
-                <div class="text-xs text-text-mute capitalize">
-                  {fmtDay(s.starts_at)} · {fmtTime(s.starts_at)} · {modalityLabel[s.modality] ??
-                    s.modality}
-                </div>
-              </div>
-              <form method="POST" action="?/confirmSession" use:enhance class="flex-shrink-0">
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="action-primary">Confirmar</button>
-              </form>
-              <form method="POST" action="?/rejectSession" use:enhance class="flex-shrink-0">
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="action-danger">Rechazar</button>
-              </form>
-            </div>
-          {/each}
-        </div>
-      </section>
-    {/if}
-
-    <!-- ===== BANDEJA DE CORRECCIÓN DE TÉCNICA =====
-         Se corrige aquí mismo: ver el vídeo, escribir la corrección y guardar.
-         Al guardar, el vídeo sale de la bandeja. -->
-    {#if data.reviewQueue.length > 0}
-      <section>
-        <div class="flex items-baseline justify-between gap-4 mb-2">
-          <h2 class="text-lg font-display font-semibold">Técnica por corregir</h2>
-          {#if data.pendingVideoCount > data.reviewQueue.length}
-            <span class="text-xs text-text-mute">
-              {data.reviewQueue.length} de {data.pendingVideoCount}
-            </span>
-          {/if}
-        </div>
-
-        <div class="space-y-4 border-t border-line pt-4">
-          {#each data.reviewQueue as v (v.id)}
-            {@const cmp = comparando.includes(v.id)}
-            <article class="card space-y-3">
-              <div class="flex items-baseline justify-between gap-3">
-                <h3 class="font-semibold min-w-0 truncate">
-                  {v.clientName}
-                  <span class="text-text-mute font-normal"> · {v.exerciseName}</span>
-                </h3>
-                <div class="flex items-baseline gap-3 flex-shrink-0">
-                  {#if v.firstUrl}
-                    <button
-                      type="button"
-                      onclick={() => toggleCompare(v.id)}
-                      class="action-neutral"
-                    >
-                      {cmp ? 'Ocultar el primero' : 'Comparar con el primero'}
-                    </button>
-                  {/if}
-                  <span class="text-xs text-text-mute">{hace(v.createdAt)}</span>
-                </div>
-              </div>
-
-              <!-- Compacto: vídeo a la izquierda y corrección a la derecha, que
-                   hay ancho de sobra. Al comparar pasa a una columna para que
-                   los dos vídeos quepan al lado. -->
-              <div class="grid gap-4 {cmp ? '' : 'sm:grid-cols-[minmax(0,20rem)_1fr]'}">
-                <div class="grid gap-3 {cmp ? 'sm:grid-cols-2' : ''}">
-                  <div class="space-y-1.5">
-                    {#if cmp}
-                      <span class="text-xs uppercase tracking-wider text-text-mute">Ahora</span>
-                    {/if}
-                    {#if v.url}
-                      <!-- svelte-ignore a11y_media_has_caption -->
-                      <video
-                        src={v.url}
-                        controls
-                        playsinline
-                        preload="metadata"
-                        class="w-full rounded-md bg-black {cmp ? 'max-h-64' : 'max-h-44'}"
-                      ></video>
-                    {:else}
-                      <p class="text-xs text-text-mute italic">No se pudo cargar el vídeo.</p>
-                    {/if}
-                  </div>
-                  {#if cmp && v.firstUrl}
-                    <div class="space-y-1.5">
-                      <span class="text-xs uppercase tracking-wider text-text-mute">
-                        Su primer vídeo{v.firstAt
-                          ? ' · ' + new Date(v.firstAt).toLocaleDateString('es-ES')
-                          : ''}
-                      </span>
-                      <!-- svelte-ignore a11y_media_has_caption -->
-                      <video
-                        src={v.firstUrl}
-                        controls
-                        playsinline
-                        preload="metadata"
-                        class="w-full max-h-64 rounded-md bg-black"
-                      ></video>
-                    </div>
-                  {/if}
-                </div>
-
-                <form
-                  method="POST"
-                  action="?/commentVideo"
-                  use:enhance
-                  class="space-y-2 {cmp ? 'border-t border-line pt-3' : ''}"
-                >
-                  <input type="hidden" name="video_id" value={v.id} />
-                  <label
-                    for="cmt-{v.id}"
-                    class="block text-xs uppercase tracking-wider text-text-mute"
-                  >
-                    Corrección para {v.clientName.split(' ')[0]}
-                  </label>
-                  <textarea
-                    id="cmt-{v.id}"
-                    name="comment"
-                    rows="3"
-                    maxlength="600"
-                    required
-                    placeholder="ej: baja más la cadera y mantén la espalda neutra…"
-                    class="w-full px-4 py-2.5 bg-bg border border-line rounded-md text-sm
-                           focus:border-accent focus:ring-2 focus:ring-accent/20 resize-none"
-                  ></textarea>
-                  <div class="flex items-center justify-end gap-3">
-                    <a href="/clients/{v.clientId}?tab=tecnica" class="action-neutral"
-                      >Ver historial</a
-                    >
-                    <button type="submit" class="action-primary">Enviar corrección</button>
-                  </div>
-                </form>
-              </div>
-            </article>
-          {/each}
-        </div>
-
-        {#if data.pendingVideoCount > data.reviewQueue.length}
-          <p class="text-sm text-text-mute mt-3">
-            Quedan {data.pendingVideoCount - data.reviewQueue.length} vídeos más por corregir. Aparecerán
-            aquí según despaches estos.
-          </p>
-        {/if}
-      </section>
-    {/if}
-
-    <!-- ===== REQUIERE TU ATENCIÓN (programar / cobrar) ===== -->
-    {#if data.clientsWithoutWorkout.length > 0 || data.paymentAlerts.length > 0}
-      <section>
-        <h2 class="text-lg font-display font-semibold mb-2">Requiere tu atención</h2>
-        <div class="border-t border-line">
-          {#each data.paymentAlerts as c (c.id)}
-            <a href="/clients/{c.id}?tab=ficha" class="row-link">
-              <span class="flex-shrink-0 {c.status === 'vencido' ? 'pill-danger' : 'pill-warn'}">
-                {c.status === 'vencido' ? 'Vencida' : 'Vence pronto'}
-              </span>
-              <span class="flex-1 min-w-0 truncate">
-                <span class="font-medium">{c.name}</span>
-                <span class="text-text-mute text-sm">
-                  {#if c.paidUntil}
-                    · pagado hasta el {fmtDate(c.paidUntil)}
-                  {:else}
-                    · sin fecha de pago
-                  {/if}
-                </span>
-              </span>
-              <span class="text-xs text-accent flex-shrink-0">Actualizar →</span>
-            </a>
-          {/each}
-
-          {#each data.clientsWithoutWorkout as c (c.id)}
-            <div class="row">
-              <span class="pill-mute flex-shrink-0">Sin entrenos</span>
-              <span class="flex-1 min-w-0 truncate">
-                <span class="font-medium">{c.full_name ?? 'Cliente'}</span>
-                <span class="text-text-mute text-sm"> no tiene nada esta semana</span>
-              </span>
-              <a href="/clients/{c.id}/workouts/{data.today}" class="action-primary flex-shrink-0"
-                >Programar</a
-              >
-              <a href="/clients/{c.id}" class="text-xs text-text-mute hover:text-text flex-shrink-0"
-                >Ficha</a
-              >
-            </div>
-          {/each}
-        </div>
-      </section>
-    {/if}
-
-    <!-- ===== ESPERANDO AL CLIENTE ===== -->
-    {#if data.pendingProposals.length > 0}
-      <section>
-        <h2 class="text-lg font-display font-semibold mb-2">Esperando a que confirmen</h2>
-        <div class="border-t border-line">
-          {#each data.pendingProposals as s (s.id)}
-            <div class="row text-sm">
-              <span class="flex-1 min-w-0 truncate">
-                <span class="font-medium">{s.client?.full_name ?? 'Cliente'}</span>
-                <span class="text-text-mute capitalize"> · {fmtDay(s.starts_at)}</span>
-              </span>
-              <span class="text-xs text-text-mute flex-shrink-0">Pendiente del cliente</span>
-              <form method="POST" action="?/rejectSession" use:enhance class="flex-shrink-0">
-                <input type="hidden" name="session_id" value={s.id} />
-                <button type="submit" class="action-neutral">Anular</button>
-              </form>
-            </div>
-          {/each}
-        </div>
-      </section>
-    {/if}
   {/if}
 </div>

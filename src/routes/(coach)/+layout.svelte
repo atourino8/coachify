@@ -174,7 +174,13 @@
                    bg-surface border-l border-line
                    flex flex-col overflow-y-auto"
             >
-              <div class="flex items-center justify-end p-3">
+              <!-- La flecha va a la IZQUIERDA, como en el wireframe, y no es
+                   decoración: el botón de la hamburguesa se queda visible por
+                   encima del panel a propósito (es la única forma de cerrar
+                   que no depende de JavaScript), así que si esta flecha
+                   estuviera a la derecha las dos cosas se solaparían en la
+                   misma esquina. -->
+              <div class="flex items-center justify-start p-3">
                 <button
                   type="button"
                   aria-label="Cerrar menú"
@@ -191,7 +197,7 @@
                     stroke-linecap="round"
                     aria-hidden="true"
                   >
-                    <path d="M5 12h14M12 5l-7 7 7 7" />
+                    <path d="M19 12H5M12 19l7-7-7-7" />
                   </svg>
                 </button>
               </div>
