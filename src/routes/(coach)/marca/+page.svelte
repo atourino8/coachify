@@ -38,6 +38,9 @@
 
 <div class="space-y-8">
   <header class="space-y-2">
+    <a href="/ajustes" class="text-sm text-text-mute hover:text-text transition-colors">
+      ← Ajustes
+    </a>
     <h1 class="h-display text-2xl sm:text-3xl">Tu marca</h1>
     <p class="text-text-mute max-w-2xl">
       El color con el que tus clientes ven la aplicación. Para ellos esto es tu herramienta, no la
