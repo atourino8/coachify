@@ -5,6 +5,7 @@ import { identidadDeMarca } from '$lib/brand';
 import { accesoDelCliente } from '$lib/access';
 import { todayISOInTZ } from '$lib/week';
 import { supabaseAdmin } from '$lib/supabase/admin';
+import { construirVocabulario, VOCABULARIO_BASE, type EtiquetaCoach } from '$lib/tags';
 import type { LayoutServerLoad } from './$types';
 
 const TZ_POR_DEFECTO = 'Europe/Madrid';
@@ -80,5 +81,21 @@ export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSessio
   const hoy = todayISOInTZ(profile.timezone || TZ_POR_DEFECTO);
   const acceso = accesoDelCliente(bloqueoActivado, info ?? null, hoy);
 
-  return { profile, marca, acceso, nombreCoach };
+  // El cliente necesita el vocabulario de SU entrenador: si no, en su pantalla
+  // de progreso vería "suelo_pelvico" en vez de "Suelo pélvico". La política
+  // coach_tags_read_by_clients de la migración 0019 se lo permite.
+  let vocabulario = VOCABULARIO_BASE;
+  if (profile.coach_id) {
+    try {
+      const { data: propias } = await supabase
+        .from('coach_tags')
+        .select('id, kind, slug, label')
+        .eq('coach_id', profile.coach_id);
+      vocabulario = construirVocabulario((propias ?? []) as EtiquetaCoach[]);
+    } catch {
+      vocabulario = VOCABULARIO_BASE;
+    }
+  }
+
+  return { profile, marca, acceso, nombreCoach, vocabulario };
 };

@@ -21,14 +21,25 @@
     return match.some((m) => path === m || path.startsWith(m + '/'));
   }
 
-  // El cajón se cierra al navegar. Con <details> el estado vive en el DOM, y
-  // en una navegación del lado del cliente ese nodo no se vuelve a crear: sin
-  // esto, tocas "Clientes" y el menú se queda abierto encima de la pantalla
-  // a la que acabas de ir.
+  // Los destinos de configuración, en el mismo orden en los dos menús: el
+  // cajón del móvil y el desplegable de escritorio. Aprender dos ordenaciones
+  // distintas de lo mismo es trabajo que no debería existir.
+  const cuenta = [
+    { href: '/ajustes', label: 'Ajustes' },
+    { href: '/marca', label: 'Tu marca' },
+    { href: '/avisos', label: 'Avisos' }
+  ];
+
+  // Los dos menús se cierran al navegar. Con <details> el estado vive en el
+  // DOM, y en una navegación del lado del cliente ese nodo no se vuelve a
+  // crear: sin esto, tocas "Clientes" y el menú se queda abierto encima de la
+  // pantalla a la que acabas de ir.
   let cajon: HTMLDetailsElement | undefined = $state();
+  let menuCuenta: HTMLDetailsElement | undefined = $state();
   $effect(() => {
     page.url.pathname;
     if (cajon) cajon.open = false;
+    if (menuCuenta) menuCuenta.open = false;
   });
 </script>
 
@@ -108,14 +119,67 @@
           </nav>
           {@render campana('text-text-mute hover:text-text transition-colors')}
           <span class="text-line-strong">|</span>
-          <a
-            href="/ajustes"
-            class="transition-colors {isActive(['/ajustes', '/marca'])
-              ? 'text-accent font-medium'
-              : 'text-text-mute hover:text-text'}"
-          >
-            Ajustes
-          </a>
+
+          <!--
+            Desplegable de cuenta. En escritorio no había nada equivalente al
+            cajón del móvil: solo un enlace suelto a Ajustes, y las opciones
+            quedaban escondidas dentro de esa pantalla.
+
+            Mismo <details> que el cajón y la lista de cobros, por lo mismo:
+            abre sin JavaScript, el navegador le da el rol y el teclado, y
+            Escape lo cierra. La arquitectura es la misma que la del cajón —tu
+            identidad arriba, destinos de configuración en medio, salir
+            abajo— para que no haya que aprender dos menús.
+          -->
+          <details bind:this={menuCuenta} class="relative">
+            <summary
+              class="list-none cursor-pointer flex items-center gap-2 rounded-md
+                     transition-colors {isActive(['/ajustes', '/marca'])
+                ? 'text-accent font-medium'
+                : 'text-text-mute hover:text-text'}
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <span aria-hidden="true" class="marca-cuadro w-7 h-7 text-2xs">
+                {data.marca.inicial}
+              </span>
+              <span class="max-w-[9rem] truncate">{data.profile.full_name ?? 'Ajustes'}</span>
+            </summary>
+
+            <button
+              type="button"
+              aria-label="Cerrar menú"
+              onclick={() => menuCuenta && (menuCuenta.open = false)}
+              class="fixed inset-0 z-40 cursor-default"
+            ></button>
+
+            <div
+              class="absolute right-0 top-full mt-2 z-50 w-60
+                     bg-surface border border-line rounded-lg shadow-lg overflow-hidden"
+            >
+              <div class="px-4 py-3 border-b border-line">
+                <p class="font-semibold truncate">{data.profile.full_name ?? 'Tu nombre'}</p>
+                <p class="text-2xs text-text-mute">Entrenador</p>
+              </div>
+              {#each cuenta as c (c.href)}
+                <a
+                  href={c.href}
+                  class="block px-4 py-2.5 text-sm border-b border-line transition-colors
+                         {isActive([c.href]) ? 'text-accent' : 'hover:bg-surface-2'}"
+                >
+                  {c.label}
+                </a>
+              {/each}
+              <form method="POST" action="/logout">
+                <button
+                  type="submit"
+                  class="w-full text-left px-4 py-2.5 text-sm text-text-mute
+                         hover:text-danger hover:bg-surface-2 transition-colors"
+                >
+                  Salir
+                </button>
+              </form>
+            </div>
+          </details>
         </div>
 
         <!--
@@ -230,14 +294,19 @@
               <!-- Configuración y salir, abajo y separados del resto: no son
                  destinos de trabajo y no compiten con ellos. -->
               <div class="mt-auto px-3 pb-4 pt-8">
-                <a
-                  href="/ajustes"
-                  aria-current={isActive(['/ajustes', '/marca']) ? 'page' : undefined}
-                  class="block px-2 py-3 text-lg font-medium transition-colors
-                       {isActive(['/ajustes', '/marca']) ? 'text-accent' : 'hover:text-accent'}"
-                >
-                  Ajustes
-                </a>
+                <!-- La MISMA lista que el desplegable de escritorio. Son dos
+                     formas de enseñar lo mismo, y si se escribieran por
+                     separado un día tendrían destinos distintos. -->
+                {#each cuenta as c (c.href)}
+                  <a
+                    href={c.href}
+                    aria-current={isActive([c.href]) ? 'page' : undefined}
+                    class="block px-2 py-3 text-lg font-medium transition-colors
+                           {isActive([c.href]) ? 'text-accent' : 'hover:text-accent'}"
+                  >
+                    {c.label}
+                  </a>
+                {/each}
                 <form method="POST" action="/logout" class="px-2 pt-2">
                   <button type="submit" class="text-text-mute hover:text-danger transition-colors">
                     Salir

@@ -4,7 +4,6 @@
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
   import CampoMedio from '$lib/components/CampoMedio.svelte';
-  import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
   import { idDeYoutube, urlDeEmbebido } from '$lib/coach-media';
   import { page } from '$app/state';
   import { env } from '$env/dynamic/public';
@@ -105,14 +104,14 @@
       <SelectorEtiquetas
         name="muscle_groups"
         titulo="Grupos musculares"
-        opciones={MUSCLE_GROUP_LABELS}
+        opciones={data.vocabulario.muscle}
         bind:seleccion={grupos}
         ayuda="Marca todos los que trabaje. El primero es el principal y es el que ve tu cliente en su entreno."
       />
       <SelectorEtiquetas
         name="equipment_types"
         titulo="Material"
-        opciones={EQUIPMENT_LABELS}
+        opciones={data.vocabulario.equipment}
         bind:seleccion={materiales}
       />
     </div>

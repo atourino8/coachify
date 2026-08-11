@@ -3,7 +3,6 @@
   import { SvelteSet } from 'svelte/reactivity';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
-  import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
   let { data, form } = $props();
 
   let seeding = $state(false);
@@ -14,7 +13,7 @@
   // es un text[] y se indexa con cadenas sueltas. Quien garantiza que solo hay
   // valores válidos es la restricción de la migración 0016 y el saneado de
   // exercise-tags.ts, no el tipo de esta tabla de etiquetas.
-  const muscleLabels: Record<string, string> = MUSCLE_GROUP_LABELS;
+  const muscleLabels = $derived(data.vocabulario.muscle);
 
   /** Clave interna del cajón de los que no tienen ningún grupo puesto. */
   const SIN_GRUPO = '__sin_grupo__';
@@ -35,7 +34,7 @@
         : data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
   );
 
-  const equipmentLabels: Record<string, string> = EQUIPMENT_LABELS;
+  const equipmentLabels = $derived(data.vocabulario.equipment);
 
   // ---- Vista: por grupos o lista plana ----
   //

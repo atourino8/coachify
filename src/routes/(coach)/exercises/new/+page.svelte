@@ -1,8 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
-  import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
-  let { form } = $props();
+  let { data, form } = $props();
   let loading = $state(false);
 
   // Un ejercicio trabaja varios grupos: un press de banca es pecho, hombro y
@@ -79,14 +78,14 @@
       <SelectorEtiquetas
         name="muscle_groups"
         titulo="Grupos musculares"
-        opciones={MUSCLE_GROUP_LABELS}
+        opciones={data.vocabulario.muscle}
         bind:seleccion={grupos}
         ayuda="Marca todos los que trabaje. El primero que marques es el principal."
       />
       <SelectorEtiquetas
         name="equipment_types"
         titulo="Material"
-        opciones={EQUIPMENT_LABELS}
+        opciones={data.vocabulario.equipment}
         bind:seleccion={materiales}
       />
     </div>

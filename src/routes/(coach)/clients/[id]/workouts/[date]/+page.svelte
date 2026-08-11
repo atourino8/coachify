@@ -136,16 +136,11 @@
     );
   }
 
-  const muscleLabels: Record<string, string> = {
-    chest: 'Pecho',
-    back: 'Espalda',
-    legs: 'Pierna',
-    shoulders: 'Hombro',
-    arms: 'Brazo',
-    core: 'Core',
-    cardio: 'Cardio',
-    full_body: 'Full body'
-  };
+  // El diccionario viene del layout: incluye el vocabulario base MÁS las
+  // etiquetas que se haya inventado el entrenador (migración 0019). Estaba
+  // copiado a mano en cuatro pantallas, y una decía "Pierna" donde otra
+  // decía "Piernas".
+  const muscleLabels = $derived(data.vocabulario.muscle);
 </script>
 
 <svelte:head>

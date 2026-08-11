@@ -3,6 +3,7 @@
 import { redirect } from '@sveltejs/kit';
 import { identidadDeMarca } from '$lib/brand';
 import { avisosDelCoach, cuentaSinVer } from '$lib/avisos.server';
+import { construirVocabulario, VOCABULARIO_BASE, type EtiquetaCoach } from '$lib/tags';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetSession } }) => {
@@ -53,5 +54,24 @@ export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetS
     sinVer = 0;
   }
 
-  return { profile, marca, sinVer };
+  // Vocabulario de etiquetas. Se carga en el layout porque lo usan seis
+  // pantallas y porque así el diccionario es el MISMO en todas: si cada una lo
+  // trajera por su cuenta, un renombrado tardaría en verse en unas y en otras
+  // no, según qué se hubiera recargado.
+  //
+  // Si falla —la migración 0019 sin aplicar— se cae al vocabulario base, que
+  // es exactamente lo que había antes.
+  let vocabulario = VOCABULARIO_BASE;
+  try {
+    const { data: propias } = await supabase
+      .from('coach_tags')
+      .select('id, kind, slug, label')
+      .eq('coach_id', user.id)
+      .order('label');
+    vocabulario = construirVocabulario((propias ?? []) as EtiquetaCoach[]);
+  } catch {
+    vocabulario = VOCABULARIO_BASE;
+  }
+
+  return { profile, marca, sinVer, vocabulario };
 };
