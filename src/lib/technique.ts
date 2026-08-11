@@ -96,11 +96,19 @@ export function uploadWithProgress(opts: {
   path: string;
   file: File;
   onProgress: (pct: number) => void;
+  /**
+   * Cubo destino. Por defecto el de técnica, que es de donde salió esta
+   * función; el material del entrenador va a `coach-media`. Se parametriza en
+   * vez de duplicar la función porque lo único que cambia es el destino, y dos
+   * copias de esto acabarían arreglándose solo una cuando falle algo.
+   */
+  bucket?: string;
 }): UploadHandle {
   const xhr = new XMLHttpRequest();
+  const bucket = opts.bucket ?? BUCKET;
 
   const promise = new Promise<void>((resolve, reject) => {
-    xhr.open('POST', `${opts.supabaseUrl}/storage/v1/object/${BUCKET}/${opts.path}`, true);
+    xhr.open('POST', `${opts.supabaseUrl}/storage/v1/object/${bucket}/${opts.path}`, true);
     xhr.setRequestHeader('Authorization', `Bearer ${opts.accessToken}`);
     xhr.setRequestHeader('x-upsert', 'true');
 

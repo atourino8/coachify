@@ -2,6 +2,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { etiquetasParaGuardar } from '$lib/exercise-tags';
+import { idDeYoutube } from '$lib/coach-media';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -15,6 +16,11 @@ export const actions: Actions = {
 
     if (!name || name.length < 2) {
       return fail(400, { error: 'El nombre del ejercicio es obligatorio.' });
+    }
+    // Misma comprobación que al editar: lo que se guarda acaba en un iframe,
+    // y solo se admite lo que sabemos reconstruir como URL de YouTube.
+    if (video_url && !idDeYoutube(video_url)) {
+      return fail(400, { error: 'Ese enlace no parece un vídeo de YouTube.' });
     }
 
     const { data, error } = await supabase

@@ -164,7 +164,14 @@ export interface Exercise {
   coach_id: string;
   name: string;
   description: string | null;
+  /** Vídeo ENLAZADO (YouTube). Excluyente con video_path. */
   video_url: string | null;
+  /** Vídeo SUBIDO: ruta en el cubo coach-media. Excluyente con video_url. */
+  video_path: string | null;
+  /** Imagen ENLAZADA. Excluyente con image_path. */
+  image_url: string | null;
+  /** Imagen SUBIDA: ruta en el cubo coach-media. Excluyente con image_url. */
+  image_path: string | null;
   video_poster: string | null;
   duration_seconds: number | null;
   /** Grupos que trabaja. El primero es el principal. */

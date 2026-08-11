@@ -2,6 +2,7 @@
 
 import { error, fail, redirect } from '@sveltejs/kit';
 import { BUCKET } from '$lib/technique';
+import { BUCKET_COACH } from '$lib/coach-media';
 import { accesoDeCliente } from '$lib/access.server';
 import type {
   WorkoutItemWithWorkout,
@@ -61,8 +62,24 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user },
     if (s?.signedUrl) signed[v.kind] = s.signedUrl;
   }
 
+  // Material del entrenador para este ejercicio. El cubo es privado y la
+  // política deja leerlo solo a los clientes de ese entrenador, así que hay
+  // que firmar. Se firma aquí y no en el navegador porque firmar requiere la
+  // sesión y hacerlo en servidor evita un viaje de ida y vuelta más.
+  const firmarMaterial = async (ruta: string | null | undefined) => {
+    if (!ruta) return null;
+    const { data } = await supabase.storage.from(BUCKET_COACH).createSignedUrl(ruta, 60 * 60);
+    return data?.signedUrl ?? null;
+  };
+  const [videoCoach, imagenCoach] = await Promise.all([
+    firmarMaterial(item.exercise.video_path),
+    firmarMaterial(item.exercise.image_path)
+  ]);
+
   return {
     item,
+    videoCoach,
+    imagenCoach,
     clientId: user.id,
     coachId: profile?.coach_id ?? null,
     techniqueFirst: videos.find((v) => v.kind === 'first') ?? null,

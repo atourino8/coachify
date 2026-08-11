@@ -3,6 +3,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { SEED_EXERCISES } from '$lib/seed-exercises';
 import { BUCKET } from '$lib/technique';
+import { BUCKET_COACH } from '$lib/coach-media';
 import type { PageServerLoad, Actions } from './$types';
 
 /** Campos que tiene sentido cambiar a varios ejercicios de golpe. */
@@ -138,15 +139,27 @@ export const actions: Actions = {
 
     let borrados = 0;
     if (borrables.length > 0) {
-      // Primero los ficheros del bucket, porque después de borrar la fila ya
-      // no hay forma de saber qué rutas había.
-      const { data: vids } = await supabase
-        .from('technique_videos')
-        .select('storage_path')
-        .in('exercise_id', borrables);
+      // Primero los ficheros de los dos cubos, porque después de borrar la
+      // fila ya no hay forma de saber qué rutas había.
+      const [{ data: vids }, { data: medios }] = await Promise.all([
+        // Vídeos de técnica de los clientes: la fila cae en cascada, el
+        // fichero no.
+        supabase.from('technique_videos').select('storage_path').in('exercise_id', borrables),
+        // Material propio del entrenador: vídeo e imagen subidos.
+        supabase.from('exercises').select('video_path, image_path').in('id', borrables)
+      ]);
 
       const rutas = ((vids ?? []) as { storage_path: string }[]).map((v) => v.storage_path);
       if (rutas.length > 0) await supabase.storage.from(BUCKET).remove(rutas);
+
+      const rutasMedios = (
+        (medios ?? []) as { video_path: string | null; image_path: string | null }[]
+      )
+        .flatMap((m) => [m.video_path, m.image_path])
+        .filter((r): r is string => Boolean(r));
+      if (rutasMedios.length > 0) {
+        await supabase.storage.from(BUCKET_COACH).remove(rutasMedios);
+      }
 
       const { error } = await supabase
         .from('exercises')

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { idDeYoutube, urlDeEmbebido, miniaturaDeYoutube } from '$lib/coach-media';
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
@@ -121,17 +122,21 @@
     currentUpload?.abort();
   }
 
-  function youtubeId(url: string | null): string | null {
-    if (!url) return null;
-    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
-    return m ? m[1] : null;
-  }
-
   function logForSet(n: number) {
     return data.item.set_logs?.find((l: SetLog) => l.set_number === n);
   }
 
-  const ytId = $derived(youtubeId(data.item.exercise.video_url));
+  const ytId = $derived(idDeYoutube(data.item.exercise.video_url));
+
+  // La imagen se enseña SIEMPRE que exista, junto al vídeo y no dentro de él.
+  //
+  // El motivo no es decorativo: quien ya se ha visto el vídeo tres veces no
+  // necesita el vídeo, necesita acordarse de la posición. Y en el gimnasio,
+  // con prisa y el móvil en la mano, mirar una foto es más rápido que cargar
+  // un vídeo y buscar el segundo doce.
+  const imagen = $derived(
+    data.imagenCoach ?? data.item.exercise.image_url ?? (ytId ? miniaturaDeYoutube(ytId) : null)
+  );
   const sets = $derived(Array.from({ length: data.item.sets }, (_, i) => i + 1));
 
   let activeSet = $state<number | null>(null);
@@ -159,26 +164,46 @@
 <div class="space-y-6">
   <a href="/today" class="text-sm text-text-mute hover:text-text">← Volver al día</a>
 
-  <!-- Vídeo + nombre -->
-  {#if ytId}
+  <!-- Material del ejercicio.
+       Orden a propósito: primero el vídeo si lo hay, y la imagen SIEMPRE
+       visible debajo cuando existe. No es la miniatura del vídeo: es la
+       chuleta de la posición para quien ya se lo ha visto. -->
+  {#if data.videoCoach}
+    <!-- Vídeo subido por el entrenador. Se sirve con URL firmada porque el
+         cubo es privado: su material es parte de lo que vende. -->
+    <video
+      src={data.videoCoach}
+      controls
+      playsinline
+      preload="metadata"
+      poster={data.imagenCoach ?? undefined}
+      class="w-full aspect-video rounded-md bg-black"
+    >
+      <track kind="captions" />
+    </video>
+  {:else if ytId}
     <div class="aspect-video rounded-md overflow-hidden bg-black">
       <iframe
-        src="https://www.youtube.com/embed/{ytId}"
+        src={urlDeEmbebido(ytId)}
         title={data.item.exercise.name}
         class="w-full h-full"
         allowfullscreen
       ></iframe>
     </div>
-  {:else if data.item.exercise.video_url}
-    <a
-      href={data.item.exercise.video_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="card text-center py-10"
-    >
-      <div class="text-4xl mb-2">▶</div>
-      <div class="text-sm text-text-mute">Abrir vídeo de técnica</div>
-    </a>
+  {/if}
+
+  {#if imagen}
+    <figure class="space-y-1">
+      <img
+        src={imagen}
+        alt="Posición de {data.item.exercise.name}"
+        loading="lazy"
+        class="w-full rounded-md border border-line"
+      />
+      <figcaption class="text-2xs text-text-mute">
+        La posición, para cuando ya te sabes el vídeo.
+      </figcaption>
+    </figure>
   {/if}
 
   <div>

@@ -3,7 +3,11 @@
   import { untrack } from 'svelte';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
+  import CampoMedio from '$lib/components/CampoMedio.svelte';
   import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
+  import { idDeYoutube, urlDeEmbebido } from '$lib/coach-media';
+  import { page } from '$app/state';
+  import { env } from '$env/dynamic/public';
   let { data, form } = $props();
   let saving = $state(false);
   let confirmArchive = $state(false);
@@ -14,13 +18,15 @@
   let grupos = $state<string[]>(untrack(() => data.exercise.muscle_groups) ?? []);
   let materiales = $state<string[]>(untrack(() => data.exercise.equipment_types) ?? []);
 
-  // Helper para extraer ID YouTube y mostrar thumbnail
-  function youtubeId(url: string | null): string | null {
-    if (!url) return null;
-    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
-    return m ? m[1] : null;
-  }
-  const ytId = $derived(youtubeId(data.exercise.video_url));
+  let videoUrl = $state<string | null>(untrack(() => data.exercise.video_url));
+  let videoPath = $state<string | null>(untrack(() => data.exercise.video_path));
+  let imagenUrl = $state<string | null>(untrack(() => data.exercise.image_url));
+  let imagenPath = $state<string | null>(untrack(() => data.exercise.image_path));
+
+  // La vista previa sale de lo que haya: un vídeo subido se reproduce directo
+  // con la URL firmada; uno enlazado va por el embebido de YouTube, que se
+  // reconstruye a partir del identificador y nunca con la URL tal cual.
+  const ytId = $derived(idDeYoutube(videoUrl));
 </script>
 
 <svelte:head>
@@ -37,11 +43,7 @@
 
   {#if ytId}
     <div class="aspect-video rounded-md overflow-hidden bg-black">
-      <iframe
-        src="https://www.youtube.com/embed/{ytId}"
-        title="Vista previa"
-        class="w-full h-full"
-        allowfullscreen
+      <iframe src={urlDeEmbebido(ytId)} title="Vista previa" class="w-full h-full" allowfullscreen
       ></iframe>
     </div>
   {/if}
@@ -73,19 +75,31 @@
       />
     </div>
 
-    <div>
-      <label for="video_url" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-        URL del vídeo
-      </label>
-      <input
-        id="video_url"
-        name="video_url"
-        type="url"
-        value={data.exercise.video_url ?? ''}
-        placeholder="https://youtu.be/..."
-        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-      />
-    </div>
+    <CampoMedio
+      tipo="video"
+      titulo="Vídeo"
+      exerciseId={data.exercise.id}
+      coachId={data.exercise.coach_id}
+      supabase={page.data.supabase}
+      supabaseUrl={env.PUBLIC_SUPABASE_URL}
+      bind:url={videoUrl}
+      bind:path={videoPath}
+      firmada={data.videoFirmado}
+      ayuda="Súbelo si puedes: se ve dentro de la aplicación y no depende de YouTube. Enlazarlo también vale."
+    />
+
+    <CampoMedio
+      tipo="imagen"
+      titulo="Imagen"
+      exerciseId={data.exercise.id}
+      coachId={data.exercise.coach_id}
+      supabase={page.data.supabase}
+      supabaseUrl={env.PUBLIC_SUPABASE_URL}
+      bind:url={imagenUrl}
+      bind:path={imagenPath}
+      firmada={data.imagenFirmada}
+      ayuda="Para tu cliente que ya se ha visto el vídeo y solo necesita recordar la posición."
+    />
 
     <div class="space-y-5">
       <SelectorEtiquetas
