@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import { SvelteSet } from 'svelte/reactivity';
   import Icono from '$lib/components/Icono.svelte';
+  import Pastillas from '$lib/components/Pastillas.svelte';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
   let { data, form } = $props();
@@ -578,9 +579,9 @@
               <span class="text-xs text-warning">sin vídeo</span>
             {/if}
           </a>
-          {#each ex.muscle_groups ?? [] as g (g)}
-            <span class="pill-mute flex-shrink-0">{muscleLabels[g] ?? g}</span>
-          {/each}
+          <!-- Tope de cuatro: un ejercicio con ocho etiquetas empujaría el
+               nombre —que es lo que se está buscando— fuera de la pantalla. -->
+          <Pastillas valores={ex.muscle_groups ?? []} etiquetas={muscleLabels} />
           <!-- El significado NO puede vivir en un `title`: un lector de
                pantalla no lo anuncia y en un móvil no hay forma de verlo. El
                icono es decoración y el texto va en sr-only. -->

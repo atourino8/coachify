@@ -29,6 +29,30 @@
 
   let { name, opciones, seleccion = $bindable(), ayuda, titulo }: Props = $props();
 
+  /**
+   * Tope de opciones visibles antes de plegar.
+   *
+   * Con el vocabulario base son ocho grupos y siete materiales, que ya llenan
+   * dos líneas en un móvil. Con etiquetas propias pueden ser veinte, y
+   * entonces el formulario entero es una alfombra de pastillas antes de llegar
+   * al primer campo que importa.
+   *
+   * Cuatro es lo que cabe en una línea de móvil sin apretar.
+   */
+  const TOPE = 4;
+  let desplegado = $state(false);
+
+  // Las ELEGIDAS van primero y siempre se ven, aunque sean más de cuatro:
+  // plegar algo que el entrenador acaba de marcar es hacerle dudar de si se
+  // guardó. El tope solo esconde lo que NO ha elegido.
+  const ordenadas = $derived([
+    ...Object.keys(opciones).filter((v) => seleccion.includes(v)),
+    ...Object.keys(opciones).filter((v) => !seleccion.includes(v))
+  ]);
+  const cuantasSeVen = $derived(Math.max(TOPE, seleccion.length));
+  const visibles = $derived(desplegado ? ordenadas : ordenadas.slice(0, cuantasSeVen));
+  const ocultas = $derived(ordenadas.length - visibles.length);
+
   function alternar(valor: string) {
     seleccion = seleccion.includes(valor)
       ? seleccion.filter((v) => v !== valor)
@@ -47,7 +71,7 @@
   </p>
 
   <div class="flex flex-wrap gap-2">
-    {#each Object.entries(opciones) as [valor, etiqueta] (valor)}
+    {#each visibles as valor (valor)}
       {@const elegido = seleccion.includes(valor)}
       <button
         type="button"
@@ -57,9 +81,23 @@
           ? 'bg-primary text-bg border-primary font-medium'
           : 'border-line text-text-mute hover:text-text hover:border-line-strong'}"
       >
-        {etiqueta}
+        {opciones[valor] ?? valor}
       </button>
     {/each}
+
+    <!-- El botón dice CUÁNTAS faltan, no solo que hay más: «+9» y «+2» son
+         dos decisiones distintas sobre si merece la pena desplegar. -->
+    {#if ocultas > 0 || desplegado}
+      <button
+        type="button"
+        onclick={() => (desplegado = !desplegado)}
+        aria-expanded={desplegado}
+        class="px-3 py-1.5 rounded-full text-sm border border-line text-accent
+               hover:border-line-strong transition-colors tabular-nums"
+      >
+        {desplegado ? 'Ver menos' : `+${ocultas}`}
+      </button>
+    {/if}
   </div>
 
   {#each seleccion as valor (valor)}
