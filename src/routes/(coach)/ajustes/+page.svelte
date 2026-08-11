@@ -6,6 +6,7 @@
   let { data, form } = $props();
 
   let nombre = $state(untrack(() => data.nombre));
+  let sitio = $state(untrack(() => data.sitio));
   let guardando = $state(false);
   let renombrando = $state<string | null>(null);
   let textoNuevo = $state('');
@@ -107,6 +108,29 @@
           Preside la cabecera de la aplicación de tus clientes, encima de sus entrenos.
         </p>
       </div>
+      <div>
+        <label
+          for="default_location"
+          class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+        >
+          Dónde entrenas habitualmente
+        </label>
+        <input
+          id="default_location"
+          name="default_location"
+          type="text"
+          bind:value={sitio}
+          maxlength="60"
+          placeholder="Gimnasio Pepe"
+          class="w-full px-4 py-3 bg-bg border border-line rounded-md
+                 focus:outline-none focus:border-accent"
+        />
+        <p class="text-2xs text-text-mute mt-2">
+          Opcional. Sale bajo tu nombre y viene propuesto al crear una cita, pero cada cita puede
+          tener el suyo: si trabajas en dos sitios o vas a domicilio, no pasa nada.
+        </p>
+      </div>
+
       <button type="submit" class="btn-primary" disabled={guardando || nombre.trim().length < 2}>
         {guardando ? 'Guardando…' : 'Guardar'}
       </button>

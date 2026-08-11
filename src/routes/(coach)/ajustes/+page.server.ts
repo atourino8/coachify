@@ -17,7 +17,11 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
 
   const [{ data: profile }, { data: propias }] = await Promise.all([
-    supabase.from('profiles').select('full_name, brand_accent').eq('id', user.id).single(),
+    supabase
+      .from('profiles')
+      .select('full_name, brand_accent, default_location')
+      .eq('id', user.id)
+      .single(),
     supabase
       .from('coach_tags')
       .select('id, kind, slug, label')
@@ -27,6 +31,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   return {
     nombre: profile?.full_name ?? '',
+    sitio: profile?.default_location ?? '',
     email: user.email ?? '',
     tieneMarca: Boolean(profile?.brand_accent),
     propias: (propias ?? []) as { id: string; kind: ClaseEtiqueta; slug: string; label: string }[]
@@ -36,7 +41,9 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 export const actions: Actions = {
   nombre: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
-    const nombre = ((await request.formData()).get('full_name') as string)?.trim() ?? '';
+    const fd = await request.formData();
+    const nombre = (fd.get('full_name') as string)?.trim() ?? '';
+    const sitio = ((fd.get('default_location') as string) ?? '').trim();
 
     // Se exige nombre: si se permitiera vacío, sus clientes verían "Treno" en
     // la cabecera en vez de a su entrenador, que es lo contrario de lo que
@@ -45,10 +52,14 @@ export const actions: Actions = {
       return fail(400, { error: 'Escribe tu nombre: es lo que ven tus clientes.' });
     }
     if (nombre.length > 80) return fail(400, { error: 'El nombre es demasiado largo.' });
+    if (sitio.length > 60) return fail(400, { error: 'El sitio es demasiado largo.' });
 
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: nombre } as never)
+      // Vacío se guarda como null y no como cadena vacía: así "no lo he
+      // puesto" y "lo he borrado" son el mismo estado, y la cabecera no tiene
+      // que distinguir entre dos formas de nada.
+      .update({ full_name: nombre, default_location: sitio || null } as never)
       .eq('id', user.id);
 
     if (error) return fail(500, { error: error.message });

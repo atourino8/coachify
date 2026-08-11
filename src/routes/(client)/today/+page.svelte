@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icono from '$lib/components/Icono.svelte';
   import { diaLargo, diaConSemana } from '$lib/formato';
   import { page } from '$app/state';
   import { enhance } from '$app/forms';
@@ -269,8 +270,11 @@
                 {#if item.rest_seconds}· {item.rest_seconds}s desc.{/if}
               </div>
             </div>
-            {#if item.exercise.video_url}
-              <div class="text-xl text-text-mute">▶</div>
+            {#if item.exercise.video_url || item.exercise.video_path}
+              <span class="text-text-mute flex-shrink-0">
+                <Icono nombre="video" class="w-5 h-5" />
+                <span class="sr-only">Tiene vídeo</span>
+              </span>
             {/if}
           </div>
 

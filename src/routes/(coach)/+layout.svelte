@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import Icono from '$lib/components/Icono.svelte';
 
   let { data, children } = $props();
 
@@ -9,14 +10,14 @@
   // misma pantalla y separarlas en el menú obligaba a saber en cuál de las dos
   // está lo que buscas antes de buscarlo.
   const links = [
-    { href: '/dashboard', label: 'Inicio', match: ['/dashboard'] },
-    { href: '/exercises', label: 'Rutinas', match: ['/exercises', '/templates'] },
-    { href: '/clients', label: 'Clientes', match: ['/clients', '/groups'] },
-    { href: '/agenda', label: 'Agenda', match: ['/agenda', '/availability'] },
-    { href: '/cobros', label: 'Cobros', match: ['/cobros'] }
-  ];
+    { href: '/dashboard', label: 'Inicio', icono: 'inicio', match: ['/dashboard'] },
+    { href: '/exercises', label: 'Rutinas', icono: 'rutinas', match: ['/exercises', '/templates'] },
+    { href: '/clients', label: 'Clientes', icono: 'clientes', match: ['/clients', '/groups'] },
+    { href: '/agenda', label: 'Agenda', icono: 'agenda', match: ['/agenda', '/availability'] },
+    { href: '/cobros', label: 'Cobros', icono: 'cobros', match: ['/cobros'] }
+  ] as const;
 
-  function isActive(match: string[]): boolean {
+  function isActive(match: readonly string[]): boolean {
     const path = page.url.pathname;
     return match.some((m) => path === m || path.startsWith(m + '/'));
   }
@@ -25,10 +26,10 @@
   // cajón del móvil y el desplegable de escritorio. Aprender dos ordenaciones
   // distintas de lo mismo es trabajo que no debería existir.
   const cuenta = [
-    { href: '/ajustes', label: 'Ajustes' },
-    { href: '/marca', label: 'Tu marca' },
-    { href: '/avisos', label: 'Avisos' }
-  ];
+    { href: '/ajustes', label: 'Ajustes', icono: 'ajustes' },
+    { href: '/marca', label: 'Tu marca', icono: 'rejilla' },
+    { href: '/avisos', label: 'Avisos', icono: 'avisos' }
+  ] as const;
 
   // Los dos menús se cierran al navegar. Con <details> el estado vive en el
   // DOM, y en una navegación del lado del cliente ese nodo no se vuelve a
@@ -51,19 +52,7 @@
     class="relative {clases}"
     aria-label={data.sinVer > 0 ? `Avisos, ${data.sinVer} sin ver` : 'Avisos'}
   >
-    <svg
-      class="w-6 h-6"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-    </svg>
+    <Icono nombre="avisos" class="w-6 h-6" />
     {#if data.sinVer > 0}
       <span
         class="absolute -top-1 -right-1 min-w-[1.15rem] h-[1.15rem] px-1 rounded-full
@@ -163,18 +152,22 @@
               {#each cuenta as c (c.href)}
                 <a
                   href={c.href}
-                  class="block px-4 py-2.5 text-sm border-b border-line transition-colors
-                         {isActive([c.href]) ? 'text-accent' : 'hover:bg-surface-2'}"
+                  class="flex items-center gap-2.5 px-4 py-2.5 text-sm border-b border-line
+                         transition-colors {isActive([c.href])
+                    ? 'text-accent'
+                    : 'hover:bg-surface-2'}"
                 >
+                  <Icono nombre={c.icono} class="w-4 h-4 flex-shrink-0" />
                   {c.label}
                 </a>
               {/each}
               <form method="POST" action="/logout">
                 <button
                   type="submit"
-                  class="w-full text-left px-4 py-2.5 text-sm text-text-mute
+                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-mute
                          hover:text-danger hover:bg-surface-2 transition-colors"
                 >
+                  <Icono nombre="salir" class="w-4 h-4 flex-shrink-0" />
                   Salir
                 </button>
               </form>
@@ -274,7 +267,12 @@
                   <span class="block font-semibold truncate">
                     {data.profile.full_name ?? 'Tu nombre'}
                   </span>
-                  <span class="block text-sm text-text-mute">Ver ajustes</span>
+                  <!-- Debajo del nombre va DÓNDE entrena, como en el wireframe.
+                     Si no lo ha puesto, se ofrece ponerlo en vez de dejar el
+                     hueco o inventarse un texto. -->
+                  <span class="block text-sm text-text-mute truncate">
+                    {data.profile.default_location ?? 'Añadir dónde entrenas'}
+                  </span>
                 </span>
               </a>
 
@@ -301,14 +299,19 @@
                   <a
                     href={c.href}
                     aria-current={isActive([c.href]) ? 'page' : undefined}
-                    class="block px-2 py-3 text-lg font-medium transition-colors
+                    class="flex items-center gap-3 px-2 py-3 text-lg font-medium transition-colors
                            {isActive([c.href]) ? 'text-accent' : 'hover:text-accent'}"
                   >
+                    <Icono nombre={c.icono} class="w-5 h-5 flex-shrink-0" />
                     {c.label}
                   </a>
                 {/each}
                 <form method="POST" action="/logout" class="px-2 pt-2">
-                  <button type="submit" class="text-text-mute hover:text-danger transition-colors">
+                  <button
+                    type="submit"
+                    class="flex items-center gap-3 text-text-mute hover:text-danger transition-colors"
+                  >
+                    <Icono nombre="salir" class="w-5 h-5 flex-shrink-0" />
                     Salir
                   </button>
                 </form>

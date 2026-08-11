@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { SvelteSet } from 'svelte/reactivity';
+  import Icono from '$lib/components/Icono.svelte';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
   let { data, form } = $props();
@@ -184,19 +185,23 @@
               filterGroup = '';
             }}
             aria-pressed={vista === 'grupos'}
-            class="px-3 py-1.5 text-sm transition-colors {vista === 'grupos'
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors {vista ===
+            'grupos'
               ? 'bg-primary text-bg font-medium'
               : 'text-text-mute hover:text-text'}"
           >
+            <Icono nombre="rejilla" class="w-4 h-4" />
             Grupos
           </button>
           <button
             onclick={() => (vista = 'lista')}
             aria-pressed={vista === 'lista'}
-            class="px-3 py-1.5 text-sm border-l border-line transition-colors {vista === 'lista'
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
+                   transition-colors {vista === 'lista'
               ? 'bg-primary text-bg font-medium'
               : 'text-text-mute hover:text-text'}"
           >
+            <Icono nombre="lista" class="w-4 h-4" />
             Lista
           </button>
         </div>
@@ -576,8 +581,14 @@
           {#each ex.muscle_groups ?? [] as g (g)}
             <span class="pill-mute flex-shrink-0">{muscleLabels[g] ?? g}</span>
           {/each}
-          {#if ex.video_url}
-            <span class="text-xs text-text-mute flex-shrink-0" title="Tiene vídeo">▶</span>
+          <!-- El significado NO puede vivir en un `title`: un lector de
+               pantalla no lo anuncia y en un móvil no hay forma de verlo. El
+               icono es decoración y el texto va en sr-only. -->
+          {#if ex.video_url || ex.video_path}
+            <span class="flex-shrink-0 text-text-mute">
+              <Icono nombre="video" class="w-4 h-4" />
+              <span class="sr-only">Tiene vídeo</span>
+            </span>
           {/if}
           <a href="/exercises/{ex.id}" class="text-xs text-accent flex-shrink-0">Editar</a>
         </div>

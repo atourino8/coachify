@@ -14,6 +14,7 @@
    * huérfano por hueco, se sobrescribe a la siguiente y no crece sin control.
    */
   import { uploadWithProgress } from '$lib/technique';
+  import Icono from '$lib/components/Icono.svelte';
   import {
     BUCKET_COACH,
     rutaMedio,
@@ -173,11 +174,13 @@
                hover:border-line-strong transition-colors"
       >
         <input type="file" accept={acepta} onchange={elegido} class="sr-only" />
+        <Icono nombre="subir" class="w-6 h-6 mx-auto mb-2 text-text-mute" />
         <span class="block text-sm font-medium">Subir {tipo}</span>
         <span class="block text-2xs text-text-mute mt-1">Desde el móvil o el ordenador</span>
       </label>
 
       <div class="border border-line rounded-md p-4">
+        <Icono nombre="enlace" class="w-6 h-6 mx-auto mb-2 text-text-mute" />
         <label for="{nombreCampo}-enlace" class="block text-sm font-medium text-center">
           Enlazar
         </label>
