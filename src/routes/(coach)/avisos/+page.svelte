@@ -53,8 +53,19 @@
           : 'border-transparent text-text-mute hover:text-text'}"
       >
         {g.etiqueta}
+        <!-- El número va en círculo relleno, no suelto: en una fila de cuatro
+             pestañas con números al lado no se distingue el nombre de la
+             cuenta de un vistazo. Y el círculo toma el acento cuando la
+             pestaña está activa, así que sigue la marca del entrenador. -->
         {#if g.sinVer.length > 0}
-          <span class="ml-1 tabular-nums">{g.sinVer.length}</span>
+          <span
+            class="ml-1.5 inline-grid place-items-center min-w-[1.25rem] h-5 px-1.5 rounded-full
+                   text-2xs font-bold tabular-nums {activa === g.tipo
+              ? 'bg-accent text-bg'
+              : 'bg-surface-2 text-text'}"
+          >
+            {g.sinVer.length}
+          </span>
         {/if}
       </button>
     {/each}

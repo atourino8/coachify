@@ -20,20 +20,56 @@
   /** Clave interna del cajón de los que no tienen ningún grupo puesto. */
   const SIN_GRUPO = '__sin_grupo__';
 
+  // ---- Filtro del embudo ----
+  //
+  // Complementa al de grupo, no lo repite. Los dos criterios que hoy NO se
+  // pueden usar y que un entrenador sí busca:
+  //
+  //   · Material: "qué le puedo mandar a alguien que solo tiene mancuernas".
+  //   · Sin vídeo: "qué me falta por grabar", que es la lista de deberes de
+  //     quien está montando su biblioteca.
+  let filtroMaterial = $state<string[]>([]);
+  let soloSinVideo = $state(false);
+  const filtrosActivos = $derived(filtroMaterial.length + (soloSinVideo ? 1 : 0));
+
+  function limpiarFiltros() {
+    filtroMaterial = [];
+    soloSinVideo = false;
+  }
+
+  /**
+   * El filtro se aplica ANTES que el de grupo, y eso importa: las cuentas de
+   * la rejilla salen de aquí, así que al filtrar por mancuerna las tarjetas
+   * dicen cuántos hay de cada grupo CON mancuerna, no el total. Si no fuera
+   * así, entrarías en "Pecho 24" y encontrarías tres.
+   */
+  const conFiltro = $derived(
+    data.exercises.filter((e) => {
+      if (soloSinVideo && (e.video_url || e.video_path)) return false;
+      if (filtroMaterial.length > 0) {
+        const suyos = e.equipment_types ?? [];
+        // "Cualquiera de los marcados" y no "todos": marcar barra y mancuerna
+        // es buscar lo que se puede hacer con una cosa o con la otra.
+        if (!filtroMaterial.some((m) => suyos.includes(m))) return false;
+      }
+      return true;
+    })
+  );
+
   // Filtro por grupo muscular (mismo patrón que el de categorías en
   // Entrenamientos, para que la biblioteca se comporte igual en las dos pestañas).
   let filterGroup = $state('');
   const presentGroups = $derived(
-    [...new Set(data.exercises.flatMap((e) => e.muscle_groups ?? []))].sort((a, b) =>
+    [...new Set(conFiltro.flatMap((e) => e.muscle_groups ?? []))].sort((a, b) =>
       (muscleLabels[a] ?? a).localeCompare(muscleLabels[b] ?? b)
     )
   );
   const filtered = $derived(
     filterGroup === ''
-      ? data.exercises
+      ? conFiltro
       : filterGroup === SIN_GRUPO
-        ? data.exercises.filter((e) => (e.muscle_groups ?? []).length === 0)
-        : data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
+        ? conFiltro.filter((e) => (e.muscle_groups ?? []).length === 0)
+        : conFiltro.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
   );
 
   const equipmentLabels = $derived(data.vocabulario.equipment);
@@ -45,6 +81,7 @@
   // un móvil no es viable, pero a quien tiene seis la rejilla le mete un clic
   // de más para ver lo que le cabía en pantalla.
   const UMBRAL_REJILLA = 12;
+  let panelFiltro: HTMLDetailsElement | undefined = $state();
   let vista = $state<'grupos' | 'lista'>(
     untrack(() => data.exercises.length) > UMBRAL_REJILLA ? 'grupos' : 'lista'
   );
@@ -55,7 +92,7 @@
   // desconfiar de toda la pantalla.
   const conteoPorGrupo = $derived.by(() => {
     const mapa = new Map<string, number>();
-    for (const ex of data.exercises) {
+    for (const ex of conFiltro) {
       const grupos = ex.muscle_groups ?? [];
       if (grupos.length === 0) mapa.set(SIN_GRUPO, (mapa.get(SIN_GRUPO) ?? 0) + 1);
       for (const g of grupos) mapa.set(g, (mapa.get(g) ?? 0) + 1);
@@ -171,6 +208,90 @@
           {seeding ? 'Cargando…' : 'Cargar biblioteca base'}
         </button>
       </form>
+      <!--
+        Filtro. Un <details> otra vez, por lo mismo que el cajón y la lista de
+        cobros: abre sin JavaScript y Escape lo cierra.
+
+        Filtra por MATERIAL y por lo que falta grabar, que son los dos
+        criterios que no cubre el filtro de grupo. El número al lado del
+        embudo dice cuántos hay puestos: un filtro activo y olvidado es la
+        causa habitual de "me faltan ejercicios".
+      -->
+      {#if data.exercises.length > 0}
+        <details bind:this={panelFiltro} class="relative">
+          <summary
+            class="list-none cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-md border
+                   transition-colors {filtrosActivos > 0
+              ? 'border-accent text-accent'
+              : 'border-line text-text-mute hover:text-text'}
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Icono nombre="filtro" class="w-4 h-4" />
+            <span class="text-sm">Filtrar</span>
+            {#if filtrosActivos > 0}
+              <span class="text-sm tabular-nums">{filtrosActivos}</span>
+            {/if}
+          </summary>
+
+          <button
+            type="button"
+            aria-label="Cerrar filtro"
+            onclick={() => panelFiltro && (panelFiltro.open = false)}
+            class="fixed inset-0 z-40 cursor-default"
+          ></button>
+
+          <div
+            class="absolute right-0 top-full mt-2 z-50 w-72 max-w-[85vw] p-4 space-y-4
+                   bg-surface border border-line rounded-lg shadow-lg"
+          >
+            <div class="space-y-2">
+              <p class="text-xs uppercase tracking-wider text-text-mute">Material</p>
+              <div class="flex flex-wrap gap-2">
+                {#each Object.entries(equipmentLabels) as [valor, texto] (valor)}
+                  {@const puesto = filtroMaterial.includes(valor)}
+                  <button
+                    type="button"
+                    aria-pressed={puesto}
+                    onclick={() =>
+                      (filtroMaterial = puesto
+                        ? filtroMaterial.filter((m) => m !== valor)
+                        : [...filtroMaterial, valor])}
+                    class="px-3 py-1.5 rounded-full text-sm border transition-colors {puesto
+                      ? 'bg-primary text-bg border-primary font-medium'
+                      : 'border-line text-text-mute hover:text-text'}"
+                  >
+                    {texto}
+                  </button>
+                {/each}
+              </div>
+              <p class="text-2xs text-text-mute">
+                Marca varios para ver lo que se puede hacer con cualquiera de ellos.
+              </p>
+            </div>
+
+            <label
+              class="flex items-center gap-2.5 text-sm cursor-pointer border-t border-line pt-3"
+            >
+              <input
+                type="checkbox"
+                bind:checked={soloSinVideo}
+                class="w-4 h-4 rounded border-line bg-surface-2 accent-accent"
+              />
+              Solo los que están sin vídeo
+            </label>
+
+            {#if filtrosActivos > 0}
+              <button
+                onclick={limpiarFiltros}
+                class="text-sm text-text-mute hover:text-text transition-colors"
+              >
+                Quitar los filtros
+              </button>
+            {/if}
+          </div>
+        </details>
+      {/if}
+
       <!-- Conmutador de vista. Dos botones visibles en vez de un icono que
            alterna: con un solo icono nunca sabes si te enseña el estado actual
            o lo que pasaría al pulsarlo. -->
@@ -207,7 +328,7 @@
           </button>
         </div>
       {/if}
-      <a href="/exercises/new" class="btn-primary whitespace-nowrap">+ Nuevo ejercicio</a>
+      <a href="/exercises/new" class="btn-primary whitespace-nowrap">+ Añadir</a>
     </div>
   </div>
 

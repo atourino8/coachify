@@ -281,9 +281,12 @@
                   <a
                     href={link.href}
                     aria-current={isActive(link.match) ? 'page' : undefined}
-                    class="block px-2 py-3.5 border-b border-line text-lg font-medium transition-colors
-                         {isActive(link.match) ? 'text-accent' : 'hover:text-accent'}"
+                    class="flex items-center gap-3 px-2 py-3.5 border-b border-line text-lg
+                           font-medium transition-colors {isActive(link.match)
+                      ? 'text-accent'
+                      : 'hover:text-accent'}"
                   >
+                    <Icono nombre={link.icono} class="w-5 h-5 flex-shrink-0" />
                     {link.label}
                   </a>
                 {/each}
