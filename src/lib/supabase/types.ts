@@ -155,6 +155,17 @@ export interface Profile {
   archived: boolean;
   /** Cuándo terminó (o saltó) el asistente de primer login. Null = pendiente. */
   onboarded_at: string | null;
+
+  // --- Solo para perfiles de entrenador (migraciones 0014, 0015 y 0020) ---
+  /** Color de marca en hexadecimal. Null = paleta de Treno. */
+  brand_accent: string | null;
+  /** Segundo color para el degradado de la marca. Requiere brand_accent. */
+  brand_accent_2: string | null;
+  /** Si pausa el acceso a sus clientes con la cuota vencida. Apagado de fábrica. */
+  block_on_overdue: boolean;
+  /** Dónde entrena habitualmente. Sale bajo su nombre y propone el de las citas. */
+  default_location: string | null;
+
   created_at: string;
   updated_at: string;
 }
