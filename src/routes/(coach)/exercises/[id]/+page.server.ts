@@ -33,9 +33,8 @@ export const actions: Actions = {
         name,
         description: (formData.get('description') as string)?.trim() || null,
         video_url: (formData.get('video_url') as string)?.trim() || null,
-        muscle_group: ((formData.get('muscle_group') as string) || null) as never,
-        equipment: ((formData.get('equipment') as string) || null) as never
-      })
+        ...etiquetasParaGuardar(formData)
+      } as never)
       .eq('id', params.id)
       .eq('coach_id', user.id);
 

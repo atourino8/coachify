@@ -86,7 +86,10 @@
   const filteredExercises = $derived(
     data.exercises.filter((ex) => {
       if (filterText && !ex.name.toLowerCase().includes(filterText.toLowerCase())) return false;
-      if (filterMuscle && ex.muscle_group !== filterMuscle) return false;
+      // "contiene", no "es igual": desde la migración 0016 un ejercicio puede
+      // trabajar varios grupos, y con la comparación antigua un press de banca
+      // marcado como pecho+hombro no salía al filtrar por hombro.
+      if (filterMuscle && !(ex.muscle_groups ?? []).includes(filterMuscle)) return false;
       return true;
     })
   );

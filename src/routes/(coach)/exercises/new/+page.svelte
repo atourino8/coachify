@@ -1,28 +1,15 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
+  import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
   let { form } = $props();
   let loading = $state(false);
 
-  const muscleGroups = [
-    { value: 'chest', label: 'Pecho' },
-    { value: 'back', label: 'Espalda' },
-    { value: 'legs', label: 'Pierna' },
-    { value: 'shoulders', label: 'Hombro' },
-    { value: 'arms', label: 'Brazo' },
-    { value: 'core', label: 'Core' },
-    { value: 'cardio', label: 'Cardio' },
-    { value: 'full_body', label: 'Full body' }
-  ];
-
-  const equipmentOptions = [
-    { value: 'barbell', label: 'Barra' },
-    { value: 'dumbbell', label: 'Mancuerna' },
-    { value: 'machine', label: 'Máquina' },
-    { value: 'bodyweight', label: 'Peso corporal' },
-    { value: 'kettlebell', label: 'Kettlebell' },
-    { value: 'band', label: 'Banda' },
-    { value: 'other', label: 'Otro' }
-  ];
+  // Un ejercicio trabaja varios grupos: un press de banca es pecho, hombro y
+  // brazo. El PRIMERO que se marca es el principal, y es el que se ve en las
+  // pantallas que solo enseñan una etiqueta.
+  let grupos = $state<string[]>([]);
+  let materiales = $state<string[]>([]);
 </script>
 
 <svelte:head>
@@ -79,40 +66,20 @@
       />
     </div>
 
-    <div class="grid sm:grid-cols-2 gap-4">
-      <div>
-        <label
-          for="muscle_group"
-          class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-        >
-          Grupo muscular
-        </label>
-        <select
-          id="muscle_group"
-          name="muscle_group"
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="">— Sin especificar —</option>
-          {#each muscleGroups as g}
-            <option value={g.value}>{g.label}</option>
-          {/each}
-        </select>
-      </div>
-      <div>
-        <label for="equipment" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-          Equipamiento
-        </label>
-        <select
-          id="equipment"
-          name="equipment"
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-        >
-          <option value="">— Sin especificar —</option>
-          {#each equipmentOptions as e}
-            <option value={e.value}>{e.label}</option>
-          {/each}
-        </select>
-      </div>
+    <div class="space-y-5">
+      <SelectorEtiquetas
+        name="muscle_groups"
+        titulo="Grupos musculares"
+        opciones={MUSCLE_GROUP_LABELS}
+        bind:seleccion={grupos}
+        ayuda="Marca todos los que trabaje. El primero que marques es el principal."
+      />
+      <SelectorEtiquetas
+        name="equipment_types"
+        titulo="Material"
+        opciones={EQUIPMENT_LABELS}
+        bind:seleccion={materiales}
+      />
     </div>
 
     <div>

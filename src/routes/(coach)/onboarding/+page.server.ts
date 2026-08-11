@@ -95,6 +95,11 @@ export const actions: Actions = {
       coach_id: user.id,
       name: e.name,
       description: e.description,
+      // Se insertan las columnas sueltas a propósito: el disparador de la
+      // migración 0016 rellena los arrays a partir de ellas. Reescribir los
+      // cuarenta y ocho ejercicios de la biblioteca base para poner arrays de
+      // un elemento sería churn sin ganancia, y de paso esto ejercita el
+      // camino de compatibilidad cada vez que alguien carga la biblioteca.
       muscle_group: e.muscle_group,
       equipment: e.equipment
     }));

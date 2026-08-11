@@ -1,6 +1,7 @@
 // Crear nuevo ejercicio.
 
 import { fail, redirect } from '@sveltejs/kit';
+import { etiquetasParaGuardar } from '$lib/exercise-tags';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
@@ -11,8 +12,6 @@ export const actions: Actions = {
     const name = (formData.get('name') as string)?.trim();
     const description = (formData.get('description') as string)?.trim() || null;
     const video_url = (formData.get('video_url') as string)?.trim() || null;
-    const muscle_group = (formData.get('muscle_group') as string) || null;
-    const equipment = (formData.get('equipment') as string) || null;
 
     if (!name || name.length < 2) {
       return fail(400, { error: 'El nombre del ejercicio es obligatorio.' });
@@ -25,9 +24,10 @@ export const actions: Actions = {
         name,
         description,
         video_url,
-        muscle_group: muscle_group as never,
-        equipment: equipment as never
-      })
+        // Las columnas sueltas muscle_group y equipment NO se escriben: las
+        // calcula el disparador de la migración 0016 a partir de los arrays.
+        ...etiquetasParaGuardar(formData)
+      } as never)
       .select()
       .single();
 

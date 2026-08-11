@@ -405,8 +405,13 @@ async function main() {
       name: DEMO_EXERCISE,
       description: 'Ejercicio de prueba con vídeo, para ver cómo queda el reproductor embebido.',
       video_url: 'https://www.youtube.com/watch?v=aclHkVaku9U',
-      muscle_group: 'legs',
-      equipment: 'barbell'
+      // Con varias etiquetas a propósito: es el caso que hay que ver
+      // funcionando tras la migración 0016. Una sentadilla trabaja pierna,
+      // core y espalda baja, y así se comprueba que el filtro la encuentra
+      // por las tres y que la principal (la primera) es la que sale en el
+      // entreno del cliente.
+      muscle_groups: ['legs', 'core', 'back'],
+      equipment_types: ['barbell']
     })
     .select('id')
     .single();

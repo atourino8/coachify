@@ -199,39 +199,81 @@ export const actions: Actions = {
     };
   },
 
-  cambiarVarios: async ({ request, locals: { supabase, user } }) => {
+  /**
+   * Añadir o quitar una etiqueta a varios ejercicios.
+   *
+   * ANTES ERA "PONER" Y AHORA ES "AÑADIR / QUITAR", Y NO ES UN CAPRICHO.
+   * Con una sola etiqueta por ejercicio, "ponle Pecho a estos ocho" era una
+   * operación completa. Desde la migración 0016 un ejercicio puede tener
+   * varias, y "poner" significaría borrar las demás: marcar ocho presses para
+   * añadirles Hombro les quitaría Pecho sin avisar. El caso real del
+   * entrenador es "a estos también les toca hombro", que es añadir.
+   */
+  etiquetarVarios: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const ids = idsDelFormulario(fd);
     if (ids.length === 0) return fail(400, { error: 'No has marcado ningún ejercicio.' });
 
+    const quitar = fd.get('modo') === 'quitar';
     const grupo = (fd.get('muscle_group') as string) ?? '';
     const material = (fd.get('equipment') as string) ?? '';
 
     // Se valida contra las listas cerradas y no se confía en el desplegable:
-    // los CHECK de la tabla rechazarían un valor inventado, pero con un error
-    // de Postgres en crudo que no le dice nada a nadie.
-    const cambios: Record<string, string> = {};
-    if (grupo) {
-      if (!GRUPOS.includes(grupo)) return fail(400, { error: 'Grupo muscular no válido.' });
-      cambios.muscle_group = grupo;
+    // la restricción de la tabla rechazaría un valor inventado, pero con un
+    // error de Postgres en crudo que no le dice nada a nadie.
+    if (grupo && !GRUPOS.includes(grupo)) return fail(400, { error: 'Grupo muscular no válido.' });
+    if (material && !MATERIALES.includes(material)) {
+      return fail(400, { error: 'Material no válido.' });
     }
-    if (material) {
-      if (!MATERIALES.includes(material)) return fail(400, { error: 'Material no válido.' });
-      cambios.equipment = material;
-    }
-    if (Object.keys(cambios).length === 0) {
-      return fail(400, { error: 'Elige qué quieres cambiar.' });
-    }
+    if (!grupo && !material) return fail(400, { error: 'Elige qué etiqueta aplicar.' });
 
-    const { error } = await supabase
+    // Hay que leer antes de escribir: el resultado depende de lo que cada
+    // ejercicio tuviera. Es la diferencia entre añadir y sobrescribir.
+    const { data: actualesRaw, error: errLeer } = await supabase
       .from('exercises')
-      .update(cambios as never)
+      .select('id, muscle_groups, equipment_types')
       .in('id', ids)
       .eq('coach_id', user.id);
 
-    if (error) return fail(500, { error: error.message });
-    return { success: true, cambiados: ids.length };
+    if (errLeer) return fail(500, { error: errLeer.message });
+    const actuales = (actualesRaw ?? []) as {
+      id: string;
+      muscle_groups: string[] | null;
+      equipment_types: string[] | null;
+    }[];
+
+    const aplicar = (lista: string[] | null, valor: string) => {
+      const arr = lista ?? [];
+      if (!valor) return arr;
+      if (quitar) return arr.filter((v) => v !== valor);
+      return arr.includes(valor) ? arr : [...arr, valor];
+    };
+
+    // Se agrupan los ejercicios que acaban con el MISMO resultado y se manda
+    // una actualización por grupo, en vez de una por ejercicio. En la práctica
+    // son dos o tres consultas en lugar de cuarenta.
+    const porResultado = new Map<string, { ids: string[]; cambios: Record<string, string[]> }>();
+    for (const ex of actuales) {
+      const cambios: Record<string, string[]> = {};
+      if (grupo) cambios.muscle_groups = aplicar(ex.muscle_groups, grupo);
+      if (material) cambios.equipment_types = aplicar(ex.equipment_types, material);
+      const clave = JSON.stringify(cambios);
+      const entrada = porResultado.get(clave) ?? { ids: [], cambios };
+      entrada.ids.push(ex.id);
+      porResultado.set(clave, entrada);
+    }
+
+    for (const { ids: grupoIds, cambios } of porResultado.values()) {
+      const { error } = await supabase
+        .from('exercises')
+        .update(cambios as never)
+        .in('id', grupoIds)
+        .eq('coach_id', user.id);
+      if (error) return fail(500, { error: error.message });
+    }
+
+    return { success: true, cambiados: actuales.length, quitados: quitar };
   },
 
   // Carga la biblioteca base en la cuenta del coach. Se puede ejecutar más de
@@ -252,6 +294,11 @@ export const actions: Actions = {
       coach_id: user.id,
       name: e.name,
       description: e.description,
+      // Se insertan las columnas sueltas a propósito: el disparador de la
+      // migración 0016 rellena los arrays a partir de ellas. Reescribir los
+      // cuarenta y ocho ejercicios de la biblioteca base para poner arrays de
+      // un elemento sería churn sin ganancia, y de paso esto ejercita el
+      // camino de compatibilidad cada vez que alguien carga la biblioteca.
       muscle_group: e.muscle_group,
       equipment: e.equipment
     }));

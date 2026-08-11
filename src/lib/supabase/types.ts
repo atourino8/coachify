@@ -12,6 +12,40 @@ export type Feedback = 'easy' | 'just_right' | 'hard';
 export type ClientLevel = 'principiante' | 'intermedio' | 'avanzado';
 export type TechniqueVideoKind = 'first' | 'latest';
 
+/**
+ * Etiquetas visibles de los dos vocabularios cerrados.
+ *
+ * Estaban copiadas literalmente en cuatro pantallas, con "Pierna" en unas y
+ * "Piernas" en otras. Aquí viven una vez, y el orden de las claves es el que
+ * se usa para pintarlas: de lo más habitual a lo menos, no alfabético, porque
+ * un entrenador busca "Pecho" antes que "Cardio".
+ *
+ * Los valores tienen que coincidir con las restricciones de la migración 0016.
+ */
+export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
+  chest: 'Pecho',
+  back: 'Espalda',
+  legs: 'Pierna',
+  shoulders: 'Hombro',
+  arms: 'Brazo',
+  core: 'Core',
+  cardio: 'Cardio',
+  full_body: 'Full body'
+};
+
+export const EQUIPMENT_LABELS: Record<Equipment, string> = {
+  barbell: 'Barra',
+  dumbbell: 'Mancuerna',
+  machine: 'Máquina',
+  bodyweight: 'Peso corporal',
+  kettlebell: 'Kettlebell',
+  band: 'Goma',
+  other: 'Otro'
+};
+
+export const MUSCLE_GROUPS = Object.keys(MUSCLE_GROUP_LABELS) as MuscleGroup[];
+export const EQUIPMENT_TYPES = Object.keys(EQUIPMENT_LABELS) as Equipment[];
+
 export interface ClientGroup {
   id: string;
   coach_id: string;
@@ -133,6 +167,17 @@ export interface Exercise {
   video_url: string | null;
   video_poster: string | null;
   duration_seconds: number | null;
+  /** Grupos que trabaja. El primero es el principal. */
+  muscle_groups: MuscleGroup[];
+  /** Material necesario. El primero es el principal. */
+  equipment_types: Equipment[];
+  /**
+   * DERIVADAS. Son el primer elemento de los arrays de arriba, mantenidas por
+   * un disparador (migración 0016). Se conservan porque quince pantallas solo
+   * enseñan la etiqueta principal y no necesitan saber nada de arrays.
+   *
+   * No escribir en ellas desde código nuevo: el disparador las pisa.
+   */
   muscle_group: MuscleGroup | null;
   equipment: Equipment | null;
   archived: boolean;

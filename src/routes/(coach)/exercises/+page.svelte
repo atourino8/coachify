@@ -2,43 +2,30 @@
   import { enhance } from '$app/forms';
   import { SvelteSet } from 'svelte/reactivity';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
+  import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
   let { data, form } = $props();
 
   let seeding = $state(false);
 
-  // Labels en español de los enums
-  const muscleLabels: Record<string, string> = {
-    chest: 'Pecho',
-    back: 'Espalda',
-    legs: 'Pierna',
-    shoulders: 'Hombro',
-    arms: 'Brazo',
-    core: 'Core',
-    cardio: 'Cardio',
-    full_body: 'Full body'
-  };
+  // Las etiquetas viven en types.ts: estaban copiadas en cuatro pantallas y
+  // una decía "Pierna" donde otra decía "Piernas".
+  const muscleLabels = MUSCLE_GROUP_LABELS;
 
   // Filtro por grupo muscular (mismo patrón que el de categorías en
   // Entrenamientos, para que la biblioteca se comporte igual en las dos pestañas).
   let filterGroup = $state('');
   const presentGroups = $derived(
-    [...new Set(data.exercises.map((e) => e.muscle_group).filter(Boolean) as string[])].sort(
-      (a, b) => (muscleLabels[a] ?? a).localeCompare(muscleLabels[b] ?? b)
+    [...new Set(data.exercises.flatMap((e) => e.muscle_groups ?? []))].sort((a, b) =>
+      (muscleLabels[a] ?? a).localeCompare(muscleLabels[b] ?? b)
     )
   );
   const filtered = $derived(
-    filterGroup ? data.exercises.filter((e) => e.muscle_group === filterGroup) : data.exercises
+    filterGroup
+      ? data.exercises.filter((e) => (e.muscle_groups ?? []).includes(filterGroup))
+      : data.exercises
   );
 
-  const equipmentLabels: Record<string, string> = {
-    barbell: 'Barra',
-    dumbbell: 'Mancuerna',
-    machine: 'Máquina',
-    bodyweight: 'Peso corporal',
-    kettlebell: 'Kettlebell',
-    band: 'Goma',
-    other: 'Otro'
-  };
+  const equipmentLabels = EQUIPMENT_LABELS;
 
   // ---- Selección múltiple ----
   // Un Set y no un array de booleanos por ejercicio: la pertenencia se
@@ -170,7 +157,8 @@
       class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
     >
       {form.cambiados}
-      {form.cambiados === 1 ? 'ejercicio actualizado' : 'ejercicios actualizados'}.
+      {form.cambiados === 1 ? 'ejercicio actualizado' : 'ejercicios actualizados'}
+      {form.quitados ? '(etiqueta quitada)' : ''}.
     </p>
   {/if}
 
@@ -326,10 +314,12 @@
     {#if marcadosVisibles.length > 0}
       {@const seleccion = marcadosVisibles}
       <div class="card space-y-4">
-        <!-- Cambiar campos -->
+        <!-- Etiquetar. Dos botones y no uno con un desplegable de modo:
+             "añadir" y "quitar" son dos intenciones distintas y verlas juntas
+             evita el error de quitar creyendo que añades. -->
         <form
           method="POST"
-          action="?/cambiarVarios"
+          action="?/etiquetarVarios"
           use:enhance={trasLaAccion}
           class="flex flex-wrap items-end gap-3"
         >
@@ -347,7 +337,7 @@
               class="mt-1 bg-surface-2 border border-line rounded-md px-3 py-2 text-sm
                      focus:outline-none focus:border-accent"
             >
-              <option value="">Sin cambios</option>
+              <option value="">—</option>
               {#each Object.entries(muscleLabels) as [valor, texto] (valor)}
                 <option value={valor}>{texto}</option>
               {/each}
@@ -367,7 +357,7 @@
               class="mt-1 bg-surface-2 border border-line rounded-md px-3 py-2 text-sm
                      focus:outline-none focus:border-accent"
             >
-              <option value="">Sin cambios</option>
+              <option value="">—</option>
               {#each Object.entries(equipmentLabels) as [valor, texto] (valor)}
                 <option value={valor}>{texto}</option>
               {/each}
@@ -375,11 +365,26 @@
           </div>
           <button
             type="submit"
+            name="modo"
+            value="anadir"
             class="action-primary"
             disabled={trabajando || (!grupoNuevo && !materialNuevo)}
           >
-            Aplicar a {seleccion.length}
+            Añadir a {seleccion.length}
           </button>
+          <button
+            type="submit"
+            name="modo"
+            value="quitar"
+            class="action-neutral"
+            disabled={trabajando || (!grupoNuevo && !materialNuevo)}
+          >
+            Quitar
+          </button>
+          <p class="text-2xs text-text-mute w-full">
+            Añadir conserva las etiquetas que ya tuvieran. Un ejercicio puede trabajar varios
+            grupos.
+          </p>
         </form>
 
         <!-- Quitar de en medio -->
@@ -454,11 +459,9 @@
               <span class="text-xs text-warning">sin vídeo</span>
             {/if}
           </a>
-          {#if ex.muscle_group}
-            <span class="pill-mute flex-shrink-0">
-              {muscleLabels[ex.muscle_group] ?? ex.muscle_group}
-            </span>
-          {/if}
+          {#each ex.muscle_groups ?? [] as g (g)}
+            <span class="pill-mute flex-shrink-0">{muscleLabels[g] ?? g}</span>
+          {/each}
           {#if ex.video_url}
             <span class="text-xs text-text-mute flex-shrink-0" title="Tiene vídeo">▶</span>
           {/if}
