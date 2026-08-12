@@ -3,6 +3,7 @@
   /** Datos del cliente, notas privadas y cuota. Ver PanelHistorial sobre las props. */
   import { enhance } from '$app/forms';
   import { untrack } from 'svelte';
+  import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -13,6 +14,9 @@
   ];
   let savingInfo = $state(false);
   let levelSel = $state(untrack(() => data.info?.level) ?? '');
+  let etiquetas = $state<string[]>(untrack(() => data.info?.tags) ?? []);
+
+  const hayVocabulario = $derived(Object.keys(data.vocabulario.client).length > 0);
 
   function ageFrom(birth: string | null | undefined): number | null {
     if (!birth) return null;
@@ -159,6 +163,28 @@
           />
         </div>
       </div>
+    </div>
+
+    <!-- Las etiquetas van ARRIBA de las notas privadas y no al final: son lo
+         que se usa para encontrarle en la lista, así que es lo primero que hay
+         que poder tocar al abrir la ficha. -->
+    <div class="sm:col-span-2">
+      {#if hayVocabulario}
+        <SelectorEtiquetas
+          name="tags"
+          titulo="Etiquetas"
+          opciones={data.vocabulario.client}
+          bind:seleccion={etiquetas}
+          ayuda="Sirven para filtrar tu lista de clientes."
+        />
+      {:else}
+        <p class="block text-xs uppercase tracking-wider text-text-mute mb-2">Etiquetas</p>
+        <p class="text-sm text-text-mute">
+          Todavía no has creado ninguna.
+          <a href="/ajustes" class="text-accent hover:underline">Créalas en Ajustes</a>
+          y podrás filtrar tu lista por ellas.
+        </p>
+      {/if}
     </div>
 
     <div class="sm:col-span-2">

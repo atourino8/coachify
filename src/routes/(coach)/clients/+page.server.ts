@@ -68,7 +68,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   // Cuota y estado de pago de cada cliente (client_info, solo-coach).
   const { data: feesRaw } = await supabase
     .from('client_info')
-    .select('client_id, fee_amount, paid_until')
+    .select('client_id, fee_amount, paid_until, tags')
     .eq('coach_id', user.id);
   const fees = new Map(
     (
@@ -76,11 +76,18 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
         client_id: string;
         fee_amount: number | null;
         paid_until: string | null;
+        tags: string[] | null;
       }[]
-    ).map((f) => [f.client_id, { fee_amount: f.fee_amount, paid_until: f.paid_until }])
+    ).map((f) => [
+      f.client_id,
+      { fee_amount: f.fee_amount, paid_until: f.paid_until, tags: f.tags ?? [] }
+    ])
   );
 
-  const withFees = enriched.map((c) => ({ ...c, fee: fees.get(c.id) ?? null }));
+  const withFees = enriched.map((c) => {
+    const info = fees.get(c.id) ?? null;
+    return { ...c, fee: info, tags: info?.tags ?? [] };
+  });
 
   const active = withFees.filter((c) => c.accepted);
   const pending = withFees.filter((c) => !c.accepted);

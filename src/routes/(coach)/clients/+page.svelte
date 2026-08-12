@@ -8,6 +8,23 @@
 
   let { data, form } = $props();
 
+  // ---- Filtro por etiqueta ----
+  //
+  // Etiquetar sin poder filtrar no sirve para nada: la razón de ponerle «VIP» a
+  // alguien es encontrarle después. Solo aparece si tiene etiquetas creadas,
+  // porque una fila de filtros vacía es ruido en todas las visitas.
+  let filtroEtiqueta = $state('');
+  const etiquetasEnUso = $derived(
+    [...new Set(data.active.flatMap((c) => c.tags ?? []))].sort((a, b) =>
+      (data.vocabulario.client[a] ?? a).localeCompare(data.vocabulario.client[b] ?? b)
+    )
+  );
+  const activosFiltrados = $derived(
+    filtroEtiqueta === ''
+      ? data.active
+      : data.active.filter((c) => (c.tags ?? []).includes(filtroEtiqueta))
+  );
+
   let tab = $state<'active' | 'pending'>('active');
   // Se abre solo con ?invite=1 (atajo desde el home o desde un grupo).
   // svelte-ignore state_referenced_locally
@@ -161,10 +178,39 @@
         </p>
       </div>
     {:else}
+      {#if etiquetasEnUso.length > 0}
+        <!-- La fila de filtros solo existe si hay algo que filtrar: con cero
+             etiquetas puestas sería una barra vacía en todas las visitas. -->
+        <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <button
+            onclick={() => (filtroEtiqueta = '')}
+            aria-pressed={filtroEtiqueta === ''}
+            class="px-3 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0 border transition-colors
+              {filtroEtiqueta === ''
+              ? 'border-accent bg-accent/10 text-text'
+              : 'border-line text-text-mute hover:text-text'}"
+          >
+            Todos
+          </button>
+          {#each etiquetasEnUso as slug (slug)}
+            <button
+              onclick={() => (filtroEtiqueta = filtroEtiqueta === slug ? '' : slug)}
+              aria-pressed={filtroEtiqueta === slug}
+              class="px-3 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0 border transition-colors
+                {filtroEtiqueta === slug
+                ? 'border-accent bg-accent/10 text-text'
+                : 'border-line text-text-mute hover:text-text'}"
+            >
+              {data.vocabulario.client[slug] ?? slug}
+            </button>
+          {/each}
+        </div>
+      {/if}
+
       <!-- Lista densa: filas separadas por línea, no tarjetas. Se ve más
            gente por pantalla y el estado de pago se lee de un vistazo. -->
       <div class="border-t border-line">
-        {#each data.active as client (client.id)}
+        {#each activosFiltrados as client (client.id)}
           {@const pay = payLabelFor(client.fee)}
           <a href="/clients/{client.id}" class="row-link">
             <div
@@ -174,7 +220,16 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
-              <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
+              <!-- Las etiquetas sustituyen al email cuando las hay: en una fila
+                   estrecha compiten por el mismo hueco y el email ya está en la
+                   ficha, mientras que la etiqueta es lo que se está buscando. -->
+              {#if client.tags.length > 0}
+                <div class="text-xs text-text-mute truncate">
+                  {client.tags.map((s) => data.vocabulario.client[s] ?? s).join(' · ')}
+                </div>
+              {:else}
+                <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
+              {/if}
             </div>
             {#if client.fee?.fee_amount}
               <span class="text-xs text-text-mute tabular-nums hidden sm:block flex-shrink-0">
@@ -187,6 +242,9 @@
             <span class="text-text-mute text-sm flex-shrink-0">→</span>
           </a>
         {/each}
+        {#if activosFiltrados.length === 0}
+          <p class="py-8 text-center text-sm text-text-mute">Nadie con esta etiqueta.</p>
+        {/if}
       </div>
     {/if}
   {:else if data.pending.length === 0}

@@ -92,6 +92,12 @@ export interface ClientInfo {
   fee_amount: number | null;
   fee_currency: string;
   paid_until: string | null;
+  /**
+   * Etiquetas que el ENTRENADOR le pone («VIP», «Online»). Viven aquí y no en
+   * profiles porque son su opinión, no un dato del cliente. Los textos
+   * visibles están en coach_tags con kind = 'client' (migración 0021).
+   */
+  tags: string[];
   updated_at: string;
 }
 

@@ -13,7 +13,7 @@
 
 import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '$lib/supabase/types';
 
-export type ClaseEtiqueta = 'muscle' | 'equipment';
+export type ClaseEtiqueta = 'muscle' | 'equipment' | 'client';
 
 export interface EtiquetaCoach {
   id: string;
@@ -22,33 +22,38 @@ export interface EtiquetaCoach {
   label: string;
 }
 
-/** Los dos diccionarios listos para pintar, con lo del entrenador aplicado. */
+/** Los diccionarios listos para pintar, con lo del entrenador aplicado. */
 export interface Vocabulario {
   muscle: Record<string, string>;
   equipment: Record<string, string>;
+  /**
+   * Etiquetas de cliente. Empieza VACÍO a propósito: los grupos musculares y
+   * el material los traemos nosotros porque son anatomía y hierros, iguales
+   * para todos. Cómo clasifica cada entrenador a su gente no lo es —uno separa
+   * por objetivo, otro por horario, otro por quién le paga—, y traerle un
+   * «VIP» de fábrica sería decidir por él cómo mira su cartera.
+   */
+  client: Record<string, string>;
   /** Identificadores del base: no se pueden borrar, solo renombrar. */
   baseMuscle: string[];
   baseEquipment: string[];
 }
 
-export const VOCABULARIO_BASE: Vocabulario = {
-  muscle: { ...MUSCLE_GROUP_LABELS },
-  equipment: { ...EQUIPMENT_LABELS },
-  baseMuscle: Object.keys(MUSCLE_GROUP_LABELS),
-  baseEquipment: Object.keys(EQUIPMENT_LABELS)
-};
-
-export function construirVocabulario(propias: EtiquetaCoach[]): Vocabulario {
-  const v: Vocabulario = {
+function vacio(): Vocabulario {
+  return {
     muscle: { ...MUSCLE_GROUP_LABELS },
     equipment: { ...EQUIPMENT_LABELS },
+    client: {},
     baseMuscle: Object.keys(MUSCLE_GROUP_LABELS),
     baseEquipment: Object.keys(EQUIPMENT_LABELS)
   };
-  for (const t of propias) {
-    if (t.kind === 'muscle') v.muscle[t.slug] = t.label;
-    else v.equipment[t.slug] = t.label;
-  }
+}
+
+export const VOCABULARIO_BASE: Vocabulario = vacio();
+
+export function construirVocabulario(propias: EtiquetaCoach[]): Vocabulario {
+  const v = vacio();
+  for (const t of propias) v[t.kind][t.slug] = t.label;
   return v;
 }
 

@@ -376,7 +376,16 @@ export const actions: Actions = {
       birth_date: str('birth_date'),
       coach_notes: str('coach_notes'),
       fee_amount: num('fee_amount'),
-      paid_until: str('paid_until')
+      paid_until: str('paid_until'),
+      // Se sanean contra su forma y no contra el vocabulario del entrenador:
+      // la restricción de la tabla exige la forma, y comprobar que existen
+      // costaría una consulta más para protegerse de algo cuyo peor caso es
+      // que él vea una etiqueta suelta en SU propia ficha.
+      tags: fd
+        .getAll('tags')
+        .map(String)
+        .filter((s) => /^[a-z0-9_]{2,32}$/.test(s))
+        .slice(0, 20)
     };
 
     const { error: upErr } = await supabase

@@ -27,6 +27,16 @@
       ayuda: 'Lo que hace falta para hacerlo.',
       base: data.vocabulario.baseEquipment,
       mapa: data.vocabulario.equipment
+    },
+    {
+      kind: 'client' as ClaseEtiqueta,
+      titulo: 'Etiquetas de cliente',
+      ayuda: 'Para encontrar a alguien cuando la lista pasa de treinta nombres.',
+      // Sin base: los grupos musculares son anatomía y el material son
+      // hierros, iguales para todos. Cómo clasificas a tu gente no lo es.
+      base: [] as string[],
+      mapa: data.vocabulario.client,
+      ejemplos: ['VIP', 'Online', 'Presencial', 'Mañanas', 'Rehabilitación']
     }
   ]);
 
@@ -225,6 +235,32 @@
           {/each}
         </div>
 
+        <!-- Estado vacío con ejemplos de un toque. Un campo de texto en blanco
+             y la palabra "etiqueta" no le dicen a nadie para qué sirve esto;
+             cinco ejemplos reales sí, y siguen siendo suyos porque los añade
+             él. -->
+        {#if v.ejemplos && Object.keys(v.mapa).length === 0}
+          <div class="space-y-2">
+            <p class="text-sm text-text-mute">Todavía no tienes ninguna. Por ejemplo:</p>
+            <div class="flex flex-wrap gap-2">
+              {#each v.ejemplos as ejemplo (ejemplo)}
+                <form method="POST" action="?/crearEtiqueta" use:enhance={trasGuardar}>
+                  <input type="hidden" name="kind" value={v.kind} />
+                  <input type="hidden" name="label" value={ejemplo} />
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 rounded-full text-sm border border-line text-text-mute
+                           hover:text-text hover:border-line-strong transition-colors"
+                    disabled={guardando}
+                  >
+                    + {ejemplo}
+                  </button>
+                </form>
+              {/each}
+            </div>
+          </div>
+        {/if}
+
         <form
           method="POST"
           action="?/crearEtiqueta"
@@ -241,7 +277,11 @@
           <input
             name="label"
             maxlength="40"
-            placeholder={v.kind === 'muscle' ? 'Suelo pélvico' : 'Anillas'}
+            placeholder={v.kind === 'muscle'
+              ? 'Suelo pélvico'
+              : v.kind === 'equipment'
+                ? 'Anillas'
+                : 'Corporativo'}
             aria-label="Añadir a {v.titulo.toLowerCase()}"
             class="flex-1 min-w-0 bg-surface-2 border border-line rounded-md px-3 py-2 text-sm
                    focus:outline-none focus:border-accent"

@@ -11,7 +11,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { aIdentificador, identificadorValido, type ClaseEtiqueta } from '$lib/tags';
 import type { PageServerLoad, Actions } from './$types';
 
-const CLASES: ClaseEtiqueta[] = ['muscle', 'equipment'];
+const CLASES: ClaseEtiqueta[] = ['muscle', 'equipment', 'client'];
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
@@ -135,15 +135,24 @@ export const actions: Actions = {
     if (!CLASES.includes(kind)) return fail(400, { error: 'Clase de etiqueta no válida.' });
     if (!identificadorValido(slug)) return fail(400, { error: 'Etiqueta no válida.' });
 
-    // Borrar la etiqueta sin más dejaría el identificador dentro de los
-    // ejercicios que la usaban, y ahí se vería el identificador crudo
-    // ("suelo_pelvico") en vez de un nombre. Así que primero se quita de los
-    // ejercicios y luego se borra la fila.
-    const columna = kind === 'muscle' ? 'muscle_groups' : 'equipment_types';
+    // Borrar la etiqueta sin más dejaría el identificador dentro de las filas
+    // que la usaban, y ahí se vería el identificador crudo ("suelo_pelvico")
+    // en vez de un nombre. Así que primero se quita de donde esté y luego se
+    // borra la fila del vocabulario.
+    //
+    // Las tres clases se comportan igual; lo único que cambia es de qué tabla
+    // y de qué columna hay que quitarla.
+    const donde =
+      kind === 'muscle'
+        ? { tabla: 'exercises', columna: 'muscle_groups', clave: 'id' }
+        : kind === 'equipment'
+          ? { tabla: 'exercises', columna: 'equipment_types', clave: 'id' }
+          : { tabla: 'client_info', columna: 'tags', clave: 'client_id' };
+    const { tabla, columna, clave } = donde;
 
     const { data: afectadosRaw } = await supabase
-      .from('exercises')
-      .select(`id, ${columna}`)
+      .from(tabla)
+      .select(`${clave}, ${columna}`)
       .eq('coach_id', user.id)
       .contains(columna, [slug]);
 
@@ -156,15 +165,15 @@ export const actions: Actions = {
     const porResultado = new Map<string, string[]>();
     for (const ex of afectados) {
       const restante = ((ex[columna] as string[]) ?? []).filter((v) => v !== slug);
-      const clave = JSON.stringify(restante);
-      porResultado.set(clave, [...(porResultado.get(clave) ?? []), ex.id as string]);
+      const resultado = JSON.stringify(restante);
+      porResultado.set(resultado, [...(porResultado.get(resultado) ?? []), ex[clave] as string]);
     }
 
-    for (const [clave, ids] of porResultado) {
+    for (const [resultado, ids] of porResultado) {
       const { error: errQuitar } = await supabase
-        .from('exercises')
-        .update({ [columna]: JSON.parse(clave) } as never)
-        .in('id', ids)
+        .from(tabla)
+        .update({ [columna]: JSON.parse(resultado) } as never)
+        .in(clave, ids)
         .eq('coach_id', user.id);
       if (errQuitar) return fail(500, { error: errQuitar.message });
     }
