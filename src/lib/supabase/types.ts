@@ -467,7 +467,10 @@ export interface Database {
         Args: { p_class_id: string; p_client_id?: string };
         Returns: 'cancelled' | 'cancelled_late';
       };
-      class_seats_taken: { Args: { p_class_id: string }; Returns: number };
+      class_seats_taken: {
+        Args: { p_class_ids: string[] };
+        Returns: { class_id: string; taken: number }[];
+      };
     };
     Enums: {};
   };

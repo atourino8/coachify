@@ -13,6 +13,7 @@
    * vive en su fichero, no en el de la página.
    */
   import { formatHumanDate } from '$lib/week';
+  import { diaConSemana, hora } from '$lib/formato';
 
   let { data }: { data: PageData } = $props();
 
@@ -93,3 +94,27 @@
     {/if}
   </section>
 </div>
+
+{#if data.clasesProximas.length > 0}
+  <section class="space-y-3 mt-8">
+    <h2 class="text-sm uppercase tracking-wider text-text-mute">Clases a las que va</h2>
+    <div class="border-t border-line">
+      {#each data.clasesProximas as c (c.id)}
+        <a href="/clases/{c.id}" class="row-link">
+          <div class="flex-1 min-w-0">
+            <div class="font-medium truncate">{c.title}</div>
+            <div class="text-xs text-text-mute truncate">
+              {diaConSemana(c.starts_at)} · {hora(c.starts_at)}
+            </div>
+          </div>
+          {#if c.cancelada}
+            <span class="text-xs text-danger flex-shrink-0">clase cancelada</span>
+          {:else if c.enEspera}
+            <span class="text-xs text-text-mute flex-shrink-0">en lista de espera</span>
+          {/if}
+          <span class="text-text-mute text-sm flex-shrink-0">→</span>
+        </a>
+      {/each}
+    </div>
+  </section>
+{/if}

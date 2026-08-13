@@ -10,6 +10,7 @@ import {
   datesInRangeOnWeekdays
 } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
+import { faltasPorCliente } from '$lib/faltas.server';
 import { BUCKET } from '$lib/technique';
 import type { TechniqueVideo } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
@@ -326,8 +327,50 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     })
     .sort((a, b) => b.sessions - a.sessions);
 
+  // ---- Clases a las que va (ADR-004) ----
+  //
+  // El !inner sobre group_classes convierte el join en filtro y de paso trae
+  // el coach_id, que es lo que permite descartar clases de otro entrenador si
+  // el cliente alguna vez cambió de manos.
+  const { data: susClasesRaw } = await supabase
+    .from('class_bookings')
+    .select('status, group_classes!inner(id, title, starts_at, coach_id, status)')
+    .eq('client_id', params.id)
+    .in('status', ['seat', 'waitlist']);
+
+  const ahoraMs = Date.now();
+  const clasesProximas = (
+    (susClasesRaw ?? []) as unknown as {
+      status: 'seat' | 'waitlist';
+      group_classes: {
+        id: string;
+        title: string;
+        starts_at: string;
+        coach_id: string;
+        status: string;
+      };
+    }[]
+  )
+    .filter(
+      (b) =>
+        b.group_classes.coach_id === user.id &&
+        new Date(b.group_classes.starts_at).getTime() > ahoraMs
+    )
+    .map((b) => ({
+      id: b.group_classes.id,
+      title: b.group_classes.title,
+      starts_at: b.group_classes.starts_at,
+      cancelada: b.group_classes.status === 'cancelled',
+      enEspera: b.status === 'waitlist'
+    }))
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+
+  const faltas = (await faltasPorCliente(supabase, user.id, [params.id])).get(params.id) ?? 0;
+
   return {
     client,
+    clasesProximas,
+    faltas,
     view,
     windowStart,
     windowDays: WINDOW_DAYS,

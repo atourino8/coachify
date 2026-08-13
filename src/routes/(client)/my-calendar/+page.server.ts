@@ -3,6 +3,9 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { accesoDeCliente } from '$lib/access.server';
+import { mensajeDeError } from '$lib/clases';
+import { faltasPorCliente } from '$lib/faltas.server';
+import type { GroupClass } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
 type AvailabilitySlot = {
@@ -144,11 +147,64 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
     bookable = buildBookableSlots((slotsRaw ?? []) as unknown as AvailabilitySlot[], busy);
   }
 
+  // ---- Clases grupales (ADR-004) ----
+  //
+  // Qué clases ve lo decide la RLS: las de su entrenador, y de las
+  // restringidas a un grupo solo si pertenece. Aquí no se filtra por eso, se
+  // filtra por lo que el cliente entiende: lo que aún no ha pasado.
+  const desde = new Date(now - 60 * 60 * 1000).toISOString(); // una hora de margen
+  const { data: clasesRaw } = await supabase
+    .from('group_classes')
+    .select('id, title, starts_at, ends_at, capacity, location, notes, status')
+    .gte('starts_at', desde)
+    .order('starts_at');
+  const clasesBase = (clasesRaw ?? []) as unknown as Pick<
+    GroupClass,
+    'id' | 'title' | 'starts_at' | 'ends_at' | 'capacity' | 'location' | 'notes' | 'status'
+  >[];
+
+  // Sus inscripciones y las plazas ocupadas de cada clase. Las plazas van por
+  // función porque su política solo le deja ver SUS inscripciones: puede saber
+  // cuánta gente hay, no quién.
+  const ocupadas = new Map<string, number>();
+  const mias = new Map<string, 'seat' | 'waitlist'>();
+  if (clasesBase.length > 0) {
+    const ids = clasesBase.map((c) => c.id);
+    const [{ data: plazas }, { data: misRaw }] = await Promise.all([
+      supabase.rpc('class_seats_taken', { p_class_ids: ids }),
+      supabase
+        .from('class_bookings')
+        .select('class_id, status')
+        .eq('client_id', user.id)
+        .in('class_id', ids)
+        .in('status', ['seat', 'waitlist'])
+    ]);
+    for (const f of (plazas ?? []) as { class_id: string; taken: number }[]) {
+      ocupadas.set(f.class_id, f.taken);
+    }
+    for (const b of (misRaw ?? []) as { class_id: string; status: 'seat' | 'waitlist' }[]) {
+      mias.set(b.class_id, b.status);
+    }
+  }
+
+  const clases = clasesBase.map((c) => ({
+    ...c,
+    ocupadas: ocupadas.get(c.id) ?? 0,
+    inscripcion: mias.get(c.id) ?? null
+  }));
+
+  // Sus faltas, para poder avisarle antes de que suelte otra plaza tarde.
+  const misFaltas = coachId
+    ? ((await faltasPorCliente(supabase, coachId, [user.id])).get(user.id) ?? 0)
+    : 0;
+
   return {
     proposals,
     upcoming,
     past,
     bookable,
+    clases,
+    misFaltas,
     hasCoach: !!coachId
   };
 };
@@ -255,5 +311,39 @@ export const actions: Actions = {
       .eq('client_id', user.id);
     if (error) return fail(500, { error: error.message });
     return { success: true, rejectedByClient: true };
+  },
+  // Apuntarse. Todo el trabajo lo hace book_class: comprueba el aforo con la
+  // fila de la clase bloqueada y decide si es plaza o lista de espera.
+  apuntarse: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+
+    // Mismo criterio que pedir cita: ocupar una plaza es exactamente lo que
+    // está pendiente de pagar. Salirse sigue abierto en pausa.
+    if ((await accesoDeCliente(user.id)).pausado) {
+      return fail(403, {
+        error: 'Tu acceso está en pausa. Habla con tu entrenador para apuntarte a clases.'
+      });
+    }
+
+    const fd = await request.formData();
+    const classId = String(fd.get('class_id') ?? '');
+    if (!classId) return fail(400, { error: 'Falta la clase.' });
+
+    const { data, error: err } = await supabase.rpc('book_class', { p_class_id: classId });
+    if (err) return fail(400, { error: mensajeDeError(err.message) });
+    return { success: true, apuntado: data === 'seat', enEspera: data === 'waitlist' };
+  },
+
+  salirse: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const classId = String(fd.get('class_id') ?? '');
+    if (!classId) return fail(400, { error: 'Falta la clase.' });
+
+    const { data, error: err } = await supabase.rpc('cancel_class_booking', {
+      p_class_id: classId
+    });
+    if (err) return fail(400, { error: mensajeDeError(err.message) });
+    return { success: true, salido: true, tarde: data === 'cancelled_late' };
   }
 };

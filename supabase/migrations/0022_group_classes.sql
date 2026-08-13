@@ -311,16 +311,22 @@ create policy "client reads own bookings"
 -- =============================================================================
 -- El cliente no puede contar las inscripciones de una clase: su política solo
 -- le deja ver las suyas. Necesita el número, no los nombres.
-create or replace function public.class_seats_taken(p_class_id uuid)
-returns int
+--
+-- Recibe un ARRAY y no un id porque la pantalla del cliente pinta una lista:
+-- una llamada por clase sería el mismo N+1 que ya se quitó tres veces de este
+-- proyecto, y encima a través de la red.
+create or replace function public.class_seats_taken(p_class_ids uuid[])
+returns table (class_id uuid, taken int)
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select count(*)::int
-    from public.class_bookings
-   where class_id = p_class_id and status = 'seat';
+  select c.id, count(b.id)::int
+    from unnest(p_class_ids) as c(id)
+    left join public.class_bookings b
+      on b.class_id = c.id and b.status = 'seat'
+   group by c.id;
 $$;
 
 -- =============================================================================
@@ -336,4 +342,4 @@ grant select, update, delete on public.class_bookings to authenticated;
 
 grant execute on function public.book_class(uuid) to authenticated;
 grant execute on function public.cancel_class_booking(uuid, uuid) to authenticated;
-grant execute on function public.class_seats_taken(uuid) to authenticated;
+grant execute on function public.class_seats_taken(uuid[]) to authenticated;

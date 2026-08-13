@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { cancelarSeriaTarde, estadoDeClase, DIAS_DE_AVISO } from '$lib/clases';
   import { page } from '$app/state';
 
   let { data, form } = $props();
@@ -37,6 +38,11 @@
     remoto: 'Remoto'
   };
 
+  // Clases grupales. La cuenta atrás de «cancelar tarde» se calcula en el
+  // navegador con la MISMA regla que aplica la base al cancelar, para que el
+  // aviso salga antes de pulsar y no después.
+  const clasesFuturas = $derived(data.clases ?? []);
+
   function fmt(iso: string) {
     return new Date(iso).toLocaleString('es-ES', {
       weekday: 'long',
@@ -68,6 +74,37 @@
   {#if form?.error}
     <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
       {form.error}
+    </p>
+  {/if}
+  {#if form?.success && form?.apuntado}
+    <p
+      aria-live="polite"
+      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
+    >
+      Tienes plaza. Si no puedes ir, avisa con {DIAS_DE_AVISO} días para que la coja otro.
+    </p>
+  {/if}
+  {#if form?.success && form?.enEspera}
+    <p
+      aria-live="polite"
+      class="text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-3"
+    >
+      La clase está completa: estás en la lista de espera. Si alguien suelta su plaza y eres el
+      primero, entras automáticamente.
+    </p>
+  {/if}
+  {#if form?.success && form?.salido}
+    <p
+      aria-live="polite"
+      class="text-sm {form.tarde
+        ? 'text-warning bg-warning/10 border-warning/20'
+        : 'text-success bg-success/10 border-success/20'} border rounded-md p-3"
+    >
+      {#if form.tarde}
+        Fuera de la clase. Como quedaban menos de {DIAS_DE_AVISO} días, le consta a tu entrenador.
+      {:else}
+        Fuera de la clase. Gracias por avisar con tiempo.
+      {/if}
     </p>
   {/if}
   {#if form?.success && form?.requested}
@@ -195,6 +232,90 @@
         {/each}
       {/if}
     </section>
+
+    <!-- Clases grupales. Van DEBAJO de las citas porque una cita ya es suya y
+         una clase todavía hay que cogerla: lo propio antes que lo disponible. -->
+    {#if clasesFuturas.length > 0}
+      <section class="space-y-3">
+        <h2 class="text-lg font-semibold">Clases</h2>
+        {#if data.misFaltas > 0}
+          <p class="text-xs text-warning">
+            Has soltado la plaza tarde {data.misFaltas}
+            {data.misFaltas === 1 ? 'vez' : 'veces'} en los últimos meses. Avisar con {DIAS_DE_AVISO}
+            días deja la plaza libre para otro.
+          </p>
+        {/if}
+
+        {#each clasesFuturas as c (c.id)}
+          {@const estado = estadoDeClase(c, c.ocupadas)}
+          <div class="card space-y-3">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="font-semibold">{c.title}</div>
+                <div class="text-xs text-text-mute mt-1 capitalize">
+                  {fmt(c.starts_at)}{c.location ? ' · ' + c.location : ''}
+                </div>
+                {#if c.notes}
+                  <div class="text-xs text-text-mute mt-1 italic">{c.notes}</div>
+                {/if}
+              </div>
+              <div class="text-right flex-shrink-0">
+                {#if estado.cancelada}
+                  <span class="text-xs px-2 py-1 rounded-full bg-danger/15 text-danger">
+                    Cancelada
+                  </span>
+                {:else if c.inscripcion === 'seat'}
+                  <span class="text-xs px-2 py-1 rounded-full bg-success/15 text-success">
+                    Tienes plaza
+                  </span>
+                {:else if c.inscripcion === 'waitlist'}
+                  <span class="text-xs px-2 py-1 rounded-full bg-warning/15 text-warning">
+                    En lista de espera
+                  </span>
+                {:else}
+                  <span class="text-xs text-text-mute tabular-nums">
+                    {estado.libres === 0
+                      ? 'Completa'
+                      : `${estado.libres} ${estado.libres === 1 ? 'plaza' : 'plazas'}`}
+                  </span>
+                {/if}
+              </div>
+            </div>
+
+            {#if !estado.cancelada}
+              {#if c.inscripcion}
+                <form method="POST" action="?/salirse" use:enhance class="flex items-center gap-3">
+                  <input type="hidden" name="class_id" value={c.id} />
+                  <button type="submit" class="action-neutral">
+                    {c.inscripcion === 'seat' ? 'Soltar la plaza' : 'Salir de la lista'}
+                  </button>
+                  <!-- El aviso va JUNTO al botón y no en el mensaje de después:
+                       para que sirva de algo tiene que leerse antes de pulsar. -->
+                  {#if c.inscripcion === 'seat' && cancelarSeriaTarde(c.starts_at)}
+                    <span class="text-xs text-warning">
+                      Quedan menos de {DIAS_DE_AVISO} días: le constará a tu entrenador.
+                    </span>
+                  {/if}
+                </form>
+              {:else if data.acceso.pausado}
+                <!-- Con el acceso en pausa el botón fallaría en el servidor.
+                     Se dice antes de pulsar, que es cuando sirve de algo. -->
+                <p class="text-xs text-text-mute">
+                  Tu acceso está en pausa: habla con tu entrenador para apuntarte.
+                </p>
+              {:else}
+                <form method="POST" action="?/apuntarse" use:enhance>
+                  <input type="hidden" name="class_id" value={c.id} />
+                  <button type="submit" class={estado.llena ? 'action-neutral' : 'btn-primary'}>
+                    {estado.llena ? 'Apuntarme a la lista de espera' : 'Apuntarme'}
+                  </button>
+                </form>
+              {/if}
+            {/if}
+          </div>
+        {/each}
+      </section>
+    {/if}
 
     <!-- Historial (colapsado, menos prominente) -->
     {#if data.past.length > 0}

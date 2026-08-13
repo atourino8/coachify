@@ -62,6 +62,16 @@ export const actions: Actions = {
       .delete()
       .eq('id', groupId)
       .eq('coach_id', user.id);
+
+    // 23503 = clave ajena. Desde la migración 0022 solo puede venir de una
+    // clase restringida a este grupo: la referencia es RESTRICT a propósito,
+    // porque dejarla en nulo publicaría esa clase a toda la cartera.
+    if (error?.code === '23503') {
+      return fail(409, {
+        error:
+          'No se puede borrar: hay clases publicadas solo para este grupo. Cámbialas a «todos mis clientes» o bórralas primero.'
+      });
+    }
     if (error) return fail(500, { error: error.message });
 
     return { success: true, deleted: true };

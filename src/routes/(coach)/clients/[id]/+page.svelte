@@ -65,6 +65,14 @@
       <p class="text-text-mute text-sm mt-1">
         Cliente desde {fechaCorta(data.client.created_at)}
       </p>
+      {#if data.faltas > 0}
+        <!-- Aquí y no en una pestaña: es contexto para leer todo lo demás, no
+             una sección que se visite. -->
+        <p class="text-xs text-warning mt-2">
+          Ha soltado la plaza de una clase tarde {data.faltas}
+          {data.faltas === 1 ? 'vez' : 'veces'} en los últimos meses.
+        </p>
+      {/if}
     </div>
 
     {#if payStatus !== 'sin_cuota'}

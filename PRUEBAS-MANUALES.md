@@ -5,9 +5,9 @@ este proyecto —`svelte-check`, el guardián de diseño, el formato, los bytes�
 es **estático**. Demuestra que el código existe, compila y es coherente
 consigo mismo. No demuestra que funcione.
 
-Y en la última tanda se han escrito **siete migraciones (0014–0020)**, dos
-políticas de almacenamiento y un disparador que **nunca se han ejecutado**.
-Ahí está concentrado casi todo el riesgo que queda.
+Y hasta ahora se han escrito **nueve migraciones (0014–0022)**, dos políticas
+de almacenamiento, un disparador y **tres funciones** que **nunca se han
+ejecutado**. Ahí está concentrado casi todo el riesgo que queda.
 
 Esta lista va ordenada por riesgo: probabilidad de estar roto × lo caro que
 sale enterarse tarde. Con la base sembrada, son unos veinte minutos.
@@ -15,6 +15,69 @@ sale enterarse tarde. Con la base sembrada, son unos veinte minutos.
 ```
 node scripts/seed-demo.mjs <tu-email>
 ```
+
+
+---
+
+## 0 · La última plaza, a dos manos (migración 0022)
+
+**Va primero porque es lo único de este proyecto que no se puede comprobar
+leyendo el código.** Todo lo demás falla igual siempre; esto falla solo cuando
+dos personas coinciden.
+
+**Qué probar.**
+
+1. Clases → Nueva clase → mañana a las 19:00, **1 plaza**.
+2. Abre la aplicación en **dos navegadores distintos** (o uno normal y otro de
+   incógnito) con **dos clientes distintos**.
+3. Los dos en Citas, con el botón «Apuntarme» a la vista.
+4. Púlsalos **a la vez**. Vale con que sea más o menos.
+
+**Qué tiene que pasar.** Uno entra con plaza y el otro con el mensaje de lista
+de espera. **Nunca los dos con plaza.**
+
+**Si fallan los dos con plaza**, el `for update` de `book_class` no está
+haciendo su trabajo: mira si la función se creó de verdad (`\df book_class` en
+el SQL editor) o si alguien está insertando en `class_bookings` sin pasar por
+ella.
+
+---
+
+## 0b · Que la lista de espera ascienda sola
+
+**Qué probar.** Con la clase anterior —uno dentro, uno esperando—, entra como
+el que tiene plaza y pulsa **Soltar la plaza**.
+
+**Qué tiene que pasar.** El otro pasa de «En lista de espera» a «Tienes plaza»
+**sin hacer nada**, solo recargando. Y el entrenador ve el movimiento en el
+detalle de la clase.
+
+**Qué se está comprobando.** Que el ascenso ocurre dentro de la misma
+transacción que la cancelación. Si hiciera falta que alguien «refrescara» para
+que la cola avanzase, la plaza se quedaría muerta.
+
+---
+
+## 0c · Las faltas
+
+**Qué probar.**
+
+1. Crea una clase para **pasado mañana** (menos de dos días).
+2. Apúntate como cliente. Al lado del botón de soltar la plaza tiene que salir
+   ya el aviso de que le constará.
+3. Suéltala.
+4. Mira la ficha de ese cliente como entrenador, y el detalle de la clase.
+
+**Qué tiene que pasar.** Al soltar, el mensaje dice que le consta. En la ficha
+sale «Ha soltado la plaza de una clase tarde 1 vez». En la clase, la pastilla
+«1 falta» junto a su nombre.
+
+**El caso que importa de verdad:** repite con una clase a **una semana vista**.
+Esa **no** debe contar. Si cuenta, la resta de `starts_at - interval '2 days'`
+está al revés.
+
+**Y el que se olvida:** que el ENTRENADOR saque a alguien no cuenta como falta,
+porque la decisión no fue del cliente.
 
 ---
 
