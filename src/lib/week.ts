@@ -1,5 +1,15 @@
 // Helpers para trabajar con semanas (lunes-domingo).
 
+function pad2(n: number): string {
+  return n.toString().padStart(2, '0');
+}
+
+// YYYY-MM-DD de un Date interpretado en LOCAL, no en UTC (a diferencia de
+// formatDateISO, que usa toISOString y por tanto UTC).
+function toLocalISO(d: Date): string {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
 export function startOfWeek(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay(); // 0 = domingo, 1 = lunes...
@@ -17,6 +27,26 @@ export function addDays(date: Date, days: number): Date {
 
 export function formatDateISO(date: Date): string {
   return date.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+// Fechas ISO de un rango [startISO, endISO] cuyo día de la semana (0=domingo
+// … 6=sábado, como Date#getDay) está en `weekdays`. El tope de 400 días evita
+// un bucle sin fin si algún día endISO llega invertido o clavado a un año.
+export function datesInRangeOnWeekdays(
+  startISO: string,
+  endISO: string,
+  weekdays: number[]
+): string[] {
+  const dates: string[] = [];
+  const cur = new Date(startISO + 'T00:00:00');
+  const end = new Date(endISO + 'T00:00:00');
+  let guard = 0;
+  while (cur <= end && guard < 400) {
+    if (weekdays.includes(cur.getDay())) dates.push(formatDateISO(cur));
+    cur.setDate(cur.getDate() + 1);
+    guard++;
+  }
+  return dates;
 }
 
 export function weekDays(start: Date): { iso: string; label: string; short: string }[] {
@@ -44,11 +74,7 @@ export function formatHumanDate(iso: string): string {
 // formatDateISO usa toISOString (UTC), que puede dar el día anterior de
 // madrugada en husos como el español. Para "hoy" queremos la fecha local.
 export function todayISOLocal(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return toLocalISO(new Date());
 }
 
 // Fecha de hoy en formato ISO EN UNA ZONA HORARIA concreta. Necesario en SSR:
@@ -97,10 +123,7 @@ export function monthGrid(monthISO: string): {
   for (let i = 0; i < 42; i++) {
     const d = new Date(gridStart);
     d.setDate(d.getDate() + i);
-    const yy = d.getFullYear();
-    const mm = (d.getMonth() + 1).toString().padStart(2, '0');
-    const dd = d.getDate().toString().padStart(2, '0');
-    const iso = `${yy}-${mm}-${dd}`;
+    const iso = toLocalISO(d);
     out.push({
       iso,
       dayNum: d.getDate(),
@@ -115,14 +138,14 @@ export function monthGrid(monthISO: string): {
 // Devuelve "YYYY-MM" del mes actual (local).
 export function currentMonthISO(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
 }
 
 // Suma/resta meses a un "YYYY-MM" y devuelve el nuevo "YYYY-MM".
 export function shiftMonth(monthISO: string, delta: number): string {
   const [y, m] = monthISO.split('-').map(Number);
   const d = new Date(y, m - 1 + delta, 1);
-  return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
 }
 
 // Etiqueta legible de un mes: "julio 2026".
@@ -150,10 +173,7 @@ export function rollingDays(
   for (let i = 0; i < count; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const y = d.getFullYear();
-    const m = (d.getMonth() + 1).toString().padStart(2, '0');
-    const dd = d.getDate().toString().padStart(2, '0');
-    const iso = `${y}-${m}-${dd}`;
+    const iso = toLocalISO(d);
     out.push({
       iso,
       weekday: d.toLocaleDateString('es-ES', { weekday: 'short' }),

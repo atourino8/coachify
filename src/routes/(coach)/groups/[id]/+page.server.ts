@@ -2,7 +2,7 @@
 // del mismo entrenamiento a todo el grupo.
 
 import { error, fail, redirect } from '@sveltejs/kit';
-import { formatDateISO } from '$lib/week';
+import { datesInRangeOnWeekdays } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -129,15 +129,7 @@ export const actions: Actions = {
     if (clientIds.length === 0) return fail(400, { error: 'El grupo no tiene miembros.' });
 
     // Fechas del rango que caen en los días marcados
-    const dates: string[] = [];
-    const cur = new Date(startDate + 'T00:00:00');
-    const end = new Date(endDate + 'T00:00:00');
-    let guard = 0;
-    while (cur <= end && guard < 400) {
-      if (weekdays.includes(cur.getDay())) dates.push(formatDateISO(cur));
-      cur.setDate(cur.getDate() + 1);
-      guard++;
-    }
+    const dates = datesInRangeOnWeekdays(startDate, endDate, weekdays);
     if (dates.length === 0) return fail(400, { error: 'Ese rango no incluye ningún día marcado.' });
 
     let created = 0;

@@ -2,7 +2,13 @@
 // o vista mensual). Marca entrenos "hechos" (con set_logs) y permite duplicar.
 
 import { error, fail, redirect } from '@sveltejs/kit';
-import { addDays, formatDateISO, todayISOLocal, currentMonthISO } from '$lib/week';
+import {
+  addDays,
+  formatDateISO,
+  todayISOLocal,
+  currentMonthISO,
+  datesInRangeOnWeekdays
+} from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import { BUCKET } from '$lib/technique';
 import type { TechniqueVideo } from '$lib/supabase/types';
@@ -589,16 +595,7 @@ export const actions: Actions = {
     if (endDate < startDate)
       return fail(400, { error: 'La fecha de fin es anterior a la de inicio.' });
 
-    // Recorrer el rango y quedarnos con los días cuyo weekday esté marcado.
-    const dates: string[] = [];
-    const cur = new Date(startDate + 'T00:00:00');
-    const end = new Date(endDate + 'T00:00:00');
-    let guard = 0;
-    while (cur <= end && guard < 400) {
-      if (weekdays.includes(cur.getDay())) dates.push(formatDateISO(cur));
-      cur.setDate(cur.getDate() + 1);
-      guard++;
-    }
+    const dates = datesInRangeOnWeekdays(startDate, endDate, weekdays);
 
     let created = 0;
     let skipped = 0;

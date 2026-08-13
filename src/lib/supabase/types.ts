@@ -311,11 +311,6 @@ export type WorkoutWithItems = Workout & {
   workout_items: WorkoutItemWithRelations[];
 };
 
-// Versión ligera para el calendario del coach (solo id/date/title/notes + items count)
-export type WorkoutSummary = Pick<Workout, 'id' | 'date' | 'title' | 'notes'> & {
-  workout_items: Pick<WorkoutItem, 'id'>[];
-};
-
 // Para el detalle de item con su workout (join hacia workouts)
 export type WorkoutItemWithWorkout = WorkoutItem & {
   exercise: Exercise;
