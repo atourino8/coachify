@@ -4,8 +4,7 @@ function pad2(n: number): string {
   return n.toString().padStart(2, '0');
 }
 
-// YYYY-MM-DD de un Date interpretado en LOCAL, no en UTC (a diferencia de
-// formatDateISO, que usa toISOString y por tanto UTC).
+// YYYY-MM-DD de un Date interpretado en LOCAL, no en UTC.
 function toLocalISO(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
@@ -25,8 +24,22 @@ export function addDays(date: Date, days: number): Date {
   return d;
 }
 
+/**
+ * YYYY-MM-DD de un Date.
+ *
+ * ANTES USABA toISOString() Y ESO ERA UN ERROR, no un detalle.
+ *
+ * Todos los Date que pasan por aquí se construyen en LOCAL: `new Date(iso +
+ * 'T00:00:00')`, `new Date(y, m - 1, 1)`, `addDays(...)`. Formatearlos en UTC
+ * los devuelve al día ANTERIOR en cualquier huso al este de Greenwich —el
+ * nuestro— porque la medianoche del 13 en Madrid son las 22:00 del 12 en UTC.
+ *
+ * No saltaba en producción porque Vercel corre en UTC, donde local y UTC
+ * coinciden. Sí saltaba en el navegador: pasar página en la vista de catorce
+ * días retrocedía un día de más en cada salto.
+ */
 export function formatDateISO(date: Date): string {
-  return date.toISOString().slice(0, 10); // YYYY-MM-DD
+  return toLocalISO(date);
 }
 
 // Fechas ISO de un rango [startISO, endISO] cuyo día de la semana (0=domingo
@@ -71,8 +84,6 @@ export function formatHumanDate(iso: string): string {
 }
 
 // Fecha de hoy en formato ISO usando la fecha LOCAL (no UTC).
-// formatDateISO usa toISOString (UTC), que puede dar el día anterior de
-// madrugada en husos como el español. Para "hoy" queremos la fecha local.
 export function todayISOLocal(): string {
   return toLocalISO(new Date());
 }
