@@ -284,6 +284,11 @@
     </div>
     <div class="flex items-center gap-3">
       <a
+        href="/clases"
+        class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
+        >Clases</a
+      >
+      <a
         href="/availability"
         class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
         >⚙ Mis huecos</a

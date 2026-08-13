@@ -56,6 +56,41 @@ export interface ClientGroup {
   updated_at: string;
 }
 
+/**
+ * Clase grupal con aforo (migración 0022). NO confundir con ClientGroup, que
+ * es una capa de gestión sobre clientes: a una clase la gente se apunta.
+ */
+export interface GroupClass {
+  id: string;
+  coach_id: string;
+  /** null = la ven todos sus clientes. Con valor, solo los de ese grupo. */
+  group_id: string | null;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  location: string | null;
+  notes: string | null;
+  status: 'published' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+/** seat = tiene plaza · waitlist = espera · cancelled = se salió o le sacaron. */
+export type ClassBookingStatus = 'seat' | 'waitlist' | 'cancelled';
+
+export interface ClassBooking {
+  id: string;
+  class_id: string;
+  client_id: string;
+  status: ClassBookingStatus;
+  created_at: string;
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  /** ¿Ocupaba plaza al cancelar? Es lo que distingue una falta de un no-pasa-nada. */
+  had_seat: boolean;
+}
+
 export interface ClientGroupMember {
   group_id: string;
   client_id: string;
@@ -406,9 +441,34 @@ export interface Database {
         Insert: Omit<ClientGroupMember, 'added_at'> & { added_at?: string };
         Update: Partial<ClientGroupMember>;
       };
+      group_classes: {
+        Row: GroupClass;
+        Insert: Omit<GroupClass, 'id' | 'status' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          status?: GroupClass['status'];
+        };
+        Update: Partial<Omit<GroupClass, 'id' | 'coach_id' | 'created_at'>>;
+      };
+      class_bookings: {
+        Row: ClassBooking;
+        // Sin Insert a propósito: las inscripciones solo se crean con
+        // book_class(), que es quien respeta el aforo. La base tampoco
+        // concede INSERT sobre esta tabla.
+        Insert: never;
+        Update: Partial<
+          Pick<ClassBooking, 'status' | 'cancelled_at' | 'cancelled_by' | 'had_seat'>
+        >;
+      };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      book_class: { Args: { p_class_id: string }; Returns: ClassBookingStatus };
+      cancel_class_booking: {
+        Args: { p_class_id: string; p_client_id?: string };
+        Returns: 'cancelled' | 'cancelled_late';
+      };
+      class_seats_taken: { Args: { p_class_id: string }; Returns: number };
+    };
     Enums: {};
   };
 }

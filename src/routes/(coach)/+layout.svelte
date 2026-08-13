@@ -13,7 +13,12 @@
     { href: '/dashboard', label: 'Inicio', icono: 'inicio', match: ['/dashboard'] },
     { href: '/exercises', label: 'Rutinas', icono: 'rutinas', match: ['/exercises', '/templates'] },
     { href: '/clients', label: 'Clientes', icono: 'clientes', match: ['/clients', '/groups'] },
-    { href: '/agenda', label: 'Agenda', icono: 'agenda', match: ['/agenda', '/availability'] },
+    {
+      href: '/agenda',
+      label: 'Agenda',
+      icono: 'agenda',
+      match: ['/agenda', '/availability', '/clases']
+    },
     { href: '/cobros', label: 'Cobros', icono: 'cobros', match: ['/cobros'] }
   ] as const;
 
