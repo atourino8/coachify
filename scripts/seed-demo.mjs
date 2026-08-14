@@ -48,6 +48,18 @@ const DEMO_FLAG = 'coachify_demo';
 /** Nombres exactos de lo que creamos aparte de usuarios, para poder borrarlo. */
 const DEMO_GROUP = 'Empleadas · Talleres López';
 const DEMO_EXERCISE = 'Sentadilla con barra (demo)';
+/**
+ * Títulos de las clases demo. Llevan "(demo)" por el mismo motivo que el
+ * ejercicio: --limpiar borra por nombre exacto, y sin la marca borraría
+ * también una clase de verdad que se llamara «HIIT 45», que es un nombre que
+ * cualquiera pondría.
+ */
+const DEMO_CLASSES = [
+  'HIIT 45 (demo)',
+  'Espalda sana (demo)',
+  'Pausa activa · Talleres López (demo)',
+  'Circuito exprés (demo)'
+];
 
 // --- Utilidades --------------------------------------------------------------
 
@@ -755,7 +767,7 @@ async function main() {
   log('\nProgramando clases…');
   const clases = [
     {
-      title: 'HIIT 45',
+      title: 'HIIT 45 (demo)',
       starts_at: at(1, 19),
       capacity: 3,
       location: 'Sala 2',
@@ -765,7 +777,7 @@ async function main() {
       espera: ['ivan', 'sofia']
     },
     {
-      title: 'Espalda sana',
+      title: 'Espalda sana (demo)',
       starts_at: at(3, 10),
       capacity: 8,
       location: 'Sala 1',
@@ -774,7 +786,7 @@ async function main() {
     },
     {
       // Restringida al grupo: Lucía no debería verla ni en su lista.
-      title: 'Pausa activa · Talleres López',
+      title: 'Pausa activa · Talleres López (demo)',
       starts_at: at(2, 14),
       capacity: 10,
       location: 'Oficinas del cliente',
@@ -782,7 +794,7 @@ async function main() {
       plazas: ['ana', 'beatriz']
     },
     {
-      title: 'Circuito exprés',
+      title: 'Circuito exprés (demo)',
       starts_at: at(4, 8),
       capacity: 6,
       status: 'cancelled',
@@ -791,7 +803,7 @@ async function main() {
     },
     {
       // Pasada, y con la falta de Marcos colgando de ella.
-      title: 'HIIT 45',
+      title: 'HIIT 45 (demo)',
       starts_at: at(-2, 19),
       capacity: 3,
       location: 'Sala 2',
