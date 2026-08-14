@@ -839,31 +839,37 @@ async function main() {
     const base = new Date(c.starts_at).getTime() - 7 * 24 * 3600000;
     const enFila = (i) => new Date(base + i * 60000).toISOString();
 
-    const filas = [];
-    (c.plazas ?? []).forEach((k, i) =>
-      filas.push({ class_id: clase.id, client_id: ids[k], status: 'seat', created_at: enFila(i) })
-    );
-    (c.espera ?? []).forEach((k, i) =>
-      filas.push({
-        class_id: clase.id,
-        client_id: ids[k],
-        status: 'waitlist',
-        created_at: enFila(10 + i)
-      })
-    );
-    for (const b of [...(c.faltas ?? []), ...(c.bajas ?? [])]) {
-      filas.push({
-        class_id: clase.id,
-        client_id: ids[b.key],
-        status: 'cancelled',
-        created_at: enFila(20),
-        cancelled_at: b.cancelado,
-        cancelled_by: ids[b.key],
-        // had_seat es lo que distingue una falta de un no-pasa-nada: soltar
-        // una plaza deja a alguien fuera, salirse de la cola no.
-        had_seat: true
-      });
-    }
+    // TODAS las filas llevan TODAS las columnas, aunque vayan a null.
+    //
+    // No es manía de simetría: PostgREST recibe el array entero y monta UN
+    // insert con la UNIÓN de las claves que encuentra. A la fila que no trae
+    // una clave le mete NULL —no el DEFAULT de la columna—, así que basta con
+    // que una sola fila del lote mencione had_seat para que las demás intenten
+    // insertar null ahí y revienten contra el not null.
+    const inscripcion = (clientId, status, created_at, extra = {}) => ({
+      class_id: clase.id,
+      client_id: clientId,
+      status,
+      created_at,
+      cancelled_at: null,
+      cancelled_by: null,
+      had_seat: false,
+      ...extra
+    });
+
+    const filas = [
+      ...(c.plazas ?? []).map((k, i) => inscripcion(ids[k], 'seat', enFila(i))),
+      ...(c.espera ?? []).map((k, i) => inscripcion(ids[k], 'waitlist', enFila(10 + i))),
+      ...[...(c.faltas ?? []), ...(c.bajas ?? [])].map((b, i) =>
+        inscripcion(ids[b.key], 'cancelled', enFila(20 + i), {
+          cancelled_at: b.cancelado,
+          cancelled_by: ids[b.key],
+          // had_seat distingue una falta de un no-pasa-nada: soltar una plaza
+          // deja a alguien fuera, salirse de la cola no.
+          had_seat: true
+        })
+      )
+    ];
     if (filas.length > 0) {
       const { error: errIns } = await db.from('class_bookings').insert(filas);
       if (errIns) die('Error apuntando a la clase: ' + errIns.message);
