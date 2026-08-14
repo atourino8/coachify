@@ -10,3 +10,6 @@ node_modules
 .env.local
 .env.*.local
 !.env.example
+
+# Permisos locales de la herramienta: son de esta máquina, no del proyecto.
+.claude/
