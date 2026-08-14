@@ -84,8 +84,17 @@ mismo patrón que la migración 0002 introdujo para romper la recursión de RLS.
 **Consecuencia:** apuntarse y cancelar **no son un `insert` y un `update`**
 desde el código de la aplicación, son dos llamadas a función (`rpc`). Si
 alguien añade más adelante un `insert` directo sobre `class_bookings`, se salta
-el aforo. Queda dicho en un comentario de la tabla y en la política de RLS,
-que **no permite insertar directamente**.
+el aforo.
+
+Por eso la puerta está cerrada por dos sitios: **no hay política de INSERT** en
+la RLS, y el permiso de INSERT está **revocado** a `anon` y `authenticated`
+(migración 0023). El segundo cerrojo hizo falta porque Supabase concede `all`
+por defecto a toda tabla nueva del esquema `public`, así que escribir un
+`grant select, update, delete` no quita el INSERT que ya venía dado: conceder
+de menos no retira nada.
+
+La única excepción es el guion de sembrado, que usa la clave de servicio
+porque `book_class()` mira `auth.uid()` y ahí no hay sesión.
 
 ---
 

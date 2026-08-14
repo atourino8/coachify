@@ -298,10 +298,31 @@ async function main() {
   if (clean) {
     log('\nLimpiando datos demo…');
 
+    // ORDEN OBLIGATORIO: las clases ANTES que el grupo.
+    //
+    // La clase «Pausa activa» apunta al grupo con ON DELETE RESTRICT, así que
+    // borrar el grupo primero falla. Y falla en silencio, porque aquí nadie
+    // mira el error: el grupo se quedaría puesto y el siguiente sembrado
+    // crearía otro igual. Las inscripciones sí caen en cascada con la clase.
+    const { error: errClases } = await db.from('group_classes').delete().eq('coach_id', coachId);
+    if (errClases) die('No se pudieron borrar las clases demo: ' + errClases.message);
+
     // El grupo y el ejercicio demo se borran por nombre exacto.
-    await db.from('client_groups').delete().eq('coach_id', coachId).eq('name', DEMO_GROUP);
+    const { error: errGrupo } = await db
+      .from('client_groups')
+      .delete()
+      .eq('coach_id', coachId)
+      .eq('name', DEMO_GROUP);
+    if (errGrupo) die('No se pudo borrar el grupo demo: ' + errGrupo.message);
+
     await db.from('exercises').delete().eq('coach_id', coachId).eq('name', DEMO_EXERCISE);
-    ok('Grupo y ejercicio demo borrados');
+    await db
+      .from('coach_tags')
+      .delete()
+      .eq('coach_id', coachId)
+      .eq('kind', 'client')
+      .in('slug', ['vip', 'online', 'mananas']);
+    ok('Clases, grupo, ejercicio y etiquetas demo borrados');
 
     // La marca vuelve a NULL, no al naranja: NULL significa "no ha elegido",
     // y así el coach queda como estaba antes de sembrar.
@@ -490,6 +511,30 @@ async function main() {
       ...rest
     });
   }
+
+  // ---- Etiquetas de cliente (migración 0021) ----
+  // Sin esto el filtro de la lista de clientes no se ve: solo aparece si hay
+  // etiquetas puestas, que es justo lo que no se puede comprobar con la base
+  // vacía.
+  const ETIQUETAS_DEMO = [
+    { slug: 'vip', label: 'VIP' },
+    { slug: 'online', label: 'Online' },
+    { slug: 'mananas', label: 'Mañanas' }
+  ];
+  await db.from('coach_tags').upsert(
+    ETIQUETAS_DEMO.map((e) => ({ coach_id: coachId, kind: 'client', ...e })),
+    { onConflict: 'coach_id,kind,slug' }
+  );
+  const ETIQUETAS_POR_CLIENTE = {
+    lucia: ['vip', 'mananas'],
+    carla: ['vip'],
+    ivan: ['online'],
+    sofia: ['online', 'mananas']
+  };
+  for (const [k, tags] of Object.entries(ETIQUETAS_POR_CLIENTE)) {
+    await db.from('client_info').update({ tags }).eq('client_id', ids[k]);
+  }
+  ok('3 etiquetas de cliente, puestas a 4 personas');
 
   // ---- Grupo corporativo ----
   const { data: group } = await db
@@ -698,6 +743,123 @@ async function main() {
   }
   ok(`${citas.length} citas creadas (4 activas + 3 de historial)`);
 
+  // ---- Clases grupales ----
+  // Cinco clases que cubren los cinco estados que hay que poder mirar: llena
+  // con cola, con sitio, restringida a un grupo, cancelada y pasada. Sin la
+  // llena no se ve la lista de espera, que es la mitad de la característica.
+  //
+  // Las inscripciones se insertan DIRECTAMENTE y no con book_class() porque la
+  // función mira auth.uid(), que con la clave de servicio es nulo. Es la única
+  // excepción legítima a "las inscripciones solo pasan por la función", y por
+  // eso vive aquí y no en el código de la aplicación.
+  log('\nProgramando clases…');
+  const clases = [
+    {
+      title: 'HIIT 45',
+      starts_at: at(1, 19),
+      capacity: 3,
+      location: 'Sala 2',
+      notes: 'Trae toalla. Intensidad alta.',
+      // Tres dentro y dos esperando: la clase llena con cola detrás.
+      plazas: ['lucia', 'marcos', 'carla'],
+      espera: ['ivan', 'sofia']
+    },
+    {
+      title: 'Espalda sana',
+      starts_at: at(3, 10),
+      capacity: 8,
+      location: 'Sala 1',
+      notes: 'Nivel iniciación. Movilidad y core.',
+      plazas: ['nadia', 'ivan']
+    },
+    {
+      // Restringida al grupo: Lucía no debería verla ni en su lista.
+      title: 'Pausa activa · Talleres López',
+      starts_at: at(2, 14),
+      capacity: 10,
+      location: 'Oficinas del cliente',
+      grupo: true,
+      plazas: ['ana', 'beatriz']
+    },
+    {
+      title: 'Circuito exprés',
+      starts_at: at(4, 8),
+      capacity: 6,
+      status: 'cancelled',
+      location: 'Sala 2',
+      plazas: ['carla']
+    },
+    {
+      // Pasada, y con la falta de Marcos colgando de ella.
+      title: 'HIIT 45',
+      starts_at: at(-2, 19),
+      capacity: 3,
+      location: 'Sala 2',
+      plazas: ['lucia'],
+      // Soltó la plaza el día antes: menos de dos días = falta.
+      faltas: [{ key: 'marcos', cancelado: at(-3, 20) }],
+      // Se salió con tiempo de sobra: no cuenta.
+      bajas: [{ key: 'nadia', cancelado: at(-9, 12) }]
+    }
+  ];
+
+  let inscripcionesCreadas = 0;
+  for (const c of clases) {
+    const { data: clase, error } = await db
+      .from('group_classes')
+      .insert({
+        coach_id: coachId,
+        group_id: c.grupo ? group.id : null,
+        title: c.title,
+        starts_at: c.starts_at,
+        ends_at: plusHour(c.starts_at),
+        capacity: c.capacity,
+        location: c.location ?? null,
+        notes: c.notes ?? null,
+        status: c.status ?? 'published'
+      })
+      .select('id')
+      .single();
+    if (error) die('Error creando clase: ' + error.message);
+
+    // El orden de created_at ES la cola, así que se separan un minuto entre
+    // ellas: con el mismo instante, quién sube primero sería cosa del azar.
+    const base = new Date(c.starts_at).getTime() - 7 * 24 * 3600000;
+    const enFila = (i) => new Date(base + i * 60000).toISOString();
+
+    const filas = [];
+    (c.plazas ?? []).forEach((k, i) =>
+      filas.push({ class_id: clase.id, client_id: ids[k], status: 'seat', created_at: enFila(i) })
+    );
+    (c.espera ?? []).forEach((k, i) =>
+      filas.push({
+        class_id: clase.id,
+        client_id: ids[k],
+        status: 'waitlist',
+        created_at: enFila(10 + i)
+      })
+    );
+    for (const b of [...(c.faltas ?? []), ...(c.bajas ?? [])]) {
+      filas.push({
+        class_id: clase.id,
+        client_id: ids[b.key],
+        status: 'cancelled',
+        created_at: enFila(20),
+        cancelled_at: b.cancelado,
+        cancelled_by: ids[b.key],
+        // had_seat es lo que distingue una falta de un no-pasa-nada: soltar
+        // una plaza deja a alguien fuera, salirse de la cola no.
+        had_seat: true
+      });
+    }
+    if (filas.length > 0) {
+      const { error: errIns } = await db.from('class_bookings').insert(filas);
+      if (errIns) die('Error apuntando a la clase: ' + errIns.message);
+      inscripcionesCreadas += filas.length;
+    }
+  }
+  ok(`${clases.length} clases con ${inscripcionesCreadas} inscripciones`);
+
   // ---- Cobros ----
   // Sin histórico la pantalla de Cobros no dice nada: hace falta más de un mes
   // para que aparezca una evolución. Se generan meses hacia atrás y se meten a
@@ -872,6 +1034,19 @@ async function main() {
   log('   · Peticiones pendientes: Marcos te ha pedido cita');
   log('   · Rechaza una y prueba "Deshacer": el ✓ y la ✕ estan a un pulgar');
   log('   · Lo demas (tecnica, cuotas, sin entreno) esta en la campana');
+  log('');
+  log('  ETIQUETAS (Clientes)');
+  log('   · Arriba de la lista sale la fila de filtros: VIP, Online, Mañanas');
+  log('   · Pulsa VIP y quedan Lucía y Carla. En Ajustes puedes crear más');
+  log('');
+  log('  CLASES (Agenda → Clases)');
+  log('   · HIIT 45 de mañana: 3/3 y dos esperando. Saca a alguien y mira cómo');
+  log('     sube el primero de la cola sin tocar nada más');
+  log('   · Pausa activa: solo la ven Ana, Beatriz y Diana. Entra como Lucía');
+  log('     y comprueba que NO le aparece');
+  log('   · Marcos tiene 1 falta: soltó la plaza del HIIT del martes pasado');
+  log('     con un día de aviso. Nadia se salió con una semana: no cuenta');
+  log('   · Entra como Iván (en lista de espera) y como Nadia (con plaza)');
   log('');
   log('  MARCA');
   log('   · Mi marca → tu color es un azul marino que NO se lee sobre el fondo:');
