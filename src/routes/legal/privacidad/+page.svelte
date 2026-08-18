@@ -44,6 +44,10 @@
         <strong class="text-text">Vídeos de técnica:</strong> vídeos cortos que tú, como cliente, decides
         grabar y enviar a tu entrenador para que corrija tu postura, junto con la corrección que él escribe.
       </li>
+      <li>
+        <strong class="text-text">Foto de perfil:</strong> opcional. Puedes subirla tú, y tu entrenador
+        también puede ponerla o cambiarla desde tu ficha para reconocerte en su lista de clientes.
+      </li>
     </ul>
 
     <h2 class="text-2xl font-semibold text-text">3. Vídeos de técnica (tratamiento específico)</h2>
@@ -76,6 +80,31 @@
       </li>
     </ul>
 
+    <h2 class="text-2xl font-semibold text-text">3 bis. Foto de perfil</h2>
+    <p>
+      También es tu imagen, así que se trata con el mismo cuidado que los vídeos, con dos
+      diferencias que conviene que conozcas:
+    </p>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>
+        <strong class="text-text">Quién la ve:</strong> únicamente tu entrenador. Los demás clientes no
+        ven tu foto en ninguna pantalla.
+      </li>
+      <li>
+        <strong class="text-text">Quién puede ponerla:</strong> tú desde tu perfil, y también tu entrenador
+        desde tu ficha. Esto último es deliberado y por eso se dice aquí: le sirve para identificarte
+        de un vistazo entre decenas de clientes.
+      </li>
+      <li>
+        <strong class="text-text">Cómo se guarda:</strong> en almacenamiento privado, igual que los vídeos,
+        y se muestra con enlaces firmados que caducan. No es pública ni indexable.
+      </li>
+      <li>
+        <strong class="text-text">Borrado:</strong> puedes quitarla cuando quieras desde tu perfil. Al
+        hacerlo se borra también el archivo y vuelve a verse tu inicial.
+      </li>
+    </ul>
+
     <h2 class="text-2xl font-semibold text-text">4. Para qué usamos los datos</h2>
     <p>
       Exclusivamente para prestar el servicio: que tu entrenador pueda programarte entrenamientos,
@@ -87,8 +116,8 @@
     <h2 class="text-2xl font-semibold text-text">5. Base legal</h2>
     <p>
       Ejecución del contrato (prestación del servicio) para los datos de cuenta y entrenamiento;
-      <em>consentimiento explícito</em> para los vídeos de técnica; interés legítimo para la seguridad
-      de la plataforma.
+      <em>consentimiento explícito</em> para los vídeos de técnica y la foto de perfil; interés legítimo
+      para la seguridad de la plataforma.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">6. Quién los procesa</h2>

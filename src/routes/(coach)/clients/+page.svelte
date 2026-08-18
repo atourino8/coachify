@@ -1,6 +1,7 @@
 <script lang="ts">
   import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
+  import Avatar from '$lib/components/Avatar.svelte';
   import { page } from '$app/state';
   import { paymentStatus } from '$lib/supabase/types';
   import { todayISOLocal } from '$lib/week';
@@ -213,11 +214,7 @@
         {#each activosFiltrados as client (client.id)}
           {@const pay = payLabelFor(client.fee)}
           <a href="/clients/{client.id}" class="row-link">
-            <div
-              class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0"
-            >
-              {client.full_name?.charAt(0).toUpperCase() ?? '?'}
-            </div>
+            <Avatar url={client.avatar} nombre={client.full_name} tamano="sm" />
             <div class="flex-1 min-w-0">
               <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
               <!-- Las etiquetas sustituyen al email cuando las hay: en una fila

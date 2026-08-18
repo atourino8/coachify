@@ -4,6 +4,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { datesInRangeOnWeekdays } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
+import { urlsDeAvatar } from '$lib/avatares.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -22,20 +23,26 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   const { data: memRaw } = await supabase
     .from('client_group_members')
     .select(
-      'client_id, added_at, client:profiles!client_group_members_client_id_fkey(id, full_name)'
+      'client_id, added_at, client:profiles!client_group_members_client_id_fkey(id, full_name, avatar_path)'
     )
     .eq('group_id', params.id);
 
-  const members = (
-    (memRaw ?? []) as unknown as {
-      client_id: string;
-      added_at: string;
-      client: { id: string; full_name: string | null } | null;
-    }[]
-  )
+  const crudos = (memRaw ?? []) as unknown as {
+    client_id: string;
+    added_at: string;
+    client: { id: string; full_name: string | null; avatar_path: string | null } | null;
+  }[];
+
+  const avatares = await urlsDeAvatar(
+    supabase,
+    crudos.map((m) => m.client?.avatar_path)
+  );
+
+  const members = crudos
     .map((m) => ({
       id: m.client_id,
       name: m.client?.full_name ?? 'Cliente',
+      avatar: m.client?.avatar_path ? (avatares.get(m.client.avatar_path) ?? null) : null,
       addedAt: m.added_at
     }))
     .sort((a, b) => a.name.localeCompare(b.name));

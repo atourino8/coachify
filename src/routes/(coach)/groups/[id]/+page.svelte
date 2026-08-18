@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import Avatar from '$lib/components/Avatar.svelte';
 
   let { data, form } = $props();
 
@@ -265,11 +266,7 @@
         {#each data.members as m (m.id)}
           <div class="row">
             <a href="/clients/{m.id}" class="flex items-center gap-3 flex-1 min-w-0">
-              <span
-                class="w-8 h-8 rounded-full bg-surface-2 grid place-items-center text-xs font-semibold text-text-mute flex-shrink-0"
-              >
-                {m.name.charAt(0).toUpperCase()}
-              </span>
+              <Avatar url={m.avatar} nombre={m.name} class="w-8 h-8 text-xs" />
               <span class="font-medium truncate">{m.name}</span>
             </a>
             <a href="/clients/{m.id}" class="text-xs text-accent hover:underline flex-shrink-0"

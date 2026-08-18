@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import Avatar from '$lib/components/Avatar.svelte';
   import { diaLargo, hora } from '$lib/formato';
   import { estadoDeClase } from '$lib/clases';
 
@@ -26,13 +27,12 @@
   <title>{data.clase.title} · Treno</title>
 </svelte:head>
 
-{#snippet persona(p: { client_id: string; nombre: string; faltas: number }, quitable: boolean)}
+{#snippet persona(
+  p: { client_id: string; nombre: string; faltas: number; avatar: string | null },
+  quitable: boolean
+)}
   <div class="row">
-    <div
-      class="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-sm font-semibold text-text-mute flex-shrink-0"
-    >
-      {p.nombre.charAt(0).toUpperCase()}
-    </div>
+    <Avatar url={p.avatar} nombre={p.nombre} tamano="sm" />
     <div class="flex-1 min-w-0">
       <a href="/clients/{p.client_id}" class="font-medium truncate hover:text-primary">
         {p.nombre}

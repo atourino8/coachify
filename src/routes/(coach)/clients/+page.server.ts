@@ -7,11 +7,14 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabase/admin';
+import { urlsDeAvatar } from '$lib/avatares.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type ClientRow = {
   id: string;
   full_name: string | null;
+  /** URL ya firmada, o nula: entonces se pinta la inicial. */
+  avatar: string | null;
   created_at: string;
   email: string | null;
   invited_at: string | null;
@@ -23,12 +26,24 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, full_name, created_at')
+    .select('id, full_name, created_at, avatar_path')
     .eq('coach_id', user.id)
     .eq('archived', false)
     .order('full_name', { ascending: true });
 
-  const rows = (profiles ?? []) as { id: string; full_name: string | null; created_at: string }[];
+  const rows = (profiles ?? []) as {
+    id: string;
+    full_name: string | null;
+    created_at: string;
+    avatar_path: string | null;
+  }[];
+
+  // Las fotos, todas de una llamada. Firmarlas de una en una serían sesenta
+  // idas y venidas al almacenamiento para pintar una lista.
+  const avatares = await urlsDeAvatar(
+    supabase,
+    rows.map((r) => r.avatar_path)
+  );
 
   // Enriquecer cada cliente con el email y si ya aceptó (auth.users).
   const enriched: ClientRow[] = await Promise.all(
@@ -57,6 +72,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
       return {
         id: p.id,
         full_name: p.full_name,
+        avatar: p.avatar_path ? (avatares.get(p.avatar_path) ?? null) : null,
         created_at: p.created_at,
         email,
         invited_at: invitedAt,

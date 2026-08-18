@@ -2,12 +2,14 @@
   import { enhance } from '$app/forms';
   import { untrack } from 'svelte';
   import type { ClaseEtiqueta } from '$lib/tags';
+  import Avatar from '$lib/components/Avatar.svelte';
 
   let { data, form } = $props();
 
   let nombre = $state(untrack(() => data.nombre));
   let sitio = $state(untrack(() => data.sitio));
   let guardando = $state(false);
+  let subiendoFoto = $state(false);
   let renombrando = $state<string | null>(null);
   let textoNuevo = $state('');
 
@@ -96,6 +98,46 @@
       <h2 class="text-lg font-display font-semibold">Perfil</h2>
       <p class="text-sm text-text-mute">Lo que ven tus clientes.</p>
     </div>
+
+    <!-- La foto, en su propia tarjeta y antes que el nombre: es lo primero
+         que se ve en el cajón y en la cabecera del cliente. -->
+    <form
+      method="POST"
+      action="?/foto"
+      enctype="multipart/form-data"
+      class="card flex flex-wrap items-center gap-4"
+      use:enhance={() => {
+        subiendoFoto = true;
+        return async ({ update }) => {
+          subiendoFoto = false;
+          await update();
+        };
+      }}
+    >
+      <Avatar url={data.avatar} nombre={data.nombre} tamano="xl" />
+      <div class="flex-1 min-w-[12rem] space-y-2">
+        <label for="foto" class="block text-xs uppercase tracking-wider text-text-mute"
+          >Tu foto</label
+        >
+        <input
+          id="foto"
+          name="foto"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
+          class="block w-full text-sm text-text-mute file:mr-3 file:py-2 file:px-4
+                 file:rounded-md file:border file:border-line file:bg-surface-2
+                 file:text-text file:text-sm file:cursor-pointer"
+        />
+        <p class="text-2xs text-text-mute">
+          JPG, PNG o WEBP, hasta 5 MB. Sin foto se ve tu inicial.
+          {#if subiendoFoto}<span class="text-accent">Subiendo…</span>{/if}
+        </p>
+      </div>
+      {#if data.tieneFoto}
+        <button type="submit" name="quitar" value="1" class="action-neutral">Quitar</button>
+      {/if}
+    </form>
 
     <form method="POST" action="?/nombre" use:enhance={trasGuardar} class="card space-y-4">
       <div>

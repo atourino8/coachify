@@ -11,6 +11,7 @@ import {
 } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import { faltasPorCliente } from '$lib/faltas.server';
+import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
 import { BUCKET } from '$lib/technique';
 import type { TechniqueVideo } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
@@ -369,6 +370,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   return {
     client,
+    // La cara del cliente, firmada. El cubo es privado (migración 0024).
+    avatar: await urlDeAvatar(supabase, (client as { avatar_path: string | null }).avatar_path),
     clasesProximas,
     faltas,
     view,
@@ -386,6 +389,35 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 };
 
 export const actions: Actions = {
+  // La foto del cliente, puesta por su entrenador.
+  //
+  // El .eq('coach_id') no es decorativo: sin él, cualquiera podría cambiarle
+  // la cara a un cliente ajeno mandando otro id en la URL. La RLS del cubo lo
+  // impediría igualmente, pero la comprobación se hace donde se decide.
+  foto: async ({ request, params, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('avatar_path')
+      .eq('id', params.id)
+      .eq('coach_id', user.id)
+      .maybeSingle();
+    if (!perfil) return fail(404, { error: 'Ese cliente no es tuyo.' });
+    const anterior = (perfil as { avatar_path: string | null }).avatar_path;
+
+    const fd = await request.formData();
+    if (fd.get('quitar')) {
+      const { error: err } = await quitarAvatar(supabase, params.id, anterior);
+      if (err) return fail(500, { error: err });
+      return { success: true, fotoQuitada: true };
+    }
+
+    const res = await guardarAvatar(supabase, params.id, fd.get('foto') as File | null, anterior);
+    if ('error' in res) return fail(400, { error: res.error });
+    return { success: true, fotoGuardada: true };
+  },
+
   // Guarda (upsert) la ficha del cliente.
   saveInfo: async ({ request, params, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');

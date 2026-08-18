@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Avatar from '$lib/components/Avatar.svelte';
   import { page } from '$app/state';
   import Icono from '$lib/components/Icono.svelte';
 
@@ -133,9 +134,11 @@
                 : 'text-text-mute hover:text-text'}
                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <span aria-hidden="true" class="marca-cuadro w-7 h-7 text-2xs">
-                {data.marca.inicial}
-              </span>
+              <!-- Aquí el cuadro de marca deja paso a la cara: este bloque es
+                   «tú», no «tu marca». El color sigue mandando en el logotipo
+                   y en toda la aplicación del cliente, que es donde la marca
+                   tiene algo que decir. -->
+              <Avatar url={data.avatar} nombre={data.profile.full_name} class="w-7 h-7 text-2xs" />
               <span class="max-w-[9rem] truncate">{data.profile.full_name ?? 'Ajustes'}</span>
             </summary>
 
@@ -265,9 +268,11 @@
               </div>
 
               <a href="/ajustes" class="flex items-center gap-3 px-5 pb-5">
-                <div aria-hidden="true" class="marca-cuadro w-12 h-12 text-lg flex-shrink-0">
-                  {data.marca.inicial}
-                </div>
+                <Avatar
+                  url={data.avatar}
+                  nombre={data.profile.full_name}
+                  class="w-12 h-12 text-lg"
+                />
                 <span class="min-w-0">
                   <span class="block font-semibold truncate">
                     {data.profile.full_name ?? 'Tu nombre'}

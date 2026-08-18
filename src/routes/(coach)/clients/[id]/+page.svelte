@@ -15,12 +15,14 @@
    * secciones de esta pantalla. Por eso reciben `data` entera en vez de un
    * contrato de props que habría que rehacer cada vez que cambie la consulta.
    */
+  import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import { fechaCorta } from '$lib/formato';
   import { todayISOLocal, formatHumanDate } from '$lib/week';
   import { paymentStatus } from '$lib/supabase/types';
 
   import CobroRapido from './CobroRapido.svelte';
+  import Avatar from '$lib/components/Avatar.svelte';
   import PanelEntrenos from './PanelEntrenos.svelte';
   import PanelFicha from './PanelFicha.svelte';
   import PanelProgreso from './PanelProgreso.svelte';
@@ -49,6 +51,8 @@
   };
   const payLabel = $derived(PAY_LABELS[payStatus]);
   let registrandoCobro = $state(false);
+  let cambiandoFoto = $state(false);
+  let subiendoFoto = $state(false);
 </script>
 
 <svelte:head>
@@ -59,9 +63,25 @@
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div class="min-w-0">
       <a href="/clients" class="text-sm text-text-mute hover:text-text">← Clientes</a>
-      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-3">
-        {data.client.full_name}
-      </h1>
+
+      <!-- La foto y el nombre en la misma línea, como en el wireframe. El
+           formulario de cambiarla se despliega al pulsar la foto: está a mano
+           sin ocupar sitio permanente en una cabecera que ya lleva el estado
+           de pago, las faltas y cinco pestañas. -->
+      <div class="flex items-center gap-3 mt-3">
+        <button
+          type="button"
+          onclick={() => (cambiandoFoto = !cambiandoFoto)}
+          title="Cambiar la foto"
+          class="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <Avatar url={data.avatar} nombre={data.client.full_name} tamano="lg" />
+          <span class="sr-only">Cambiar la foto de {data.client.full_name}</span>
+        </button>
+        <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">
+          {data.client.full_name}
+        </h1>
+      </div>
       <p class="text-text-mute text-sm mt-1">
         Cliente desde {fechaCorta(data.client.created_at)}
       </p>
@@ -93,6 +113,49 @@
       </div>
     {/if}
   </div>
+
+  {#if cambiandoFoto}
+    <form
+      method="POST"
+      action="?/foto"
+      enctype="multipart/form-data"
+      class="card flex flex-wrap items-end gap-3"
+      use:enhance={() => {
+        subiendoFoto = true;
+        return async ({ update }) => {
+          subiendoFoto = false;
+          cambiandoFoto = false;
+          await update();
+        };
+      }}
+    >
+      <div class="flex-1 min-w-[14rem]">
+        <label for="foto" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+          Foto de {data.client.full_name}
+        </label>
+        <input
+          id="foto"
+          name="foto"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          class="block w-full text-sm text-text-mute file:mr-3 file:py-2 file:px-4
+                 file:rounded-md file:border file:border-line file:bg-surface-2
+                 file:text-text file:text-sm file:cursor-pointer"
+        />
+        <!-- Se dice que él también puede cambiarla: la foto es suya, y el
+             entrenador la pone para no depender de que lo haga. -->
+        <p class="text-2xs text-text-mute mt-2">
+          Hasta 5 MB. Tu cliente puede cambiarla desde su perfil.
+        </p>
+      </div>
+      <button type="submit" disabled={subiendoFoto} class="btn-primary">
+        {subiendoFoto ? 'Subiendo…' : 'Guardar foto'}
+      </button>
+      <button type="button" onclick={() => (cambiandoFoto = false)} class="action-neutral">
+        Cancelar
+      </button>
+    </form>
+  {/if}
 
   <CobroRapido {data} {form} bind:abierto={registrandoCobro} />
 

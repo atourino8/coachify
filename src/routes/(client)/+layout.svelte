@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Avatar from '$lib/components/Avatar.svelte';
   import { page } from '$app/state';
 
   let { data, children } = $props();
@@ -57,9 +58,16 @@
             {@render navLinks()}
           </nav>
           <span class="text-line-strong hidden sm:inline">|</span>
-          <span class="text-text-mute hidden md:inline">
-            {data.profile.full_name ?? 'Cliente'}
-          </span>
+          <!-- Su cara enlaza a su perfil. Antes su nombre estaba aquí escrito
+               y no llevaba a ninguna parte, porque no había ninguna parte a la
+               que llevar: un cliente no tenía ni una pantalla suya. -->
+          <a
+            href="/perfil"
+            class="flex items-center gap-2 text-text-mute hover:text-text transition-colors"
+          >
+            <Avatar url={data.avatar} nombre={data.profile.full_name} tamano="sm" class="w-8 h-8" />
+            <span class="hidden md:inline">{data.profile.full_name ?? 'Cliente'}</span>
+          </a>
           <form method="POST" action="/logout">
             <button type="submit" class="text-text-mute hover:text-danger transition-colors">
               Salir

@@ -190,7 +190,8 @@ export interface Profile {
   role: Role;
   full_name: string | null;
   coach_id: string | null;
-  avatar_url: string | null;
+  /** Ruta en el cubo `avatars`, no una URL: el cubo es privado (migr. 0024). */
+  avatar_path: string | null;
   timezone: string;
   locale: string;
   archived: boolean;

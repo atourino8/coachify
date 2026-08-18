@@ -9,6 +9,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { aIdentificador, identificadorValido, type ClaseEtiqueta } from '$lib/tags';
+import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
 import type { PageServerLoad, Actions } from './$types';
 
 const CLASES: ClaseEtiqueta[] = ['muscle', 'equipment', 'client'];
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   const [{ data: profile }, { data: propias }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, brand_accent, default_location')
+      .select('full_name, brand_accent, default_location, avatar_path')
       .eq('id', user.id)
       .single(),
     supabase
@@ -31,6 +32,8 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   return {
     nombre: profile?.full_name ?? '',
+    avatar: await urlDeAvatar(supabase, profile?.avatar_path ?? null),
+    tieneFoto: Boolean(profile?.avatar_path),
     sitio: profile?.default_location ?? '',
     email: user.email ?? '',
     tieneMarca: Boolean(profile?.brand_accent),
@@ -39,6 +42,31 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
+  // La foto va en su propio formulario y no junto al nombre: son dos envíos
+  // distintos —uno multipart y otro no— y juntarlos obligaría a subir la foto
+  // otra vez cada vez que corriges una letra del nombre.
+  foto: async ({ request, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+
+    const { data: actual } = await supabase
+      .from('profiles')
+      .select('avatar_path')
+      .eq('id', user.id)
+      .single();
+    const anterior = (actual as { avatar_path: string | null } | null)?.avatar_path ?? null;
+
+    if (fd.get('quitar')) {
+      const { error } = await quitarAvatar(supabase, user.id, anterior);
+      if (error) return fail(500, { error });
+      return { success: true, fotoQuitada: true };
+    }
+
+    const res = await guardarAvatar(supabase, user.id, fd.get('foto') as File | null, anterior);
+    if ('error' in res) return fail(400, { error: res.error });
+    return { success: true, fotoGuardada: true };
+  },
+
   nombre: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();

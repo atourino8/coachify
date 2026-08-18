@@ -265,3 +265,25 @@ tocar los textos legales.
 - [Artículo 9 · Tratamiento de categorías especiales de datos personales (RGPD)](https://www.boe.es/doue/2016/119/L00001-00088.pdf)
 - Migración 0002 de este repositorio, donde nació el patrón de funciones
   `SECURITY DEFINER` para evitar la recursión en políticas.
+
+---
+
+## Anexo (agosto de 2026) · El wireframe ya cuenta con esto
+
+En la pantalla 10 de la segunda tanda de wireframes, el modal de añadir
+ejercicios a un entrenamiento, los ejercicios aparecen como
+**«Alberto - Extensión de cuádriceps»**.
+
+Preguntado, Toni lo confirma: es el caso del gimnasio con varios entrenadores.
+**Alberto tiene sus ejercicios, con su vídeo explicativo grabado por él**, y
+sus compañeros los ven en una biblioteca común sabiendo de quién es cada uno.
+
+Es la primera vez que una decisión de interfaz *depende* de este ADR, y aclara
+una duda que quedó abierta: la biblioteca compartida **no funde** los
+ejercicios de todos en un montón anónimo, sino que **conserva el autor y lo
+enseña**. Eso descarta la opción más simple —copiar los ejercicios al alta de
+la organización— y exige que `exercises` sepa a la vez de quién es y a qué
+organización pertenece.
+
+No se implementa nada todavía: sin organizaciones, un prefijo con el nombre del
+entrenador sería el nombre del único entrenador que hay, repetido en cada fila.

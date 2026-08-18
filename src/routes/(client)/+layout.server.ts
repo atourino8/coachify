@@ -6,6 +6,7 @@ import { accesoDelCliente } from '$lib/access';
 import { todayISOInTZ } from '$lib/week';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { construirVocabulario, VOCABULARIO_BASE, type EtiquetaCoach } from '$lib/tags';
+import { urlDeAvatar } from '$lib/avatares.server';
 import type { LayoutServerLoad } from './$types';
 
 const TZ_POR_DEFECTO = 'Europe/Madrid';
@@ -97,5 +98,16 @@ export const load: LayoutServerLoad = async ({ locals: { supabase, safeGetSessio
     }
   }
 
-  return { profile, marca, acceso, nombreCoach, vocabulario };
+  return {
+    profile,
+    // Su propia foto, para la cabecera. La del entrenador no se firma aquí:
+    // la marca sigue siendo su color y su inicial, y meterle la cara del
+    // entrenador a toda la aplicación del cliente es una decisión de diseño
+    // que nadie ha tomado.
+    avatar: await urlDeAvatar(supabase, (profile as { avatar_path: string | null }).avatar_path),
+    marca,
+    acceso,
+    nombreCoach,
+    vocabulario
+  };
 };

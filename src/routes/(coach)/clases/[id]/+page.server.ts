@@ -4,6 +4,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { mensajeDeError } from '$lib/clases';
 import { faltasPorCliente } from '$lib/faltas.server';
+import { urlsDeAvatar } from '$lib/avatares.server';
 import type { GroupClass, ClassBooking } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -33,13 +34,28 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   // N+1 que ya se quitó de la agenda y de la lista de clientes.
   const ids = [...new Set(inscripciones.map((i) => i.client_id))];
   const nombres = new Map<string, string>();
+  const rutas = new Map<string, string | null>();
+  const avatares = new Map<string, string | null>();
   if (ids.length > 0) {
     const { data: perfiles } = await supabase
       .from('profiles')
-      .select('id, full_name')
+      .select('id, full_name, avatar_path')
       .in('id', ids);
-    for (const p of (perfiles ?? []) as { id: string; full_name: string | null }[]) {
+    const filas = (perfiles ?? []) as {
+      id: string;
+      full_name: string | null;
+      avatar_path: string | null;
+    }[];
+    for (const p of filas) {
       nombres.set(p.id, p.full_name ?? 'Sin nombre');
+      rutas.set(p.id, p.avatar_path);
+    }
+    const firmadas = await urlsDeAvatar(
+      supabase,
+      filas.map((f) => f.avatar_path)
+    );
+    for (const [id, ruta] of rutas) {
+      if (ruta) avatares.set(id, firmadas.get(ruta) ?? null);
     }
   }
 
@@ -49,6 +65,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     id: i.id,
     client_id: i.client_id,
     nombre: nombres.get(i.client_id) ?? 'Sin nombre',
+    avatar: avatares.get(i.client_id) ?? null,
     faltas: faltas.get(i.client_id) ?? 0,
     created_at: i.created_at,
     cancelled_at: i.cancelled_at

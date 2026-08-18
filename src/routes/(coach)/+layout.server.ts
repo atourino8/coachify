@@ -4,6 +4,7 @@ import { redirect } from '@sveltejs/kit';
 import { identidadDeMarca } from '$lib/brand';
 import { avisosDelCoach, cuentaSinVer } from '$lib/avisos.server';
 import { construirVocabulario, VOCABULARIO_BASE, type EtiquetaCoach } from '$lib/tags';
+import { urlDeAvatar } from '$lib/avatares.server';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetSession } }) => {
@@ -73,5 +74,11 @@ export const load: LayoutServerLoad = async ({ url, locals: { supabase, safeGetS
     vocabulario = VOCABULARIO_BASE;
   }
 
-  return { profile, marca, sinVer, vocabulario };
+  return {
+    profile,
+    avatar: await urlDeAvatar(supabase, (profile as { avatar_path: string | null }).avatar_path),
+    marca,
+    sinVer,
+    vocabulario
+  };
 };
