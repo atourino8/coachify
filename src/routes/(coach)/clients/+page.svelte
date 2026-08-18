@@ -2,6 +2,7 @@
   import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
   import Avatar from '$lib/components/Avatar.svelte';
+  import Icono from '$lib/components/Icono.svelte';
   import { page } from '$app/state';
   import { paymentStatus } from '$lib/supabase/types';
   import { todayISOLocal } from '$lib/week';
@@ -15,16 +16,40 @@
   // alguien es encontrarle después. Solo aparece si tiene etiquetas creadas,
   // porque una fila de filtros vacía es ruido en todas las visitas.
   let filtroEtiqueta = $state('');
+
+  // ---- Buscar en la cartera ----
+  //
+  // Busca en el nombre Y en el correo. El correo importa más de lo que parece:
+  // es lo único que el entrenador tiene cuando alguien le escribe desde una
+  // dirección y no recuerda de quién era.
+  let busqueda = $state('');
+  const normalizar = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  // ---- Vista ----
+  //
+  // La LISTA es la predeterminada, no la rejilla, aunque el wireframe enseñe
+  // la rejilla: caben doce o catorce clientes por pantalla frente a siete. Con
+  // quince clientes la rejilla es más bonita; con sesenta, es desplazamiento.
+  // Quien la prefiera la elige, y esa es justo la razón de que haya
+  // conmutador.
+  let vista = $state<'lista' | 'rejilla'>('lista');
   const etiquetasEnUso = $derived(
     [...new Set(data.active.flatMap((c) => c.tags ?? []))].sort((a, b) =>
       (data.vocabulario.client[a] ?? a).localeCompare(data.vocabulario.client[b] ?? b)
     )
   );
-  const activosFiltrados = $derived(
-    filtroEtiqueta === ''
-      ? data.active
-      : data.active.filter((c) => (c.tags ?? []).includes(filtroEtiqueta))
-  );
+  const activosFiltrados = $derived.by(() => {
+    const q = normalizar(busqueda.trim());
+    return data.active.filter((c) => {
+      if (filtroEtiqueta !== '' && !(c.tags ?? []).includes(filtroEtiqueta)) return false;
+      if (q === '') return true;
+      return normalizar(c.full_name ?? '').includes(q) || normalizar(c.email ?? '').includes(q);
+    });
+  });
 
   let tab = $state<'active' | 'pending'>('active');
   // Se abre solo con ?invite=1 (atajo desde el home o desde un grupo).
@@ -60,9 +85,12 @@
   function payLabelFor(fee: { fee_amount: number | null; paid_until: string | null } | null) {
     const st = paymentStatus(fee, todayISOLocal());
     if (st === 'sin_cuota') return null;
-    if (st === 'al_dia') return { text: 'Al día', cls: 'pill-ok' };
-    if (st === 'vence_pronto') return { text: 'Vence pronto', cls: 'pill-warn' };
-    return { text: 'Vencido', cls: 'pill-danger' };
+    // El símbolo es para la rejilla, donde el estado va en un punto pequeño.
+    // Nunca viaja solo: al lado siempre hay un texto para lectores de pantalla.
+    if (st === 'al_dia') return { text: 'Al día', cls: 'pill-ok', tinte: 'tinte-ok', simbolo: '✓' };
+    if (st === 'vence_pronto')
+      return { text: 'Vence pronto', cls: 'pill-warn', tinte: 'tinte-aviso', simbolo: '!' };
+    return { text: 'Vencido', cls: 'pill-danger', tinte: 'tinte-peligro', simbolo: '×' };
   }
 
   // El guion cuando no hay fecha se queda aquí: es decisión de esta pantalla,
@@ -179,6 +207,59 @@
         </p>
       </div>
     {:else}
+      <!-- Buscar y «+ Añadir» a la izquierda, conmutador a la derecha, igual
+           que en la biblioteca: lo que cambia QUÉ se ve, junto; lo que cambia
+           CÓMO se ve, aparte. -->
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[16rem]">
+          <div class="relative flex-1 min-w-[12rem]">
+            <label for="buscar" class="sr-only">Buscar en tu cartera</label>
+            <input
+              id="buscar"
+              type="search"
+              bind:value={busqueda}
+              placeholder="Buscar en tu cartera"
+              class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
+                     focus:outline-none focus:border-accent"
+            />
+            <span
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute pointer-events-none"
+            >
+              <Icono nombre="buscar" class="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="flex rounded-md border border-line overflow-hidden"
+          role="group"
+          aria-label="Vista"
+        >
+          <button
+            onclick={() => (vista = 'lista')}
+            aria-pressed={vista === 'lista'}
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors {vista ===
+            'lista'
+              ? 'bg-primary text-bg font-medium'
+              : 'text-text-mute hover:text-text'}"
+          >
+            <Icono nombre="lista" class="w-4 h-4" />
+            Lista
+          </button>
+          <button
+            onclick={() => (vista = 'rejilla')}
+            aria-pressed={vista === 'rejilla'}
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
+                   transition-colors {vista === 'rejilla'
+              ? 'bg-primary text-bg font-medium'
+              : 'text-text-mute hover:text-text'}"
+          >
+            <Icono nombre="rejilla" class="w-4 h-4" />
+            Fotos
+          </button>
+        </div>
+      </div>
+
       {#if etiquetasEnUso.length > 0}
         <!-- La fila de filtros solo existe si hay algo que filtrar: con cero
              etiquetas puestas sería una barra vacía en todas las visitas. -->
@@ -208,41 +289,95 @@
         </div>
       {/if}
 
-      <!-- Lista densa: filas separadas por línea, no tarjetas. Se ve más
-           gente por pantalla y el estado de pago se lee de un vistazo. -->
-      <div class="border-t border-line">
-        {#each activosFiltrados as client (client.id)}
-          {@const pay = payLabelFor(client.fee)}
-          <a href="/clients/{client.id}" class="row-link">
-            <Avatar url={client.avatar} nombre={client.full_name} tamano="sm" />
-            <div class="flex-1 min-w-0">
-              <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
-              <!-- Las etiquetas sustituyen al email cuando las hay: en una fila
-                   estrecha compiten por el mismo hueco y el email ya está en la
-                   ficha, mientras que la etiqueta es lo que se está buscando. -->
-              {#if client.tags.length > 0}
+      {#if vista === 'lista'}
+        <!-- Lista densa: filas separadas por línea, no tarjetas. Se ve más
+             gente por pantalla y el estado de pago se lee de un vistazo. -->
+        <div class="border-t border-line">
+          {#each activosFiltrados as client (client.id)}
+            {@const pay = payLabelFor(client.fee)}
+            <a href="/clients/{client.id}" class="row-link">
+              <Avatar url={client.avatar} nombre={client.full_name} tamano="sm" />
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
+                <!-- Grupo y etiquetas en la misma línea, y el email solo si no
+                     hay ninguno de los dos: los tres compiten por el mismo
+                     hueco, y el email ya está en la ficha. -->
                 <div class="text-xs text-text-mute truncate">
-                  {client.tags.map((s) => data.vocabulario.client[s] ?? s).join(' · ')}
+                  {[client.grupo ?? 'Individual']
+                    .concat(client.tags.map((s) => data.vocabulario.client[s] ?? s))
+                    .join(' · ')}
                 </div>
-              {:else}
-                <div class="text-xs text-text-mute truncate">{client.email ?? ''}</div>
+              </div>
+              {#if client.fee?.fee_amount}
+                <span class="text-xs text-text-mute tabular-nums hidden sm:block flex-shrink-0">
+                  {client.fee.fee_amount} €/mes
+                </span>
               {/if}
-            </div>
-            {#if client.fee?.fee_amount}
-              <span class="text-xs text-text-mute tabular-nums hidden sm:block flex-shrink-0">
-                {client.fee.fee_amount} €/mes
-              </span>
-            {/if}
-            {#if pay}
-              <span class="{pay.cls} flex-shrink-0">{pay.text}</span>
-            {/if}
-            <span class="text-text-mute text-sm flex-shrink-0">→</span>
-          </a>
-        {/each}
-        {#if activosFiltrados.length === 0}
-          <p class="py-8 text-center text-sm text-text-mute">Nadie con esta etiqueta.</p>
-        {/if}
-      </div>
+              {#if pay}
+                <span class="{pay.cls} flex-shrink-0">{pay.text}</span>
+              {/if}
+              <span class="text-text-mute text-sm flex-shrink-0">→</span>
+            </a>
+          {/each}
+        </div>
+      {:else}
+        <!-- Rejilla de dos columnas, como el wireframe. Dos y no tres ni
+             cuatro: en un móvil, tres tarjetas por fila dejan el nombre en dos
+             líneas cortadas y la cara del tamaño de un sello, que es lo único
+             que la rejilla aporta sobre la lista. -->
+        <div class="grid grid-cols-2 gap-3">
+          {#each activosFiltrados as client (client.id)}
+            {@const pay = payLabelFor(client.fee)}
+            <a
+              href="/clients/{client.id}"
+              class="card relative flex flex-col items-center text-center gap-2
+                     hover:border-accent transition-colors"
+            >
+              {#if pay}
+                <!--
+                  El estado, arriba a la derecha como en el wireframe, pero NO
+                  solo con color.
+
+                  Tres colores no dicen a nadie qué significan la primera vez, y
+                  a quien no distingue el rojo del verde no le dicen nada nunca.
+                  Así que el punto lleva su letra dentro —✓, !, ×— y el texto
+                  completo va en un title y en sr-only, que es lo que lee un
+                  lector de pantalla.
+                -->
+                <span
+                  class="absolute top-3 right-3 w-6 h-6 rounded-full grid place-items-center
+                         text-2xs font-bold {pay.tinte}"
+                  title={pay.text}
+                >
+                  <span aria-hidden="true">{pay.simbolo}</span>
+                  <span class="sr-only">{pay.text}</span>
+                </span>
+              {/if}
+
+              <Avatar url={client.avatar} nombre={client.full_name} tamano="lg" class="mt-1" />
+
+              <div class="min-w-0 w-full">
+                <div class="font-medium truncate">{client.full_name ?? 'Sin nombre'}</div>
+                <!-- El grupo, o «Individual». No se deja el hueco vacío: en una
+                     rejilla, una tarjeta con una línea menos que las de al lado
+                     parece que le falta algo. -->
+                <div class="text-xs text-text-mute truncate">{client.grupo ?? 'Individual'}</div>
+                {#if client.tags.length > 0}
+                  <div class="text-2xs text-text-mute truncate mt-1">
+                    {client.tags.map((s) => data.vocabulario.client[s] ?? s).join(' | ')}
+                  </div>
+                {/if}
+              </div>
+            </a>
+          {/each}
+        </div>
+      {/if}
+
+      {#if activosFiltrados.length === 0}
+        <p class="card py-8 text-center text-sm text-text-mute">
+          {busqueda.trim() ? 'Nadie con ese nombre ni ese correo.' : 'Nadie con esta etiqueta.'}
+        </p>
+      {/if}
     {/if}
   {:else if data.pending.length === 0}
     <div class="card text-center py-16">

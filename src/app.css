@@ -209,13 +209,26 @@ summary::-webkit-details-marker {
     @apply text-2xs px-2 py-0.5 rounded-full whitespace-nowrap;
   }
   .pill-ok {
-    @apply pill bg-success/10 text-success;
+    @apply pill tinte-ok;
   }
   .pill-warn {
-    @apply pill bg-warning/10 text-warning;
+    @apply pill tinte-aviso;
   }
   .pill-danger {
-    @apply pill bg-danger/10 text-danger;
+    @apply pill tinte-peligro;
+  }
+
+  /* Solo el color, sin la forma de pastilla. Lo usa el punto de estado de la
+     rejilla de clientes, que es un círculo de tamaño fijo: con el px-2 py-0.5
+     de .pill dentro de un w-6 h-6 el símbolo se sale. */
+  .tinte-ok {
+    @apply bg-success/10 text-success;
+  }
+  .tinte-aviso {
+    @apply bg-warning/10 text-warning;
+  }
+  .tinte-peligro {
+    @apply bg-danger/10 text-danger;
   }
   .pill-mute {
     @apply pill bg-surface-2 text-text-mute;

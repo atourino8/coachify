@@ -15,6 +15,8 @@ type ClientRow = {
   full_name: string | null;
   /** URL ya firmada, o nula: entonces se pinta la inicial. */
   avatar: string | null;
+  /** Nombre del grupo, o null. La palabra «Individual» la pone la pantalla. */
+  grupo: string | null;
   created_at: string;
   email: string | null;
   invited_at: string | null;
@@ -45,6 +47,32 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     rows.map((r) => r.avatar_path)
   );
 
+  // A qué grupo pertenece cada uno. Una consulta para toda la cartera, no una
+  // por cliente: es el mismo N+1 que ya se quitó tres veces de este proyecto.
+  //
+  // Un cliente puede estar en VARIOS grupos —la tabla de pertenencia se hizo
+  // así a propósito en la migración 0010— pero la tarjeta solo tiene sitio
+  // para uno. Se enseña el primero por orden alfabético, que al menos es
+  // estable entre recargas; con dos grupos, el segundo se ve en su ficha.
+  const { data: pertenencias } = await supabase
+    .from('client_group_members')
+    .select('client_id, client_groups!inner(name, coach_id)')
+    .in(
+      'client_id',
+      rows.map((r) => r.id)
+    );
+  const grupoDe = new Map<string, string>();
+  for (const p of (pertenencias ?? []) as unknown as {
+    client_id: string;
+    client_groups: { name: string; coach_id: string } | null;
+  }[]) {
+    if (!p.client_groups || p.client_groups.coach_id !== user.id) continue;
+    const actual = grupoDe.get(p.client_id);
+    if (!actual || p.client_groups.name.localeCompare(actual) < 0) {
+      grupoDe.set(p.client_id, p.client_groups.name);
+    }
+  }
+
   // Enriquecer cada cliente con el email y si ya aceptó (auth.users).
   const enriched: ClientRow[] = await Promise.all(
     rows.map(async (p) => {
@@ -73,6 +101,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
         id: p.id,
         full_name: p.full_name,
         avatar: p.avatar_path ? (avatares.get(p.avatar_path) ?? null) : null,
+        grupo: grupoDe.get(p.id) ?? null,
         created_at: p.created_at,
         email,
         invited_at: invitedAt,
