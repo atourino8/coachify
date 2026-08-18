@@ -89,8 +89,8 @@
 
     <div class="flex flex-wrap items-center gap-3">
       <button type="submit" class="btn-primary">Registrar cobro</button>
-      <a href="/cobros" class="text-sm text-text-mute hover:text-text transition-colors">
-        Ver todos los cobros →
+      <a href="/pagos" class="text-sm text-text-mute hover:text-text transition-colors">
+        Ver todos los pagos →
       </a>
     </div>
   </form>

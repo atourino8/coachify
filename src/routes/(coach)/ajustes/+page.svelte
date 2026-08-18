@@ -341,15 +341,15 @@
     {/each}
   </section>
 
-  <!-- ================= Cobros ================= -->
+  <!-- ================= Pagos ================= -->
   <section class="space-y-3">
     <div>
-      <h2 class="text-lg font-display font-semibold">Cobros</h2>
+      <h2 class="text-lg font-display font-semibold">Pagos</h2>
       <p class="text-sm text-text-mute">Cuotas, historial y qué pasa con quien no paga.</p>
     </div>
     <div class="border-t border-line">
-      <a href="/cobros" class="row-link">
-        <span class="flex-1 min-w-0 font-medium">Ir a Cobros</span>
+      <a href="/pagos" class="row-link">
+        <span class="flex-1 min-w-0 font-medium">Ir a Pagos</span>
         <span class="text-xs text-accent flex-shrink-0">Abrir</span>
       </a>
     </div>

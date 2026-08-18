@@ -20,7 +20,7 @@
       icono: 'agenda',
       match: ['/agenda', '/availability', '/clases']
     },
-    { href: '/cobros', label: 'Cobros', icono: 'cobros', match: ['/cobros'] }
+    { href: '/pagos', label: 'Pagos', icono: 'cobros', match: ['/pagos', '/cobros'] }
   ] as const;
 
   function isActive(match: readonly string[]): boolean {

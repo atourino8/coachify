@@ -3,6 +3,7 @@
   import { SvelteSet } from 'svelte/reactivity';
   import Icono from '$lib/components/Icono.svelte';
   import Pastillas from '$lib/components/Pastillas.svelte';
+  import MenuFila from '$lib/components/MenuFila.svelte';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
   let { data, form } = $props();
@@ -176,38 +177,23 @@
     >
   </div>
 
-  <!-- En móvil las acciones caen a su propia línea: en horizontal no caben
-       junto al título y el botón principal se salía de la pantalla. -->
-  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
-    <div class="min-w-0">
-      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Ejercicios</h1>
-      <p class="text-text-mute mt-1">
-        {data.exercises.length}
-        {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
-      </p>
-    </div>
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <!-- La carga de la biblioteca base está siempre disponible, no solo con
-           la biblioteca vacía: es idempotente y solo añade los que falten. -->
-      <form
-        method="POST"
-        action="?/seedLibrary"
-        use:enhance={() => {
-          seeding = true;
-          return async ({ update }) => {
-            await update();
-            seeding = false;
-          };
-        }}
-      >
-        <button
-          type="submit"
-          disabled={seeding}
-          class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
-        >
-          {seeding ? 'Cargando…' : 'Cargar biblioteca base'}
-        </button>
-      </form>
+  <!-- Título en su propia línea y los mandos debajo, como en el wireframe.
+       Antes iba todo en una fila con justify-between y en un móvil los cuatro
+       controles se repartían solos por donde cabían. -->
+  <div class="min-w-0">
+    <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">Ejercicios</h1>
+    <p class="text-text-mute mt-1">
+      {data.exercises.length}
+      {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
+    </p>
+  </div>
+
+  <!-- Filtro y «+ Añadir» a la IZQUIERDA, conmutador de vista a la DERECHA.
+       No es simetría: los dos primeros cambian QUÉ hay en la lista y el
+       tercero cambia CÓMO se ve. Agruparlos por lo que hacen evita tener que
+       leer los cuatro para encontrar el que buscas. -->
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
       <!--
         Filtro. Un <details> otra vez, por lo mismo que el cajón y la lista de
         cobros: abre sin JavaScript y Escape lo cierra.
@@ -291,45 +277,65 @@
           </div>
         </details>
       {/if}
-
-      <!-- Conmutador de vista. Dos botones visibles en vez de un icono que
-           alterna: con un solo icono nunca sabes si te enseña el estado actual
-           o lo que pasaría al pulsarlo. -->
-      {#if data.exercises.length > 0}
-        <div
-          class="flex rounded-md border border-line overflow-hidden"
-          role="group"
-          aria-label="Vista"
-        >
-          <button
-            onclick={() => {
-              vista = 'grupos';
-              filterGroup = '';
-            }}
-            aria-pressed={vista === 'grupos'}
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors {vista ===
-            'grupos'
-              ? 'bg-primary text-bg font-medium'
-              : 'text-text-mute hover:text-text'}"
-          >
-            <Icono nombre="rejilla" class="w-4 h-4" />
-            Grupos
-          </button>
-          <button
-            onclick={() => (vista = 'lista')}
-            aria-pressed={vista === 'lista'}
-            class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
-                   transition-colors {vista === 'lista'
-              ? 'bg-primary text-bg font-medium'
-              : 'text-text-mute hover:text-text'}"
-          >
-            <Icono nombre="lista" class="w-4 h-4" />
-            Lista
-          </button>
-        </div>
-      {/if}
       <a href="/exercises/new" class="btn-primary whitespace-nowrap">+ Añadir</a>
+      <!-- La carga de la biblioteca base está siempre disponible, no solo con
+           la biblioteca vacía: es idempotente y solo añade los que falten. -->
+      <form
+        method="POST"
+        action="?/seedLibrary"
+        use:enhance={() => {
+          seeding = true;
+          return async ({ update }) => {
+            await update();
+            seeding = false;
+          };
+        }}
+      >
+        <button
+          type="submit"
+          disabled={seeding}
+          class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
+        >
+          {seeding ? 'Cargando…' : 'Cargar biblioteca base'}
+        </button>
+      </form>
     </div>
+
+    <!-- Conmutador de vista. Dos botones visibles en vez de un icono que
+         alterna: con un solo icono nunca sabes si te enseña el estado actual o
+         lo que pasaría al pulsarlo. -->
+    {#if data.exercises.length > 0}
+      <div
+        class="flex rounded-md border border-line overflow-hidden"
+        role="group"
+        aria-label="Vista"
+      >
+        <button
+          onclick={() => {
+            vista = 'grupos';
+            filterGroup = '';
+          }}
+          aria-pressed={vista === 'grupos'}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors {vista === 'grupos'
+            ? 'bg-primary text-bg font-medium'
+            : 'text-text-mute hover:text-text'}"
+        >
+          <Icono nombre="rejilla" class="w-4 h-4" />
+          Grupos
+        </button>
+        <button
+          onclick={() => (vista = 'lista')}
+          aria-pressed={vista === 'lista'}
+          class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
+                   transition-colors {vista === 'lista'
+            ? 'bg-primary text-bg font-medium'
+            : 'text-text-mute hover:text-text'}"
+        >
+          <Icono nombre="lista" class="w-4 h-4" />
+          Lista
+        </button>
+      </div>
+    {/if}
   </div>
 
   {#if form?.success && form?.seeded}
@@ -696,23 +702,51 @@
             <span class="font-medium block truncate group-hover:text-accent transition-colors">
               {ex.name}
             </span>
-            {#if !ex.video_url}
-              <span class="text-xs text-warning">sin vídeo</span>
-            {/if}
           </a>
           <!-- Tope de cuatro: un ejercicio con ocho etiquetas empujaría el
                nombre —que es lo que se está buscando— fuera de la pantalla. -->
           <Pastillas valores={ex.muscle_groups ?? []} etiquetas={muscleLabels} />
-          <!-- El significado NO puede vivir en un `title`: un lector de
-               pantalla no lo anuncia y en un móvil no hay forma de verlo. El
-               icono es decoración y el texto va en sr-only. -->
-          {#if ex.video_url || ex.video_path}
+          <!--
+            «Sin vídeo» como pastilla y junto al grupo muscular, como en el
+            wireframe: es una propiedad del ejercicio y se lee en la misma
+            pasada que las demás, no en una segunda línea debajo del nombre.
+
+            Y mira las DOS columnas de vídeo. Antes solo miraba video_url, así
+            que un ejercicio con vídeo SUBIDO (migración 0017) salía marcado
+            como «sin vídeo» y con el icono de que tenía vídeo, a la vez.
+          -->
+          {#if !ex.video_url && !ex.video_path}
+            <span
+              class="text-2xs px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0
+                     whitespace-nowrap"
+            >
+              Sin vídeo
+            </span>
+          {:else}
+            <!-- El significado NO puede vivir en un `title`: un lector de
+                 pantalla no lo anuncia y en un móvil no hay forma de verlo. El
+                 icono es decoración y el texto va en sr-only. -->
             <span class="flex-shrink-0 text-text-mute">
               <Icono nombre="video" class="w-4 h-4" />
               <span class="sr-only">Tiene vídeo</span>
             </span>
           {/if}
-          <a href="/exercises/{ex.id}" class="text-xs text-accent flex-shrink-0">Editar</a>
+
+          <MenuFila etiqueta={ex.name}>
+            <a href="/exercises/{ex.id}" class="block px-4 py-2.5 hover:bg-surface-2">Editar</a>
+            <form method="POST" action="?/archive" use:enhance={trasLaAccion}>
+              <input type="hidden" name="id" value={ex.id} />
+              <!-- Archivar y no borrar: si el ejercicio está dentro de entrenos
+                   ya hechos, borrarlo se llevaría por delante series con pesos
+                   reales. La acción en lote hace la misma distinción. -->
+              <button
+                type="submit"
+                class="block w-full text-left px-4 py-2.5 hover:bg-surface-2 border-t border-line"
+              >
+                Archivar
+              </button>
+            </form>
+          </MenuFila>
         </div>
       {/each}
     </div>

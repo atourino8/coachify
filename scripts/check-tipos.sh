@@ -23,6 +23,7 @@ import pathlib, re
 tipos = pathlib.Path('.svelte-kit/types/src/routes')
 rutas = pathlib.Path('src/routes')
 NOMBRES = ('+page.server.ts', '+layout.server.ts', '+page.ts', '+layout.ts')
+ENDPOINTS = ('+server.ts',)
 CARGAS = 'PageServerLoad|LayoutServerLoad|PageLoad|LayoutLoad'
 
 def transformar(src: str) -> str:
@@ -46,6 +47,25 @@ def transformar(src: str) -> str:
         src = src.replace('export const actions: Actions = {', 'export const actions = {')
         src = src.rstrip() + '\n;null as any as Actions;'
     return '// @ts-nocheck\n' + src
+
+# Los endpoints (+server.ts) no llevan proxy, pero SÍ necesitan su $types: sin
+# él, `import type { RequestHandler } from './$types'` no resuelve y todos sus
+# parámetros pasan a `any` implícito. Se descubrió moviendo /cobros a /pagos:
+# el guion daba siete errores que no eran del código, sino suyos.
+for fuente in rutas.rglob('*'):
+    if fuente.name not in ENDPOINTS:
+        continue
+    destino = tipos / fuente.relative_to(rutas).parent
+    destino.mkdir(parents=True, exist_ok=True)
+    ruta_id = '/' + '/'.join(fuente.relative_to(rutas).parent.parts)
+    (destino / '$types.d.ts').write_text(f'''import type * as Kit from '@sveltejs/kit';
+
+type RouteParams = {{}};
+type RouteId = '{ruta_id}';
+
+export type RequestHandler = Kit.RequestHandler<RouteParams, RouteId>;
+export type RequestEvent = Kit.RequestEvent<RouteParams, RouteId>;
+''', encoding='utf8')
 
 for fuente in rutas.rglob('*'):
     if fuente.name not in NOMBRES:

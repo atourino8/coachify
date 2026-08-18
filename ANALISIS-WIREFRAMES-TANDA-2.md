@@ -38,9 +38,9 @@ peor que cualquiera de los dos.
 
 ## 2 · Inicio
 
-Prácticamente igual a lo que hay. Diferencias: el botón **«+ Añadir» pegado al
-título** de Próximas sesiones (hoy está en otro sitio) y el enlace **«Ver otras
-25 citas pendientes»** cuando la lista se corta.
+**Ya estaba entera**, y me equivoqué al listarla: comprobado en el código, el
+«+ Añadir» ya va pegado al título de Próximas sesiones y el «Ver otras N citas
+pendientes» ya aparece cuando la lista se corta. No hay nada que hacer aquí.
 
 ## 3 · Avisos
 

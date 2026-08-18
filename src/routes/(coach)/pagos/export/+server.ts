@@ -1,4 +1,4 @@
-// Export de cobros para la gestoría.  /cobros/export?anio=2026
+// Export de cobros para la gestoría.  /pagos/export?anio=2026
 //
 // Una fila por cobro, con el periodo que cubre. Eso último importa más de lo
 // que parece: un cobro del 3 de agosto puede corresponder a la cuota de julio,
@@ -77,5 +77,5 @@ export const GET: RequestHandler = async ({ url, locals: { supabase, user } }) =
     filas
   );
 
-  return respuestaCSV(`treno-cobros-${anio}.csv`, csv);
+  return respuestaCSV(`treno-pagos-${anio}.csv`, csv);
 };

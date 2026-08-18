@@ -10,14 +10,14 @@
 </script>
 
 <svelte:head>
-  <title>Cobros · Treno</title>
+  <title>Pagos · Treno</title>
 </svelte:head>
 
 <div class="space-y-8">
   <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
     <div class="min-w-0">
       <p class="eyebrow">Tu facturación</p>
-      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Cobros</h1>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Pagos</h1>
     </div>
     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
       {#each data.anios as a (a)}
@@ -67,10 +67,10 @@
       </p>
     </div>
     <div class="flex flex-wrap gap-3">
-      <a href="/cobros/export?anio={data.anio}" class="btn-ghost" data-sveltekit-reload>
-        Cobros {data.anio}
+      <a href="/pagos/export?anio={data.anio}" class="btn-ghost" data-sveltekit-reload>
+        Pagos {data.anio}
       </a>
-      <a href="/cobros/export-clientes" class="btn-ghost" data-sveltekit-reload>Clientes</a>
+      <a href="/pagos/export-clientes" class="btn-ghost" data-sveltekit-reload>Clientes</a>
     </div>
   </section>
 

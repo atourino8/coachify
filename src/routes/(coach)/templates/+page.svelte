@@ -2,6 +2,7 @@
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import MenuFila from '$lib/components/MenuFila.svelte';
 
   let { data, form } = $props();
 
@@ -177,17 +178,20 @@
           {#if t.category}
             <span class="pill-mute flex-shrink-0">{catLabels[t.category] ?? t.category}</span>
           {/if}
-          <a href="/templates/{t.id}" class="text-xs text-accent hover:underline flex-shrink-0"
-            >Editar</a
-          >
-          <button
-            type="button"
-            class="text-text-mute hover:text-danger transition-colors text-lg leading-none flex-shrink-0"
-            aria-label="Borrar entrenamiento {t.name}"
-            onclick={() => askDelete(t.id, t.name)}
-          >
-            ×
-          </button>
+          <MenuFila etiqueta={t.name}>
+            <a href="/templates/{t.id}" class="block px-4 py-2.5 hover:bg-surface-2">Editar</a>
+            <!-- data-cierra: no es un submit ni un enlace, pero abre un modal
+                 y el menú tiene que quitarse de en medio igual. -->
+            <button
+              type="button"
+              data-cierra
+              onclick={() => askDelete(t.id, t.name)}
+              class="block w-full text-left px-4 py-2.5 text-danger hover:bg-danger/10
+                     border-t border-line"
+            >
+              Borrar
+            </button>
+          </MenuFila>
         </div>
       {/each}
     </div>
