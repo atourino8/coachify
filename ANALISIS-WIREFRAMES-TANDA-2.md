@@ -186,17 +186,21 @@ predeterminada.
 **Cerradas:** 1 (cajón), 2 (inicio), 3 salvo una decisión, 4-6 (ejercicios),
 7 salvo un matiz de forma, 11 (clientes), 14 (funcional).
 
-**Lo que queda, por coste creciente:**
+**Las quince pantallas están hechas.** Lo que faltaba se cerró el 19 de
+agosto: buscador y acordeón de entrenamientos, formulario de invitar,
+pendientes en tarjetas, modal de multiselección y edición en línea del día.
 
-1. **Detalles de entrenamientos** — buscador en la lista y acordeón de los
-   ejercicios. Un rato, sin riesgo.
-2. **Formulario de invitar** — nombre y apellidos, crear grupo desde el modal,
-   pantalla de confirmación y la explicación de qué recibe el cliente.
-3. **Tarjetas en Pendientes** — solo forma.
-4. **Modal de añadir ejercicios con multiselección** — cambia una interacción
-   entera.
-5. **Edición en línea del día (pantalla 15)** — lo más caro con diferencia:
-   estado local de un formulario grande, guardado en lote y deshacer.
+Para probarlo todo junto: `PRUEBA-DE-CONCEPTO.md`.
+
+**Diferencias vivas que NO son deuda, son decisiones:**
+
+- La lista sigue siendo la vista predeterminada de clientes.
+- El punto de estado nunca viaja solo: lleva símbolo y texto.
+- El `+3` de las pastillas en vez del chevrón.
+- Avisos conserva la cuarta pestaña, «Sin entreno».
+- El editor en línea del día no crea entrenos, ni cambia título y notas, ni
+  reordena arrastrando, ni aplica plantillas: eso sigue en la pantalla del
+  día, y hay un enlace que lo dice.
 
 **Decisiones tomadas (19 de agosto):**
 
