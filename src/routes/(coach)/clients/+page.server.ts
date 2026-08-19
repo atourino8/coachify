@@ -185,22 +185,59 @@ async function sendInvite(
 }
 
 export const actions: Actions = {
-  invite: async ({ request, locals: { user }, url }) => {
+  invite: async ({ request, locals: { supabase, user }, url }) => {
     if (!user) redirect(303, '/login');
 
     const formData = await request.formData();
     const email = (formData.get('email') as string)?.trim().toLowerCase();
-    const full_name = (formData.get('full_name') as string)?.trim();
+    const nombre = (formData.get('nombre') as string)?.trim() ?? '';
+    const apellidos = (formData.get('apellidos') as string)?.trim() ?? '';
 
-    if (!email || !full_name) return fail(400, { error: 'Nombre y email son obligatorios.' });
+    // DOS CAMPOS EN EL FORMULARIO, UNA COLUMNA EN LA BASE.
+    //
+    // El wireframe pide Nombre y Apellidos separados, y tiene razón: pedirlo
+    // junto hace que la mitad escriba solo el nombre de pila. Pero partir
+    // `profiles.full_name` en dos columnas toca catorce sitios que hoy leen un
+    // nombre entero, y no compra nada que se esté usando: no se ordena por
+    // apellido ni se saluda por el nombre de pila en ninguna pantalla.
+    //
+    // Así que se piden separados y se guardan juntos. El día que haga falta
+    // ordenar por apellido, partirlos será una migración con los datos ya
+    // recogidos en el orden correcto.
+    const full_name = [nombre, apellidos].filter(Boolean).join(' ');
+
+    if (!email || !nombre) return fail(400, { error: 'El nombre y el correo son obligatorios.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      return fail(400, { error: 'Email no válido.' });
+      return fail(400, { error: 'Ese correo no tiene buena pinta. Revísalo.' });
+    }
+
+    // Grupo: uno existente, o uno nuevo creado aquí mismo.
+    let groupId = ((formData.get('group_id') as string) ?? '').trim() || null;
+    const grupoNuevo = ((formData.get('grupo_nuevo') as string) ?? '').trim();
+    if (grupoNuevo) {
+      const { data: creado, error: errGrupo } = await supabase
+        .from('client_groups')
+        .insert({ coach_id: user.id, name: grupoNuevo.slice(0, 80) } as never)
+        .select('id')
+        .single();
+      if (errGrupo) return fail(500, { error: errGrupo.message });
+      groupId = (creado as { id: string }).id;
     }
 
     const res = await sendInvite(url.origin, user.id, email, full_name);
     if ('error' in res) return fail(500, { error: res.error });
 
-    return { success: true, invited_email: email };
+    // El alta en el grupo va DESPUÉS de invitar y no antes: si el correo no
+    // sale, no queda un grupo con un miembro fantasma que no existe todavía.
+    if (groupId) {
+      await supabaseAdmin
+        .from('client_group_members')
+        .upsert({ group_id: groupId, client_id: res.userId } as never, {
+          onConflict: 'group_id,client_id'
+        });
+    }
+
+    return { success: true, invited_email: email, invited_name: full_name };
   },
 
   // Reenvía la invitación a un cliente pendiente.

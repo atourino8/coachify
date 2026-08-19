@@ -65,6 +65,19 @@
   // svelte-ignore state_referenced_locally
   let inviteGroup = $state(page.url.searchParams.get('group') ?? '');
   let bulkEmails = $state('');
+  // Grupo nuevo escrito en el propio formulario de invitar.
+  let grupoNuevo = $state('');
+
+  // La confirmación se apaga a mano al pulsar «Añadir otro». No basta con
+  // mirar `form`: form sigue trayendo el éxito anterior hasta el siguiente
+  // envío, así que sin esto el formulario nuevo no llegaría a verse.
+  let invitacionEnviada = $state(false);
+
+  function cerrarInvitar() {
+    showInvite = false;
+    invitacionEnviada = false;
+    grupoNuevo = '';
+  }
   const bulkCount = $derived(
     bulkEmails
       .split(/[\n,;]+/)
@@ -104,7 +117,7 @@
 
 <svelte:window
   onkeydown={(e) => {
-    if (showInvite && e.key === 'Escape') showInvite = false;
+    if (showInvite && e.key === 'Escape') cerrarInvitar();
   }}
 />
 
@@ -121,8 +134,12 @@
       >
         Grupos
       </a>
-      <button class="btn-primary whitespace-nowrap" onclick={() => (showInvite = true)}
-        >+ Invitar cliente</button
+      <button
+        class="btn-primary whitespace-nowrap"
+        onclick={() => {
+          invitacionEnviada = false;
+          showInvite = true;
+        }}>+ Invitar cliente</button
       >
     </div>
   </div>
@@ -445,7 +462,7 @@
   <div
     class="fixed inset-0 z-[200] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
     role="presentation"
-    onclick={() => (showInvite = false)}
+    onclick={cerrarInvitar}
   >
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div
@@ -456,192 +473,294 @@
       aria-labelledby="invite-title"
       onclick={(e) => e.stopPropagation()}
     >
-      <div>
-        <h3 id="invite-title" class="text-lg font-semibold">Invitar clientes</h3>
-        <p class="text-sm text-text-mute mt-1">
-          Les mandamos un email con un enlace. Cuando lo acepten, quedan vinculados a ti.
-        </p>
-      </div>
+      {#if invitacionEnviada && form?.invited_email}
+        <!--
+          Pantalla 13: la confirmación ocupa el modal entero en vez de ser un
+          mensaje verde detrás.
 
-      <!-- Selector de modo -->
-      <div class="flex gap-1 border-b border-line overflow-x-auto">
-        <button
-          type="button"
-          onclick={() => (inviteMode = 'one')}
-          class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-            {inviteMode === 'one'
-            ? 'border-primary text-text'
-            : 'border-transparent text-text-mute hover:text-text'}"
-        >
-          Una persona
-        </button>
-        <button
-          type="button"
-          onclick={() => (inviteMode = 'bulk')}
-          class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-            {inviteMode === 'bulk'
-            ? 'border-primary text-text'
-            : 'border-transparent text-text-mute hover:text-text'}"
-        >
-          Varias a la vez
-        </button>
-      </div>
-
-      {#if inviteMode === 'bulk'}
-        <form
-          method="POST"
-          action="?/inviteBulk"
-          use:enhance={() => {
-            inviting = true;
-            return async ({ update }) => {
-              await update();
-              inviting = false;
-              if (form?.success) {
-                bulkEmails = '';
-                showInvite = false;
-              }
-            };
-          }}
-          class="space-y-4"
-        >
-          <div>
-            <label
-              for="bulk-emails"
-              class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+          «Añadir otro» existe porque el caso real de un entrenador que empieza
+          no es invitar a uno: es invitar a doce seguidos con la lista delante.
+          Con un mensaje y el modal cerrado, cada persona son tres clics de más.
+        -->
+        <div class="space-y-4">
+          <h3 id="invite-title" class="text-lg font-semibold">¡Invitación enviada!</h3>
+          <p class="text-sm text-text-mute">
+            Se ha enviado la invitación a <strong class="text-text">{form.invited_email}</strong>.
+            No aparecerá en el listado de clientes hasta que la acepte, pero
+            <strong class="text-text">puedes cancelarla o reenviarla</strong>
+            desde la pestaña de pendientes.
+          </p>
+          <div class="flex flex-wrap gap-3 justify-end pt-1">
+            <button
+              type="button"
+              class="action-neutral"
+              onclick={() => {
+                // Vaciar el grupo nuevo: si el anterior lo creó, ya existe y
+                // volver a mandarlo crearía otro con el mismo nombre.
+                grupoNuevo = '';
+                invitacionEnviada = false;
+              }}
             >
-              Emails
-            </label>
-            <textarea
-              id="bulk-emails"
-              name="emails"
-              bind:value={bulkEmails}
-              rows="6"
-              required
-              placeholder={'ana@empresa.com\nlucia@empresa.com\nMarta Ruiz <marta@empresa.com>'}
-              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm font-mono
-                     focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
-            ></textarea>
-            <p class="text-2xs text-text-mute mt-1">
-              Uno por línea (o separados por comas). Puedes poner “Nombre &lt;email&gt;”.
-              {#if bulkCount > 0}<span class="text-primary"> · {bulkCount} detectados</span>{/if}
-            </p>
+              Añadir otro
+            </button>
+            <button type="button" class="btn-primary py-2 px-5" onclick={cerrarInvitar}>
+              Volver al listado
+            </button>
           </div>
+        </div>
+      {:else}
+        <div>
+          <h3 id="invite-title" class="text-lg font-semibold">Añadir cliente</h3>
+          <!-- Qué le llega y qué tiene que hacer, antes de pedir sus datos:
+               es la pregunta que se hace todo el que invita por primera vez. -->
+          <p class="text-sm text-text-mute mt-1">
+            El cliente recibirá una invitación a su correo electrónico. Si no tiene cuenta de Treno,
+            no podrá aceptarla hasta que se cree una.
+          </p>
+        </div>
 
-          {#if data.groups.length > 0}
+        <!-- Selector de modo -->
+        <div class="flex gap-1 border-b border-line overflow-x-auto">
+          <button
+            type="button"
+            onclick={() => (inviteMode = 'one')}
+            class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+            {inviteMode === 'one'
+              ? 'border-primary text-text'
+              : 'border-transparent text-text-mute hover:text-text'}"
+          >
+            Una persona
+          </button>
+          <button
+            type="button"
+            onclick={() => (inviteMode = 'bulk')}
+            class="px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
+            {inviteMode === 'bulk'
+              ? 'border-primary text-text'
+              : 'border-transparent text-text-mute hover:text-text'}"
+          >
+            Varias a la vez
+          </button>
+        </div>
+
+        {#if inviteMode === 'bulk'}
+          <form
+            method="POST"
+            action="?/inviteBulk"
+            use:enhance={() => {
+              inviting = true;
+              return async ({ result, update }) => {
+                await update();
+                inviting = false;
+                // La masiva sí cierra: su resultado es un recuento con los
+                // fallos, y ese se lee mejor en la página que en un modal.
+                if (result.type === 'success') {
+                  bulkEmails = '';
+                  cerrarInvitar();
+                }
+              };
+            }}
+            class="space-y-4"
+          >
             <div>
               <label
-                for="bulk-group"
+                for="bulk-emails"
                 class="block text-xs uppercase tracking-wider text-text-mute mb-2"
               >
-                Añadir al grupo <span class="normal-case tracking-normal text-text-mute/70"
-                  >(opcional)</span
-                >
+                Emails
               </label>
-              <select
-                id="bulk-group"
-                name="group_id"
-                bind:value={inviteGroup}
-                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-              >
-                <option value="">Sin grupo</option>
-                {#each data.groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
-              </select>
+              <textarea
+                id="bulk-emails"
+                name="emails"
+                bind:value={bulkEmails}
+                rows="6"
+                required
+                placeholder={'ana@empresa.com\nlucia@empresa.com\nMarta Ruiz <marta@empresa.com>'}
+                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm font-mono
+                     focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+              ></textarea>
+              <p class="text-2xs text-text-mute mt-1">
+                Uno por línea (o separados por comas). Puedes poner “Nombre &lt;email&gt;”.
+                {#if bulkCount > 0}<span class="text-primary"> · {bulkCount} detectados</span>{/if}
+              </p>
             </div>
-          {/if}
 
-          <p
-            class="text-2xs text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5"
+            {#if data.groups.length > 0}
+              <div>
+                <label
+                  for="bulk-group"
+                  class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+                >
+                  Añadir al grupo <span class="normal-case tracking-normal text-text-mute/70"
+                    >(opcional)</span
+                  >
+                </label>
+                <select
+                  id="bulk-group"
+                  name="group_id"
+                  bind:value={inviteGroup}
+                  class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
+                >
+                  <option value="">Sin grupo</option>
+                  {#each data.groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
+                </select>
+              </div>
+            {/if}
+
+            <p
+              class="text-2xs text-text-mute bg-warning/10 border border-warning/20 rounded-md p-2.5"
+            >
+              Enviar muchas invitaciones de golpe puede topar con el límite de envío del proveedor
+              de correo. Te diremos cuáles salieron y cuáles no.
+            </p>
+
+            {#if form?.error}
+              <p
+                role="alert"
+                class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+              >
+                {form.error}
+              </p>
+            {/if}
+
+            <div class="flex gap-3 justify-end pt-1">
+              <button type="button" class="action-neutral" onclick={cerrarInvitar}>Cancelar</button>
+              <button
+                type="submit"
+                disabled={inviting || bulkCount === 0}
+                class="btn-primary py-2 px-5"
+              >
+                {inviting ? 'Enviando…' : `Invitar ${bulkCount || ''}`}
+              </button>
+            </div>
+          </form>
+        {:else}
+          <form
+            method="POST"
+            action="?/invite"
+            use:enhance={() => {
+              inviting = true;
+              return async ({ result, update }) => {
+                await update();
+                inviting = false;
+                // El formulario NO se cierra al enviar: se queda enseñando la
+                // confirmación, que es la pantalla 13 del wireframe.
+                //
+                // Se mira `result` y no `form`: form conserva el éxito
+                // anterior hasta el siguiente envío, así que con él la
+                // confirmación volvería a salir sola tras «Añadir otro».
+                invitacionEnviada = result.type === 'success';
+              };
+            }}
+            class="space-y-4"
           >
-            Enviar muchas invitaciones de golpe puede topar con el límite de envío del proveedor de
-            correo. Te diremos cuáles salieron y cuáles no.
-          </p>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label
+                  for="nombre"
+                  class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+                >
+                  Nombre <span class="text-danger">*</span>
+                </label>
+                <input
+                  id="nombre"
+                  name="nombre"
+                  type="text"
+                  required
+                  maxlength="40"
+                  placeholder="Naia"
+                  class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div>
+                <label
+                  for="apellidos"
+                  class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+                >
+                  Apellidos
+                </label>
+                <input
+                  id="apellidos"
+                  name="apellidos"
+                  type="text"
+                  maxlength="60"
+                  placeholder="Serrano García"
+                  class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
 
-          {#if form?.error}
-            <p
-              role="alert"
-              class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
-            >
-              {form.error}
-            </p>
-          {/if}
+            <div>
+              <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+                Correo electrónico <span class="text-danger">*</span>
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                maxlength="100"
+                placeholder="naia.sg99@gmail.com"
+                class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
 
-          <div class="flex gap-3 justify-end pt-1">
-            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}
-              >Cancelar</button
-            >
-            <button
-              type="submit"
-              disabled={inviting || bulkCount === 0}
-              class="btn-primary py-2 px-5"
-            >
-              {inviting ? 'Enviando…' : `Invitar ${bulkCount || ''}`}
-            </button>
-          </div>
-        </form>
-      {:else}
-        <form
-          method="POST"
-          action="?/invite"
-          use:enhance={() => {
-            inviting = true;
-            return async ({ update }) => {
-              await update();
-              inviting = false;
-              if (form?.success) showInvite = false;
-            };
-          }}
-          class="space-y-4"
-        >
-          <div>
-            <label
-              for="full_name"
-              class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-            >
-              Nombre completo
-            </label>
-            <input
-              id="full_name"
-              name="full_name"
-              type="text"
-              required
-              maxlength="80"
-              placeholder="Ej: Pepe García"
-              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div>
-            <label for="email" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-              >Email</label
-            >
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              maxlength="100"
-              placeholder="pepe@email.com"
-              class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
+            <!-- Grupo: elegir uno o crear uno aquí mismo.
+               Los dos campos existen a la vez pero solo uno se usa: escribir
+               un nombre nuevo manda sobre el desplegable, y se dice. -->
+            <div>
+              <p class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+                Grupo <span class="normal-case tracking-normal text-text-mute/70">(opcional)</span>
+              </p>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <select
+                  name="group_id"
+                  bind:value={inviteGroup}
+                  disabled={grupoNuevo.trim() !== ''}
+                  aria-label="Elegir un grupo que ya existe"
+                  class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+                       disabled:opacity-40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">Sin grupo</option>
+                  {#each data.groups as g (g.id)}
+                    <option value={g.id}>{g.name}</option>
+                  {/each}
+                </select>
+                <input
+                  name="grupo_nuevo"
+                  type="text"
+                  bind:value={grupoNuevo}
+                  maxlength="80"
+                  placeholder="…o crear uno nuevo"
+                  aria-label="Crear un grupo nuevo"
+                  class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+                       focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              {#if grupoNuevo.trim()}
+                <p class="text-2xs text-text-mute mt-2">
+                  Se creará el grupo «{grupoNuevo.trim()}» y entrará en él.
+                </p>
+              {/if}
+            </div>
 
-          {#if form?.error}
-            <p
-              role="alert"
-              class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
-            >
-              {form.error}
-            </p>
-          {/if}
+            {#if form?.error}
+              <p
+                role="alert"
+                class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3"
+              >
+                {form.error}
+              </p>
+            {/if}
 
-          <div class="flex gap-3 justify-end pt-1">
-            <button type="button" class="action-neutral" onclick={() => (showInvite = false)}
-              >Cancelar</button
-            >
-            <button type="submit" disabled={inviting} class="btn-primary py-2 px-5">
-              {inviting ? 'Enviando…' : 'Enviar invitación'}
-            </button>
-          </div>
-        </form>
+            <div class="flex gap-3 justify-end pt-1">
+              <button type="button" class="action-neutral" onclick={cerrarInvitar}>Cancelar</button>
+              <button type="submit" disabled={inviting} class="btn-primary py-2 px-5">
+                {inviting ? 'Enviando…' : 'Enviar invitación'}
+              </button>
+            </div>
+          </form>
+        {/if}
       {/if}
     </div>
   </div>

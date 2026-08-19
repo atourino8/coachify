@@ -198,10 +198,32 @@ predeterminada.
 5. **Edición en línea del día (pantalla 15)** — lo más caro con diferencia:
    estado local de un formulario grande, guardado en lote y deshacer.
 
-**Decisiones abiertas**, que no son mías:
+**Decisiones tomadas (19 de agosto):**
 
-- La cuarta pestaña de Avisos, «Sin entreno»: ¿se queda?
-- El `+3` de las pastillas frente al `⌄` del wireframe.
-- El «Deshacer» de la barra inferior: ¿deshacer de verdad, o basta Cancelar?
-- Nombre y apellidos: ¿dos campos de verdad o dos campos que se guardan
-  juntos?
+- La cuarta pestaña de Avisos, «Sin entreno», **se queda**. Es el único sitio
+  donde se ve a quién tienes abandonado, y eso es dinero: un cliente sin
+  entrenos programados es un cliente que se va.
+- El `+3` de las pastillas **se queda** frente al `⌄` del wireframe: el número
+  dice cuántas faltan, un chevrón solo dice que hay algo más.
+- El «Deshacer» de las pantallas 9 y 15 será **deshacer de verdad, paso a
+  paso**. Con consecuencias, apuntadas abajo.
+- Nombre y apellidos: **dos campos en el formulario, una columna en la base**.
+  Se piden separados porque pedirlo junto hace que la mitad escriba solo el
+  nombre de pila; se guardan unidos porque partir `full_name` toca catorce
+  sitios y no compra nada que se esté usando hoy. El día que haya que ordenar
+  por apellido, los datos ya estarán recogidos en el orden correcto.
+
+### Lo que implica el deshacer paso a paso
+
+No es un botón, es una **pila de estados** dentro de un formulario sin
+guardar, y hay que decidir qué entra en ella: quitar un ejercicio, cambiar un
+peso, reordenar, editar el nombre. Lo que no entre, no se deshace, y el
+usuario no tiene forma de saber cuál es cuál.
+
+Dos reglas que conviene fijar antes de escribirlo:
+
+1. **Cada cambio es un paso, no cada pulsación.** Escribir «90» en un campo de
+   descanso son dos pulsaciones y un solo cambio; si no se agrupa, deshacer
+   una vez borra el «0» y parece roto.
+2. **El botón se apaga cuando no queda nada que deshacer.** Un «Deshacer» que
+   siempre se puede pulsar y a veces no hace nada es peor que no tenerlo.
