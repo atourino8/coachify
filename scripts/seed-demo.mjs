@@ -35,6 +35,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { avatarPNG } from './avatar-demo.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -42,6 +43,7 @@ const ROOT = join(__dirname, '..');
 // --- Configuración -----------------------------------------------------------
 
 const BUCKET = 'technique-videos';
+const BUCKET_AVATARES = 'avatars';
 const DEMO_PASSWORD = 'demo1234';
 /** Marca en el metadata que permite limpiar sin tocar datos reales. */
 const DEMO_FLAG = 'coachify_demo';
@@ -336,6 +338,16 @@ async function main() {
       .in('slug', ['vip', 'online', 'mananas']);
     ok('Clases, grupo, ejercicio y etiquetas demo borrados');
 
+    // Su foto: la del ENTRENADOR se quita aquí porque su cuenta no se borra.
+    // Las de los clientes se van con ellos: al borrar el usuario, el cubo se
+    // queda con el fichero huérfano, así que también se limpia abajo.
+    const { data: yo } = await db.from('profiles').select('avatar_path').eq('id', coachId).single();
+    if (yo?.avatar_path) {
+      await db.storage.from(BUCKET_AVATARES).remove([yo.avatar_path]);
+      await db.from('profiles').update({ avatar_path: null }).eq('id', coachId);
+      ok('Tu foto demo retirada');
+    }
+
     // La marca vuelve a NULL, no al naranja: NULL significa "no ha elegido",
     // y así el coach queda como estaba antes de sembrar.
     await db
@@ -359,6 +371,14 @@ async function main() {
         const paths = (inner ?? []).map((f) => `${u.id}/${dir.name}/${f.name}`);
         if (paths.length) await db.storage.from(BUCKET).remove(paths);
       }
+      // El fichero del cubo NO cae con el usuario: el almacenamiento no sabe
+      // de claves ajenas. Se borra a mano antes, que después ya no se sabe qué
+      // carpeta era de quién.
+      const { data: suyos } = await db.storage.from(BUCKET_AVATARES).list(u.id);
+      if (suyos?.length) {
+        await db.storage.from(BUCKET_AVATARES).remove(suyos.map((f) => `${u.id}/${f.name}`));
+      }
+
       // Borrar el usuario arrastra profile, sesiones, entrenos y client_info
       // por las FK on delete cascade.
       const { error } = await db.auth.admin.deleteUser(u.id);
@@ -522,6 +542,59 @@ async function main() {
       coach_notes: 'Cliente de prueba generado por seed-demo.mjs.',
       ...rest
     });
+  }
+
+  // ---- Fotos de perfil (migración 0024) ----
+  //
+  // Generadas aquí, no descargadas de un servicio de caras ni metidas como
+  // JPG en el repositorio. Las dos alternativas ponen CARAS DE PERSONAS
+  // REALES junto a un nombre inventado, un peso y una lesión, en una
+  // aplicación cuya política de privacidad dice que las fotos son datos
+  // sensibles. Y un servicio externo mete red en un guion que hoy no la
+  // necesita: el día que esté caído, el sembrado falla por nada.
+  //
+  // Son identicons: patrones simétricos distintos por persona. Lo que se está
+  // probando es una REJILLA DE CARAS —que se distingan de un vistazo, que el
+  // recorte redondo quede bien—, y doce patrones distintos prueban eso; doce
+  // cuadrados del mismo color, no.
+  log('\nGenerando fotos de perfil…');
+  let fotos = 0;
+  async function ponerFoto(profileId, semilla) {
+    const png = avatarPNG(semilla);
+    const ruta = `${profileId}/avatar.png`;
+    const { error: errSubida } = await db.storage
+      .from(BUCKET_AVATARES)
+      .upload(ruta, png, { contentType: 'image/png', upsert: true });
+    if (errSubida) {
+      log(
+        `  ! No se pudo subir la foto (${errSubida.message}). ¿Existe el cubo "${BUCKET_AVATARES}"?`
+      );
+      return false;
+    }
+    const { error: errPerfil } = await db
+      .from('profiles')
+      .update({ avatar_path: ruta })
+      .eq('id', profileId);
+    if (errPerfil) {
+      log(`  ! ${errPerfil.message}`);
+      return false;
+    }
+    fotos++;
+    return true;
+  }
+
+  // El entrenador también: sin su foto, el cajón y la cabecera se quedan con
+  // la inicial y no se ve la mitad de lo que hay que mirar.
+  const puedeFotos = await ponerFoto(coachId, coachProfile.full_name ?? coachEmail);
+  if (puedeFotos) {
+    for (const c of DEMO_CLIENTS) {
+      // A Rubén se le deja SIN foto a propósito: hace falta al menos uno para
+      // ver que la inicial sigue apareciendo y que la rejilla no se descuadra
+      // cuando falta una.
+      if (c.key === 'ruben') continue;
+      await ponerFoto(ids[c.key], c.name);
+    }
+    ok(`${fotos} fotos de perfil (Rubén se queda sin ella a propósito)`);
   }
 
   // ---- Etiquetas de cliente (migración 0021) ----
@@ -1052,6 +1125,12 @@ async function main() {
   log('   · Peticiones pendientes: Marcos te ha pedido cita');
   log('   · Rechaza una y prueba "Deshacer": el ✓ y la ✕ estan a un pulgar');
   log('   · Lo demas (tecnica, cuotas, sin entreno) esta en la campana');
+  log('');
+  log('  FOTOS');
+  log('   · Todos tienen foto menos Rubén: mira que su inicial sigue saliendo');
+  log('     y que la rejilla no se descuadra por el hueco');
+  log('   · Son patrones generados, no caras de gente real: es una base de');
+  log('     datos de mentira y no tiene por qué llevar fotos de nadie');
   log('');
   log('  ETIQUETAS (Clientes)');
   log('   · Arriba de la lista sale la fila de filtros: VIP, Online, Mañanas');

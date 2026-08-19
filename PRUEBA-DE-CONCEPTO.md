@@ -52,6 +52,9 @@ que de una teoría intermedia.
 
 7. **Clientes**, vista **Lista**: cada fila con su cara, y bajo el nombre el
    **grupo** («Empleadas · Talleres López» o «Individual») y las etiquetas.
+   Las fotos las genera el sembrado —patrones, no caras de gente real— y
+   **Rubén se queda sin ninguna a propósito**: sirve para ver que su inicial
+   sigue saliendo y que la rejilla no se descuadra por el hueco.
 8. Cambia a **Fotos**: rejilla de dos columnas. Arriba a la derecha de cada
    tarjeta, el **punto de estado**. Pasa el ratón por encima: tiene que decir
    «Al día», «Vence pronto» o «Vencido» con palabras.

@@ -16,6 +16,9 @@ sale enterarse tarde. Con la base sembrada, son unos veinte minutos.
 node scripts/seed-demo.mjs <tu-email>
 ```
 
+El sembrado también pone **fotos de perfil** generadas (migración 0024). Si el
+cubo `avatars` no existe, lo dirá con ese nombre y seguirá con lo demás.
+
 
 ---
 
