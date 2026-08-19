@@ -1,5 +1,10 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import { goto } from '$app/navigation';
+  import { untrack } from 'svelte';
+  import { Historial } from '$lib/historial.svelte';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import ModalEjercicios from '$lib/components/ModalEjercicios.svelte';
   import type { Exercise } from '$lib/supabase/types';
 
   let { data, form } = $props();
@@ -52,8 +57,90 @@
   );
 
   let saving = $state(false);
-  let filterText = $state('');
-  let filterMuscle = $state('');
+
+  // ---- Deshacer paso a paso ----
+  //
+  // La pila guarda SOLO los ejercicios y no el nombre ni las notas: son tres
+  // campos de texto sueltos donde Ctrl+Z del navegador ya funciona, y meterlos
+  // aquí haría que deshacer un peso pudiera cambiarte también el título.
+  const historial = new Historial<TplItem[]>();
+
+  /** Instantánea antes de tocar. Para añadir, quitar y reordenar. */
+  function antesDeCambiar() {
+    historial.marcar(items);
+  }
+
+  /**
+   * Al ENTRAR en cualquier campo de un ejercicio se marca, y al salir se
+   * descarta si no cambió nada. Va en la tarjeta entera y no en cada input:
+   * son seis campos por ejercicio y el foco pasa por todos.
+   */
+  function alSalirDelCampo() {
+    historial.olvidarSiIgual(items);
+  }
+
+  function deshacer() {
+    const anterior = historial.deshacer();
+    if (anterior) items = anterior;
+  }
+
+  // ---- Acordeón ----
+  //
+  // Abiertos por defecto: plegarlos de salida escondería lo que la pantalla
+  // viene a enseñar. Lo que se gana es poder plegarlos cuando son doce.
+  let plegados = $state<Set<string>>(new Set());
+  function alternarPliegue(id: string) {
+    const s = new Set(plegados);
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    plegados = s;
+  }
+  const todosPlegados = $derived(items.length > 0 && plegados.size === items.length);
+  function alternarTodos() {
+    plegados = todosPlegados ? new Set() : new Set(items.map((i) => i.id));
+  }
+
+  // ---- Cambios sin guardar ----
+  // untrack() dice lo que se quiere decir: el valor de AHORA, el de cuando se
+  // cargó la página. Es justo lo contrario de un derivado.
+  const estadoInicial = untrack(() =>
+    JSON.stringify({
+      name: data.template.name,
+      clientNotes: data.template.client_notes ?? '',
+      coachNotes: data.template.coach_notes ?? '',
+      category: data.template.category ?? '',
+      items: (data.template.workout_template_items ?? []).map((it) => ({
+        exercise_id: it.exercise_id,
+        sets: it.sets,
+        reps: it.reps_prescribed ?? '',
+        peso: it.weight_prescribed ?? '',
+        descanso: it.rest_seconds,
+        notas: it.notes ?? ''
+      }))
+    })
+  );
+  const hayCambios = $derived(
+    JSON.stringify({
+      name,
+      clientNotes,
+      coachNotes,
+      category,
+      items: items.map((it) => ({
+        exercise_id: it.exercise.id,
+        sets: it.sets,
+        reps: it.reps_prescribed,
+        peso: it.weight_prescribed,
+        descanso: it.rest_seconds,
+        notas: it.notes
+      }))
+    }) !== estadoInicial
+  );
+
+  let confirmarSalir = $state(false);
+  function cancelar() {
+    if (hayCambios) confirmarSalir = true;
+    else goto('/templates');
+  }
 
   // El diccionario viene del layout: incluye el vocabulario base MÁS las
   // etiquetas que se haya inventado el entrenador (migración 0019). Estaba
@@ -61,21 +148,20 @@
   // decía "Piernas".
   const muscleLabels = $derived(data.vocabulario.muscle);
 
-  const filtered = $derived(
-    data.exercises.filter((ex) => {
-      if (filterText && !ex.name.toLowerCase().includes(filterText.toLowerCase())) return false;
-      // "contiene", no "es igual": desde la migración 0016 un ejercicio puede
-      // trabajar varios grupos, y con la comparación antigua un press de banca
-      // marcado como pecho+hombro no salía al filtrar por hombro.
-      if (filterMuscle && !(ex.muscle_groups ?? []).includes(filterMuscle)) return false;
-      return true;
-    })
-  );
+  let modalAbierto = $state(false);
 
-  function addExercise(ex: Exercise) {
+  /**
+   * Añade los elegidos en el modal, todos de una vez.
+   *
+   * Un solo paso de deshacer para las seis altas: quien añade seis y se
+   * arrepiente quiere quitarlas de golpe, no pulsar «Deshacer» seis veces.
+   */
+  function anadirVarios(elegidos: Exercise[]) {
+    if (elegidos.length === 0) return;
+    antesDeCambiar();
     items = [
       ...items,
-      {
+      ...elegidos.map((ex) => ({
         id: crypto.randomUUID(),
         exercise: ex,
         sets: 4,
@@ -83,15 +169,17 @@
         weight_prescribed: '',
         rest_seconds: 90,
         notes: ''
-      }
+      }))
     ];
   }
   function removeItem(id: string) {
+    antesDeCambiar();
     items = items.filter((it) => it.id !== id);
   }
   function move(i: number, dir: -1 | 1) {
     const j = i + dir;
     if (j < 0 || j >= items.length) return;
+    antesDeCambiar();
     const copy = [...items];
     [copy[i], copy[j]] = [copy[j], copy[i]];
     items = copy;
@@ -117,29 +205,12 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between gap-4">
     <a href="/templates" class="text-sm text-text-mute hover:text-text">← Entrenamientos</a>
-    <form
-      method="POST"
-      action="?/save"
-      use:enhance={() => {
-        saving = true;
-        return async ({ update }) => {
-          await update();
-          saving = false;
-        };
-      }}
-    >
-      <input type="hidden" name="name" value={name} />
-      <input type="hidden" name="client_notes" value={clientNotes} />
-      <input type="hidden" name="coach_notes" value={coachNotes} />
-      <input type="hidden" name="category" value={category} />
-      <input type="hidden" name="items" value={itemsJSON()} />
-      <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
-        {saving ? 'Guardando…' : 'Guardar entrenamiento'}
-      </button>
-      {#if !name.trim()}
-        <p class="text-xs text-text-mute mt-1.5">El entrenamiento necesita un nombre.</p>
-      {/if}
-    </form>
+    {#if hayCambios}
+      <!-- Que haya cambios sin guardar se dice arriba TAMBIÉN, y no solo en la
+           barra de abajo: en un móvil la barra está donde está el pulgar y la
+           cabecera donde están los ojos. -->
+      <span class="text-xs text-warning">Sin guardar</span>
+    {/if}
   </div>
 
   {#if form?.error}
@@ -228,85 +299,53 @@
 
   <!-- Igual que en el constructor del día: en móvil primero el entrenamiento
        que estás montando, y la biblioteca detrás. -->
-  <div class="grid md:grid-cols-2 gap-6">
-    <!-- Biblioteca -->
-    <aside class="card space-y-3 order-2 md:order-1">
-      <h2 class="text-sm uppercase tracking-wider text-text-mute">Biblioteca</h2>
-      <div class="relative">
-        <svg
-          class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" /><line
-            x1="21"
-            y1="21"
-            x2="16.65"
-            y2="16.65"
-            stroke-linecap="round"
-          />
-        </svg>
-        <input
-          bind:value={filterText}
-          placeholder="Buscar ejercicio…"
-          class="w-full pl-9 pr-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-        />
-      </div>
-      <select
-        bind:value={filterMuscle}
-        class="w-full px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-      >
-        <option value="">Todos los grupos</option>
-        {#each Object.entries(muscleLabels) as [v, l]}<option value={v}>{l}</option>{/each}
-      </select>
-
-      {#if filtered.length === 0}
-        <div class="text-center py-8 text-sm text-text-mute">
-          {data.exercises.length === 0
-            ? 'No tienes ejercicios en la biblioteca.'
-            : 'Ninguno coincide.'}
-        </div>
-      {:else}
-        <div class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-          {#each filtered as ex (ex.id)}
+  <!-- Una sola columna: la biblioteca ya no vive al lado, se abre en un modal
+       (pantalla 10). En un móvil el panel lateral acababa debajo del todo, y
+       montar ocho ejercicios eran ocho viajes entre dos columnas. -->
+  <div class="space-y-6">
+    <section class="card space-y-4 min-h-[300px]">
+      <div class="flex items-center justify-between gap-3">
+        <h2 class="text-sm uppercase tracking-wider text-text-mute">
+          Ejercicios · {items.length}
+        </h2>
+        <div class="flex items-center gap-3">
+          {#if items.length > 1}
             <button
               type="button"
-              onclick={() => addExercise(ex)}
-              class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3 hover:border-primary/40 transition-colors group"
+              onclick={alternarTodos}
+              class="text-sm text-text-mute hover:text-text transition-colors"
             >
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm truncate">{ex.name}</div>
-                {#if ex.muscle_group}<div class="text-xs text-text-mute">
-                    {muscleLabels[ex.muscle_group]}
-                  </div>{/if}
-              </div>
-              <span class="text-primary group-hover:text-accent text-lg font-bold">+</span>
+              {todosPlegados ? 'Desplegar todos' : 'Plegar todos'}
             </button>
-          {/each}
+          {/if}
+          <button type="button" onclick={() => (modalAbierto = true)} class="action-primary">
+            + Añadir ejercicio
+          </button>
         </div>
-      {/if}
-    </aside>
-
-    <!-- Ejercicios de la plantilla -->
-    <section class="card space-y-4 min-h-[300px] order-1 md:order-2">
-      <h2 class="text-sm uppercase tracking-wider text-text-mute">Ejercicios · {items.length}</h2>
+      </div>
       {#if items.length === 0}
         <div
           class="min-h-[220px] grid place-items-center text-center border-2 border-dashed border-text-mute/20 rounded-md p-6"
         >
-          <div>
-            <p class="text-sm text-text-mute mb-1">
-              Añade ejercicios con el botón <span class="text-primary">+</span> ←
-            </p>
-            <p class="text-xs text-text-mute">Ordénalos con las flechas ↑↓</p>
+          <div class="space-y-3">
+            <p class="text-sm text-text-mute">Este entrenamiento todavía no tiene ejercicios.</p>
+            <button type="button" onclick={() => (modalAbierto = true)} class="btn-primary">
+              + Añadir ejercicios
+            </button>
+            <p class="text-xs text-text-mute">Luego los ordenas con las flechas ↑↓</p>
           </div>
         </div>
       {:else}
         {#each items as item, i (item.id)}
-          <div class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3">
+          <!-- onfocusin/onfocusout en la TARJETA y no en cada campo: son seis
+               por ejercicio y el foco pasa por todos. Aquí se marca al entrar
+               y se descarta al salir si no cambió nada, que es la regla de
+               «un paso por cambio, no por pulsación». -->
+          <div
+            onfocusin={antesDeCambiar}
+            onfocusout={alSalirDelCampo}
+            class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
+          >
             <div class="flex items-start gap-3">
               <div class="flex flex-col gap-0.5 pt-0.5">
                 <button
@@ -326,12 +365,33 @@
                   >▼</button
                 >
               </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-medium truncate">{item.exercise.name}</div>
-                {#if item.exercise.muscle_group}<div class="text-xs text-text-mute">
+              <!-- El nombre abre y cierra: es la zona más grande de la
+                   tarjeta y la que se pulsa sin apuntar. -->
+              <button
+                type="button"
+                onclick={() => alternarPliegue(item.id)}
+                aria-expanded={!plegados.has(item.id)}
+                class="flex-1 min-w-0 text-left"
+              >
+                <div class="font-medium truncate">
+                  <span aria-hidden="true" class="text-text-mute mr-1">
+                    {plegados.has(item.id) ? '▸' : '▾'}
+                  </span>
+                  {item.exercise.name}
+                </div>
+                {#if item.exercise.muscle_group}
+                  <div class="text-xs text-text-mute">
                     {muscleLabels[item.exercise.muscle_group]}
-                  </div>{/if}
-              </div>
+                    <!-- Plegado, la tarjeta sigue diciendo lo esencial: sin
+                         esto, plegar doce ejercicios deja doce nombres y cero
+                         información de qué hay dentro. -->
+                    {#if plegados.has(item.id)}
+                      · {item.sets}×{item.reps_prescribed || '—'}
+                      {item.weight_prescribed ? ` · ${item.weight_prescribed}` : ''}
+                    {/if}
+                  </div>
+                {/if}
+              </button>
               <button
                 type="button"
                 onclick={() => removeItem(item.id)}
@@ -339,62 +399,138 @@
                 class="text-text-mute hover:text-danger text-xl leading-none">×</button
               >
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div>
-                <label for="s-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                  >Series</label
-                >
-                <input
-                  id="s-{item.id}"
-                  type="number"
-                  min="1"
-                  max="20"
-                  bind:value={item.sets}
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
+            {#if !plegados.has(item.id)}
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <label for="s-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                    >Series</label
+                  >
+                  <input
+                    id="s-{item.id}"
+                    type="number"
+                    min="1"
+                    max="20"
+                    bind:value={item.sets}
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="r-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                    >Reps</label
+                  >
+                  <input
+                    id="r-{item.id}"
+                    type="text"
+                    bind:value={item.reps_prescribed}
+                    placeholder="8-10"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="w-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                    >Peso</label
+                  >
+                  <input
+                    id="w-{item.id}"
+                    type="text"
+                    bind:value={item.weight_prescribed}
+                    placeholder="80kg"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label for="d-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                    >Desc. (s)</label
+                  >
+                  <input
+                    id="d-{item.id}"
+                    type="number"
+                    min="0"
+                    step="15"
+                    bind:value={item.rest_seconds}
+                    placeholder="90"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                  />
+                </div>
               </div>
-              <div>
-                <label for="r-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                  >Reps</label
-                >
-                <input
-                  id="r-{item.id}"
-                  type="text"
-                  bind:value={item.reps_prescribed}
-                  placeholder="8-10"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-              <div>
-                <label for="w-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                  >Peso</label
-                >
-                <input
-                  id="w-{item.id}"
-                  type="text"
-                  bind:value={item.weight_prescribed}
-                  placeholder="80kg"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-              <div>
-                <label for="d-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                  >Desc. (s)</label
-                >
-                <input
-                  id="d-{item.id}"
-                  type="number"
-                  min="0"
-                  step="15"
-                  bind:value={item.rest_seconds}
-                  placeholder="90"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                />
-              </div>
-            </div>
+            {/if}
           </div>
         {/each}
       {/if}
     </section>
   </div>
+
+  <!--
+    Barra de acciones, pegada abajo (pantalla 9 del wireframe).
+
+    `sticky` y no `fixed`: pegada al viewport taparía el último ejercicio de la
+    lista para siempre, y con `sticky` el contenido termina por encima de ella.
+  -->
+  <div
+    class="sticky bottom-0 -mx-4 px-4 py-3 bg-surface/95 border-t border-line
+           flex flex-wrap items-center gap-3 backdrop-blur-sm"
+  >
+    <!-- Deshacer va a la izquierda y separado de los otros dos: no es una
+         forma de terminar, es una forma de corregirse a mitad. -->
+    <button
+      type="button"
+      onclick={deshacer}
+      disabled={!historial.puedeDeshacer}
+      class="action-neutral disabled:opacity-40 disabled:cursor-not-allowed"
+      title={historial.puedeDeshacer
+        ? 'Deshacer el último cambio en los ejercicios'
+        : 'No hay nada que deshacer'}
+    >
+      Deshacer <span aria-hidden="true">↩</span>
+    </button>
+
+    <div class="flex-1"></div>
+
+    <button type="button" onclick={cancelar} class="action-neutral">Cancelar</button>
+
+    <form
+      method="POST"
+      action="?/save"
+      use:enhance={() => {
+        saving = true;
+        return async ({ update }) => {
+          await update();
+          saving = false;
+          // Lo guardado ya no se deshace desde aquí: la pila se vacía para que
+          // el botón no ofrezca volver a un estado anterior al guardado, que
+          // desharía en pantalla algo que en la base ya está escrito.
+          historial.limpiar();
+        };
+      }}
+    >
+      <input type="hidden" name="name" value={name} />
+      <input type="hidden" name="client_notes" value={clientNotes} />
+      <input type="hidden" name="coach_notes" value={coachNotes} />
+      <input type="hidden" name="category" value={category} />
+      <input type="hidden" name="items" value={itemsJSON()} />
+      <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
+        {saving ? 'Guardando…' : 'Guardar'}
+      </button>
+    </form>
+  </div>
+
+  {#if !name.trim()}
+    <p class="text-xs text-text-mute">El entrenamiento necesita un nombre.</p>
+  {/if}
 </div>
+
+<ModalEjercicios
+  bind:abierto={modalAbierto}
+  ejercicios={data.exercises}
+  etiquetas={muscleLabels}
+  onanadir={anadirVarios}
+/>
+
+<ConfirmModal
+  bind:open={confirmarSalir}
+  title="Salir sin guardar"
+  message="Has cambiado cosas y no las has guardado. Si sales ahora se pierden."
+  confirmLabel="Salir sin guardar"
+  cancelLabel="Seguir editando"
+  onconfirm={() => goto('/templates')}
+/>

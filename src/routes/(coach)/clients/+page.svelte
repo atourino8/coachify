@@ -405,50 +405,34 @@
       </p>
     </div>
   {:else}
-    <div class="space-y-2">
+    <!-- Dos columnas, como el wireframe. -->
+    <div class="grid grid-cols-2 gap-3">
       {#each data.pending as client (client.id)}
-        <div class="card p-4 flex items-center gap-4">
-          <div
-            class="w-11 h-11 rounded-full bg-warning/10 grid place-items-center text-warning flex-shrink-0"
-            aria-hidden="true"
-          >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="5" width="18" height="14" rx="2" /><path
-                d="m3 7 9 6 9-6"
-                stroke-linecap="round"
-              />
-            </svg>
+        <!-- Tarjeta y no fila (pantalla 14): aquí no se compara a nadie con
+             nadie, se decide sobre cada invitación por separado, y las dos
+             acciones necesitan sitio para no pulsarse por error entre ellas. -->
+        <div class="card text-center space-y-2">
+          <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
+          <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
+          <div class="text-2xs text-text-mute">
+            Enviada el {fmtDate(client.invited_at)}
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-semibold truncate">{client.full_name ?? 'Sin nombre'}</div>
-            <div class="text-xs text-text-mute truncate">{client.email ?? '—'}</div>
-            <div class="text-2xs text-text-mute mt-0.5">
-              Invitado el {fmtDate(client.invited_at)}
-            </div>
-          </div>
-          <span class="text-2xs px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0">
-            Pendiente de aceptar
-          </span>
-          <div class="flex flex-col gap-1.5 flex-shrink-0">
-            <form method="POST" action="?/resendInvite" use:enhance>
-              <input type="hidden" name="email" value={client.email ?? ''} />
-              <input type="hidden" name="full_name" value={client.full_name ?? ''} />
-              <button type="submit" class="action-neutral w-full">Reenviar</button>
-            </form>
+          <div class="flex justify-center gap-2 pt-1">
             <button
               type="button"
-              class="action-danger"
+              class="action-neutral"
               onclick={() =>
                 askCancel(client.id, client.full_name ?? client.email ?? 'este cliente')}
             >
               Cancelar
             </button>
+            <form method="POST" action="?/resendInvite" use:enhance>
+              <input type="hidden" name="email" value={client.email ?? ''} />
+              <input type="hidden" name="full_name" value={client.full_name ?? ''} />
+              <!-- Reenviar es la acción destacada y Cancelar la neutra: lo
+                   normal al mirar esta pantalla es insistir, no desistir. -->
+              <button type="submit" class="btn-primary py-1.5 px-4 text-sm">Reenviar</button>
+            </form>
           </div>
         </div>
       {/each}

@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import MenuFila from '$lib/components/MenuFila.svelte';
+  import Icono from '$lib/components/Icono.svelte';
 
   let { data, form } = $props();
 
@@ -36,9 +37,23 @@
   const presentCats = $derived(
     [...new Set(data.templates.map((t) => t.category).filter(Boolean) as string[])].sort()
   );
-  const filtered = $derived(
-    filterCat ? data.templates.filter((t) => t.category === filterCat) : data.templates
-  );
+  // Buscador de la lista (pantalla 8). Busca solo en el nombre: un
+  // entrenamiento no tiene más texto que buscar, y la categoría ya tiene sus
+  // pastillas justo al lado.
+  let busqueda = $state('');
+  const normalizar = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const filtered = $derived.by(() => {
+    const q = normalizar(busqueda.trim());
+    return data.templates.filter((t) => {
+      if (filterCat && t.category !== filterCat) return false;
+      return q === '' || normalizar(t.name).includes(q);
+    });
+  });
 </script>
 
 <svelte:head>
@@ -145,6 +160,23 @@
     </div>
   {:else}
     <!-- Filtro por categoría (solo si hay categorías en uso) -->
+    {#if data.templates.length > 0}
+      <div class="relative max-w-sm">
+        <label for="buscar-tpl" class="sr-only">Buscar entrenamientos</label>
+        <input
+          id="buscar-tpl"
+          type="search"
+          bind:value={busqueda}
+          placeholder="Buscar ejercicios"
+          class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
+                 focus:outline-none focus:border-accent"
+        />
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute pointer-events-none">
+          <Icono nombre="buscar" class="w-4 h-4" />
+        </span>
+      </div>
+    {/if}
+
     {#if presentCats.length > 0}
       <div class="flex flex-wrap gap-2">
         <button
@@ -194,6 +226,11 @@
           </MenuFila>
         </div>
       {/each}
+      {#if filtered.length === 0}
+        <p class="py-8 text-center text-sm text-text-mute">
+          {busqueda.trim() ? 'Ningún entrenamiento con ese nombre.' : 'Ninguno en esta categoría.'}
+        </p>
+      {/if}
     </div>
   {/if}
 </div>
