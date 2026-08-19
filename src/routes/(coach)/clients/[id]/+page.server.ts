@@ -13,7 +13,7 @@ import { materializeTemplateWorkout } from '$lib/workouts';
 import { faltasPorCliente } from '$lib/faltas.server';
 import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
 import { BUCKET } from '$lib/technique';
-import type { TechniqueVideo } from '$lib/supabase/types';
+import type { TechniqueVideo, Exercise } from '$lib/supabase/types';
 import type { PageServerLoad, Actions } from './$types';
 
 const WINDOW_DAYS = 7;
@@ -23,7 +23,17 @@ type WorkoutRow = {
   date: string;
   title: string | null;
   notes: string | null;
-  workout_items: { id: string; order_index: number; exercise: { name: string } | null }[] | null;
+  workout_items:
+    | {
+        id: string;
+        order_index: number;
+        sets: number;
+        reps_prescribed: string | null;
+        weight_prescribed: string | null;
+        rest_seconds: number | null;
+        exercise: { id: string; name: string } | null;
+      }[]
+    | null;
 };
 
 export const load: PageServerLoad = async ({ params, url, locals: { supabase, user } }) => {
@@ -61,7 +71,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   const { data: workoutsRaw } = await supabase
     .from('workouts')
-    .select('id, date, title, notes, workout_items(id, order_index, exercise:exercises(name))')
+    // Se traen las series y los pesos, no solo el nombre: la pestaña
+    // Calendario ahora edita el día sin salir de la ficha (pantalla 15), y
+    // pedirlos por separado al desplegar sería una consulta por día abierto.
+    .select(
+      `id, date, title, notes,
+       workout_items(
+         id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds,
+         exercise:exercises(id, name)
+       )`
+    )
     .eq('client_id', params.id)
     .gte('date', rangeStart)
     .lte('date', rangeEnd);
@@ -91,7 +110,22 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
   // lista de nombres (ordenada) para la vista semana.
   const workoutsByDate: Record<
     string,
-    { id: string; title: string | null; itemCount: number; done: boolean; exercises: string[] }
+    {
+      id: string;
+      title: string | null;
+      itemCount: number;
+      done: boolean;
+      exercises: string[];
+      items: {
+        id: string;
+        exerciseId: string;
+        nombre: string;
+        sets: number;
+        reps: string;
+        peso: string;
+        descanso: number | null;
+      }[];
+    }
   > = {};
   for (const w of workouts) {
     const items = [...(w.workout_items ?? [])].sort((a, b) => a.order_index - b.order_index);
@@ -100,7 +134,16 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
       title: w.title,
       itemCount: items.length,
       done: doneWorkoutIds.has(w.id),
-      exercises: items.map((it) => it.exercise?.name).filter((n): n is string => !!n)
+      exercises: items.map((it) => it.exercise?.name).filter((n): n is string => !!n),
+      items: items.map((it) => ({
+        id: it.id,
+        exerciseId: it.exercise?.id ?? '',
+        nombre: it.exercise?.name ?? 'Ejercicio',
+        sets: it.sets,
+        reps: it.reps_prescribed ?? '',
+        peso: it.weight_prescribed ?? '',
+        descanso: it.rest_seconds
+      }))
     };
   }
 
@@ -368,8 +411,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   const faltas = (await faltasPorCliente(supabase, user.id, [params.id])).get(params.id) ?? 0;
 
+  // La biblioteca, para el modal de añadir ejercicios del editor en línea.
+  // Solo id, nombre y grupos: lo demás —vídeo, descripción, material— no se
+  // usa para elegir, y son cincuenta filas que viajan en cada carga.
+  const { data: bibliotecaRaw } = await supabase
+    .from('exercises')
+    .select('id, name, muscle_groups')
+    .eq('coach_id', user.id)
+    .eq('archived', false)
+    .order('name');
+
   return {
     client,
+    exercises: (bibliotecaRaw ?? []) as unknown as Exercise[],
     // La cara del cliente, firmada. El cubo es privado (migración 0024).
     avatar: await urlDeAvatar(supabase, (client as { avatar_path: string | null }).avatar_path),
     clasesProximas,
@@ -389,6 +443,65 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 };
 
 export const actions: Actions = {
+  /**
+   * Guarda el día entero desde la pestaña Calendario (pantalla 15).
+   *
+   * Reemplaza los ejercicios de golpe en vez de ir campo a campo: la pantalla
+   * edita en local y manda una sola vez, así que un guardado parcial dejaría
+   * el día a medias sin que nadie lo supiera. Es lo mismo que hace el
+   * constructor del día desde su propia pantalla.
+   */
+  guardarDia: async ({ request, params, locals: { supabase, user } }) => {
+    if (!user) redirect(303, '/login');
+    const fd = await request.formData();
+    const workoutId = String(fd.get('workout_id') ?? '');
+    if (!workoutId) return fail(400, { error: 'Falta el entreno.' });
+
+    // El entreno tiene que ser de ESTE cliente y de ESTE entrenador. Sin las
+    // dos comprobaciones, mandar otro id por el formulario editaría el día de
+    // cualquiera.
+    const { data: propio } = await supabase
+      .from('workouts')
+      .select('id')
+      .eq('id', workoutId)
+      .eq('client_id', params.id)
+      .eq('coach_id', user.id)
+      .maybeSingle();
+    if (!propio) return fail(403, { error: 'Ese entreno no es tuyo.' });
+
+    let filas: {
+      exercise_id: string;
+      sets: number;
+      reps_prescribed: string | null;
+      weight_prescribed: string | null;
+      rest_seconds: number | null;
+    }[];
+    try {
+      filas = JSON.parse(String(fd.get('items') ?? '[]'));
+    } catch {
+      return fail(400, { error: 'Datos inválidos.' });
+    }
+
+    await supabase.from('workout_items').delete().eq('workout_id', workoutId);
+
+    if (filas.length > 0) {
+      const { error: errIns } = await supabase.from('workout_items').insert(
+        filas.map((f, i) => ({
+          workout_id: workoutId,
+          exercise_id: f.exercise_id,
+          order_index: i,
+          sets: Number(f.sets) || 1,
+          reps_prescribed: f.reps_prescribed || null,
+          weight_prescribed: f.weight_prescribed || null,
+          rest_seconds: f.rest_seconds === null ? null : Number(f.rest_seconds) || null
+        })) as never
+      );
+      if (errIns) return fail(500, { error: errIns.message });
+    }
+
+    return { success: true, diaGuardado: true, ejercicios: filas.length };
+  },
+
   // La foto del cliente, puesta por su entrenador.
   //
   // El .eq('coach_id') no es decorativo: sin él, cualquiera podría cambiarle

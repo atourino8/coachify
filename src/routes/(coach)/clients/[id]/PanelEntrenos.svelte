@@ -23,7 +23,142 @@
     formatHumanDate
   } from '$lib/week';
 
+  import { Historial } from '$lib/historial.svelte';
+  import ModalEjercicios from '$lib/components/ModalEjercicios.svelte';
+  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import type { Exercise } from '$lib/supabase/types';
+
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  // ===========================================================================
+  // Editar el día sin salir de la ficha (pantalla 15)
+  // ===========================================================================
+  //
+  // UN SOLO DÍA ABIERTO A LA VEZ, y es a propósito: con dos abiertos y cambios
+  // en los dos, «Guardar» tendría que decidir cuál guarda, y el deshacer
+  // tendría dos pilas. Se abre uno, se resuelve y se pasa al siguiente.
+  //
+  // LO QUE NO HACE, y por eso sigue existiendo la pantalla del día: crear un
+  // entreno donde no lo hay, cambiar el título y las notas, reordenar
+  // arrastrando y aplicar una plantilla. Aquí se retoca lo que ya está
+  // montado, que es el 90 % de las veces que se abre un día.
+
+  type ItemDia = {
+    /** id local: los nuevos aún no existen en la base. */
+    key: string;
+    exercise_id: string;
+    nombre: string;
+    sets: number;
+    reps: string;
+    peso: string;
+    descanso: number | null;
+  };
+
+  let diaAbierto = $state<string | null>(null);
+  let itemsDia = $state<ItemDia[]>([]);
+  let guardandoDia = $state(false);
+  let modalDia = $state(false);
+  let confirmarDescartar = $state(false);
+  let diaSiguiente = $state<string | null>(null);
+  const historialDia = new Historial<ItemDia[]>();
+
+  const muscleLabels = $derived(data.vocabulario.muscle);
+
+  /** Cómo estaba el día al abrirlo, para saber si hay cambios. */
+  let originalDia = $state('');
+
+  const hayCambiosDia = $derived(JSON.stringify(itemsDia) !== originalDia);
+
+  function cargarDia(iso: string) {
+    const w = data.workoutsByDate[iso];
+    itemsDia = (w?.items ?? []).map((it) => ({
+      key: it.id,
+      exercise_id: it.exerciseId,
+      nombre: it.nombre,
+      sets: it.sets,
+      reps: it.reps,
+      peso: it.peso,
+      descanso: it.descanso
+    }));
+    originalDia = JSON.stringify(itemsDia);
+    historialDia.limpiar();
+    diaAbierto = iso;
+  }
+
+  function abrirDia(iso: string) {
+    if (diaAbierto === iso) {
+      pedirCerrar(null);
+      return;
+    }
+    if (hayCambiosDia && diaAbierto) {
+      diaSiguiente = iso;
+      confirmarDescartar = true;
+      return;
+    }
+    cargarDia(iso);
+  }
+
+  /** Cerrar, o saltar al día que se pidió, descartando lo no guardado. */
+  function pedirCerrar(siguiente: string | null) {
+    if (hayCambiosDia) {
+      diaSiguiente = siguiente;
+      confirmarDescartar = true;
+      return;
+    }
+    if (siguiente) cargarDia(siguiente);
+    else diaAbierto = null;
+  }
+
+  function descartar() {
+    if (diaSiguiente) cargarDia(diaSiguiente);
+    else diaAbierto = null;
+    diaSiguiente = null;
+  }
+
+  function antesDeCambiarDia() {
+    historialDia.marcar(itemsDia);
+  }
+  function alSalirDelCampoDia() {
+    historialDia.olvidarSiIgual(itemsDia);
+  }
+  function deshacerDia() {
+    const anterior = historialDia.deshacer();
+    if (anterior) itemsDia = anterior;
+  }
+
+  function quitarDelDia(key: string) {
+    antesDeCambiarDia();
+    itemsDia = itemsDia.filter((i) => i.key !== key);
+  }
+
+  function anadirAlDia(elegidos: Exercise[]) {
+    if (elegidos.length === 0) return;
+    antesDeCambiarDia();
+    itemsDia = [
+      ...itemsDia,
+      ...elegidos.map((ex) => ({
+        key: crypto.randomUUID(),
+        exercise_id: ex.id,
+        nombre: ex.name,
+        sets: 4,
+        reps: '8-10',
+        peso: '',
+        descanso: 90
+      }))
+    ];
+  }
+
+  const itemsDiaJSON = $derived(
+    JSON.stringify(
+      itemsDia.map((i) => ({
+        exercise_id: i.exercise_id,
+        sets: i.sets,
+        reps_prescribed: i.reps,
+        weight_prescribed: i.peso,
+        rest_seconds: i.descanso
+      }))
+    )
+  );
 
   const view = $derived(data.view);
 
@@ -98,6 +233,147 @@
   }
 </script>
 
+{#snippet editorDelDia(iso: string, workout: (typeof data.workoutsByDate)[string] | undefined)}
+  {#if workout && diaAbierto === iso}
+    <!-- Editor en línea del día (pantalla 15). Va DENTRO de la lista, debajo
+         de su fila, para no perder de vista dónde estás en el calendario. -->
+    <div class="card space-y-3 border-primary/40 -mt-1">
+      {#if itemsDia.length === 0}
+        <p class="text-sm text-text-mute text-center py-4">
+          Este día se ha quedado sin ejercicios. Añade alguno o guarda para dejarlo vacío.
+        </p>
+      {/if}
+
+      {#each itemsDia as item (item.key)}
+        <!-- onfocusin/onfocusout en la fila: una instantánea al entrar y se
+             descarta al salir si no cambió nada. Un paso por cambio. -->
+        <div
+          onfocusin={antesDeCambiarDia}
+          onfocusout={alSalirDelCampoDia}
+          class="bg-bg border border-text-mute/20 rounded-md p-3 space-y-2"
+        >
+          <div class="flex items-start gap-2">
+            <span class="flex-1 min-w-0 font-medium text-sm truncate">{item.nombre}</span>
+            <button
+              type="button"
+              onclick={() => quitarDelDia(item.key)}
+              aria-label="Quitar {item.nombre}"
+              class="text-text-mute hover:text-danger text-lg leading-none flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div>
+              <label for="ds-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
+                Series
+              </label>
+              <input
+                id="ds-{item.key}"
+                type="number"
+                min="1"
+                max="20"
+                bind:value={item.sets}
+                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+              />
+            </div>
+            <div>
+              <label for="dr-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
+                Reps
+              </label>
+              <input
+                id="dr-{item.key}"
+                type="text"
+                bind:value={item.reps}
+                placeholder="8-10"
+                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+              />
+            </div>
+            <div>
+              <label for="dp-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
+                Peso
+              </label>
+              <input
+                id="dp-{item.key}"
+                type="text"
+                bind:value={item.peso}
+                placeholder="80kg"
+                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+              />
+            </div>
+            <div>
+              <label for="dd-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
+                Desc. (s)
+              </label>
+              <input
+                id="dd-{item.key}"
+                type="number"
+                min="0"
+                step="15"
+                bind:value={item.descanso}
+                placeholder="90"
+                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+              />
+            </div>
+          </div>
+        </div>
+      {/each}
+
+      <div class="flex flex-wrap items-center gap-3 pt-1">
+        <button type="button" onclick={() => (modalDia = true)} class="action-primary">
+          + Añadir ejercicio
+        </button>
+        <!-- Lo que este editor NO hace vive en la pantalla del día, y se dice
+             en vez de dejar que se busque: título, notas, reordenar y aplicar
+             una plantilla. -->
+        <a
+          href="/clients/{data.client.id}/workouts/{iso}"
+          class="text-sm text-text-mute hover:text-text transition-colors"
+        >
+          Abrir el día (título, notas, plantillas) →
+        </a>
+
+        <div class="flex-1"></div>
+
+        <button
+          type="button"
+          onclick={deshacerDia}
+          disabled={!historialDia.puedeDeshacer}
+          class="action-neutral disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Deshacer <span aria-hidden="true">↩</span>
+        </button>
+        <button type="button" onclick={() => pedirCerrar(null)} class="action-neutral">
+          Cancelar
+        </button>
+        <form
+          method="POST"
+          action="?/guardarDia"
+          use:enhance={() => {
+            guardandoDia = true;
+            return async ({ update }) => {
+              await update();
+              guardandoDia = false;
+              historialDia.limpiar();
+              originalDia = JSON.stringify(itemsDia);
+            };
+          }}
+        >
+          <input type="hidden" name="workout_id" value={workout.id} />
+          <input type="hidden" name="items" value={itemsDiaJSON} />
+          <button
+            type="submit"
+            disabled={guardandoDia || !hayCambiosDia}
+            class="btn-primary py-1.5 px-4 text-sm disabled:opacity-40"
+          >
+            {guardandoDia ? 'Guardando…' : 'Guardar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  {/if}
+{/snippet}
+
 <!-- Toggle de vista (semana / mes) -->
 <div class="flex justify-end">
   <div class="flex bg-bg border border-text-mute/15 rounded-lg p-1 text-sm">
@@ -155,9 +431,16 @@
   <div class="space-y-2">
     {#each windowCells as day (day.iso)}
       {@const workout = data.workoutsByDate[day.iso]}
-      <a
-        href="/clients/{data.client.id}/workouts/{day.iso}"
-        class="card flex items-stretch gap-4 py-3 transition-all
+      <!-- Con entreno, la fila DESPLIEGA el editor; sin entreno sigue siendo
+           un enlace a la pantalla del día, que es donde se crea uno. -->
+      <svelte:element
+        this={workout ? 'button' : 'a'}
+        role={workout ? 'button' : undefined}
+        type={workout ? 'button' : undefined}
+        href={workout ? undefined : `/clients/${data.client.id}/workouts/${day.iso}`}
+        onclick={workout ? () => abrirDia(day.iso) : undefined}
+        aria-expanded={workout ? diaAbierto === day.iso : undefined}
+        class="w-full text-left card flex items-stretch gap-4 py-3 transition-all
             {day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
             {day.isPast ? 'opacity-55 hover:opacity-100' : 'hover:border-primary/50'}
             {workout && !day.isToday ? 'border-primary/30' : ''}"
@@ -209,9 +492,13 @@
 
         <!-- Acción -->
         <div class="flex items-center text-xs text-primary flex-shrink-0">
-          {workout ? 'Editar →' : ''}
+          {#if workout}
+            <span aria-hidden="true">{diaAbierto === day.iso ? '▾' : '▸'}</span>
+          {/if}
         </div>
-      </a>
+      </svelte:element>
+
+      {@render editorDelDia(day.iso, workout)}
     {/each}
   </div>
 {:else}
@@ -458,3 +745,19 @@
     </form>
   </div>
 {/if}
+
+<ModalEjercicios
+  bind:abierto={modalDia}
+  ejercicios={data.exercises}
+  etiquetas={muscleLabels}
+  onanadir={anadirAlDia}
+/>
+
+<ConfirmModal
+  bind:open={confirmarDescartar}
+  title="Cambios sin guardar"
+  message="Has tocado los ejercicios de ese día y no los has guardado. Si sigues, se pierden."
+  confirmLabel="Descartar cambios"
+  cancelLabel="Seguir editando"
+  onconfirm={descartar}
+/>
