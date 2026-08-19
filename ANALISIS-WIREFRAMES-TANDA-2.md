@@ -5,6 +5,12 @@ lleva su estado real, comprobado en el código, no de memoria.
 
 **Leyenda:** ✓ ya está · ≈ está pero distinto · ✗ no existe
 
+**Revisión del 19 de agosto.** Repasado elemento por elemento contra el
+código, no de memoria. Aparecen marcados los puntos donde la primera versión
+de este documento **se equivocó**: en tres sitios di por pendiente algo que ya
+estaba hecho. Todos los errores fueron en la misma dirección —dar por falso lo
+que no había comprobado—, que al menos es la dirección barata.
+
 ---
 
 ## Lo que ya coincide (y conviene saberlo antes de tocar nada)
@@ -26,15 +32,16 @@ imagen (subir / enlazar) de la pantalla 7.
 | --- | --- |
 | Flecha de cerrar arriba a la izquierda | ✓ |
 | Nombre + sitio debajo («Gimnasio Pepe») | ✓ |
-| **Avatar circular con la inicial** | ✗ el cajón no lo tiene |
-| **«Pagos», no «Cobros»** | ≈ hoy pone Cobros en todas partes |
-| Separadores entre destinos | ✗ |
-| Configuración abajo del todo, separada | ≈ hoy va en el mismo bloque |
+| Avatar circular | ✓ (migración 0024) |
+| «Pagos», no «Cobros» | ✓ ruta `/pagos` y `/cobros` redirige |
+| Separadores entre destinos | ✓ **ya estaban** (`border-b` en cada fila) |
+| Configuración abajo del todo, separada | ✓ **ya estaba** (`mt-auto` + `pt-8`) |
 
-**Lo caro aquí no es el avatar, es el nombre.** «Cobros» aparece en la
-navegación, en la página, en el título y en tres textos. Renombrar a «Pagos»
-es tocar todo eso a la vez o quedarse con dos nombres para lo mismo, que es
-peor que cualquiera de los dos.
+**Pantalla cerrada.** Las dos últimas filas las di por pendientes sin mirarlas.
+
+Única diferencia viva: el wireframe pone **«Configuración»** abajo y nosotros
+tenemos tres destinos ahí (Ajustes, Tu marca, Avisos) más Salir. Avisos además
+está en la campana de arriba, así que en el cajón sobra.
 
 ## 2 · Inicio
 
@@ -46,41 +53,42 @@ pendientes» ya aparece cuando la lista se corta. No hay nada que hacer aquí.
 
 | Punto | Estado |
 | --- | --- |
-| Tres pestañas: Pagos · Citas · Revisiones | ≈ **hoy hay cuatro** |
-| Contador en círculo superíndice | ✓ |
-| **Leídas debajo, en la misma lista** | ≈ hoy están en otra pestaña |
+| Se llaman Pagos · Citas · Revisiones | ✓ |
+| Contador en círculo | ✓ |
+| Leídas debajo, en gris, en la misma lista | ✓ **ya estaba** |
+| Solo tres pestañas | ≈ **hay una cuarta: «Sin entreno»** |
 
-La cuarta pestaña de hoy es **«sin entreno»** (clientes a los que no les has
-programado nada). No está en el wireframe. Hay que decidir si se quita, se
-funde con otra o el wireframe simplemente no la contempló.
+Lo de las leídas también lo di por pendiente sin comprobarlo: ya se pintan
+abajo y en gris, exactamente como el wireframe.
+
+Queda **una decisión de producto**: la cuarta pestaña avisa de clientes a los
+que no has programado nada. No está en el wireframe. O no la contempló, o
+sobra.
 
 ## 4-6 · Ejercicios
 
-Casi todo hecho. Falta:
-
-- **Menú de tres puntos por fila** (✗). Hoy se entra al ejercicio para
-  editar o borrar.
-- La pastilla **«Sin video»** como aviso en la fila (✗ hoy se ve el grupo
-  muscular, no si le falta vídeo).
-- «+ Añadir» y el embudo **a la izquierda**, conmutador a la derecha (≈ orden
-  distinto hoy).
+**Pantalla cerrada.** Menú de tres puntos ✓, pastilla «Sin vídeo» ✓ (y de paso
+salió un fallo: solo miraba `video_url`, así que un ejercicio con el vídeo
+subido salía marcado como sin vídeo *y* con el icono de vídeo a la vez),
+botones ordenados ✓, rejilla por grupo y vuelta con `← Pecho` ✓.
 
 ## 7 · Editar ejercicio
 
-Coincide, con un matiz: las pastillas llevan un **desplegable (⌄) al final de
-la fila** en vez del «Ver más» de hoy. Es el mismo comportamiento con otra
-forma.
+Coincide. Único matiz vivo: el wireframe abre las pastillas con un **⌄ al
+final de la fila** y hoy es un botón que pone `+3` / «Ver menos». Mismo
+comportamiento, distinta forma. No lo cambio sin que lo diga tu socio: el
+`+3` dice **cuántas faltan**, y un chevrón no.
 
 ## 8-9 · Entrenamientos (hoy «Plantillas»)
 
 | Punto | Estado |
 | --- | --- |
-| Se llaman «Entrenamientos» | ✓ en la pestaña, ≈ en el resto de textos |
-| Buscador propio | ✗ |
-| Tres puntos por fila | ✗ |
-| **Notas para el cliente + notas para el entrenador** | ≈ **hoy hay UNA sola nota** |
-| Ejercicios como acordeón plegable | ✗ hoy están siempre abiertos |
-| Barra inferior fija: Deshacer · Cancelar · Guardar | ✗ |
+| Se llaman «Entrenamientos» | ✓ |
+| Tres puntos por fila | ✓ |
+| Notas para el cliente + notas para el entrenador | ✓ (migración 0025) |
+| **Buscador en la lista** | ✗ |
+| **Ejercicios como acordeón plegable** | ✗ hoy están siempre abiertos |
+| **Barra inferior fija: Deshacer · Cancelar · Guardar** | ✗ |
 
 **El campo doble de notas** (hecho en la migración 0025). Y corrijo lo que
 escribí aquí primero: dije que la nota de la plantilla «acaba viéndola el
@@ -92,12 +100,16 @@ de golpe en todas las plantillas a la vez.
 
 ## 10 · Modal de añadir ejercicios
 
-Multiselección con contador («6 ejercicios seleccionados»), + y − por fila, y
-las elegidas con borde. Hoy se añaden **de uno en uno**. (✗)
+Hoy es un **panel lateral** con la biblioteca y un `+` por fila que añade de
+uno en uno. El wireframe es un **modal a pantalla completa** con
+multiselección, contador («6 ejercicios seleccionados»), `+`/`−` por fila y
+las elegidas con borde. (✗)
 
-El prefijo **«Alberto - Extensión de cuádriceps»** no sé qué es. Puede ser el
-autor del ejercicio (marketplace del backlog), el entrenador dentro de un
-gimnasio (ADR-003) o solo relleno del wireframe. Cambia bastante el modelo.
+Es la diferencia con más trabajo detrás de las que quedan, después de la 15.
+
+El prefijo **«Alberto - …»** queda resuelto: es el gimnasio con varios
+entrenadores, cada uno con sus ejercicios y su vídeo. Anotado como anexo del
+ADR-003; no se implementa hasta que existan las organizaciones.
 
 ## 11 · Clientes en rejilla
 
@@ -105,46 +117,48 @@ Esta es la pantalla con más cosas nuevas:
 
 | Punto | Estado |
 | --- | --- |
-| **Foto de perfil real** | ✗ `profiles.avatar_url` **existe desde la migración 0001 y no la usa nadie** |
-| Conmutador lista/rejilla | ✗ solo hay lista |
-| Buscador «Buscar en tu cartera» | ✗ |
-| Botón «Filtrar» | ≈ hoy es la fila de etiquetas que hicimos |
-| Etiquetas bajo el nombre («VIP \| Mañanas») | ✓ |
-| **Grupo bajo el nombre** («Consultora de turno» / «Individual») | ✗ |
-| **Estado de pago como icono de color** | ≈ hoy es una pastilla de texto |
+| Foto de perfil real | ✓ |
+| Conmutador lista/rejilla | ✓ |
+| Buscador «Buscar en tu cartera» | ✓ (busca nombre **y** correo) |
+| Botón «Filtrar» | ≈ es la fila de etiquetas, no un desplegable |
+| Etiquetas bajo el nombre | ✓ |
+| Grupo bajo el nombre, «Individual» si no tiene | ✓ |
+| Estado de pago como icono | ✓ con símbolo, `title` y `sr-only` |
 
-El icono de estado (✓ verde, ⏰ ámbar, ⊗ rojo) **no puede ir solo**: sin texto,
-tres colores no dicen a nadie qué significan, y a quien no distingue rojo de
-verde no le dicen nada en absoluto. Va con texto o con `aria-label` y `title`,
-y probablemente con las dos cosas.
+**Dos desviaciones conscientes**, las dos explicadas al final de este
+documento: la lista sigue siendo la vista predeterminada, y el punto de color
+nunca viaja solo.
 
 ## 12-13 · Añadir cliente
 
 | Punto | Estado |
 | --- | --- |
-| **Nombre y Apellidos separados** | ≈ hoy es un solo campo `full_name` |
-| Elegir o crear grupo al invitar | ≈ hoy solo se puede elegir uno existente |
-| Pantalla de confirmación con «Añadir otro» | ✗ hoy es un mensaje verde y ya |
-| Explicación de qué le llega al cliente | ✗ |
+| **Nombre y Apellidos separados** | ✗ hoy es un solo campo `full_name` |
+| **Elegir o crear grupo al invitar** | ≈ solo se puede elegir uno existente |
+| **Pantalla de confirmación con «Añadir otro»** | ✗ hoy es un mensaje verde |
+| **Explicación de qué le llega al cliente** | ✗ |
 
-Separar nombre y apellidos toca `profiles.full_name`, que se lee en **catorce
-sitios**. La alternativa barata es pedirlos en dos campos y guardarlos unidos.
+Separar nombre y apellidos toca `profiles.full_name`, que se lee en catorce
+sitios. La alternativa barata es pedirlos en dos campos y guardarlos unidos:
+el formulario queda como el wireframe y el modelo no se mueve.
 
 ## 14 · Pendientes
 
-Hoy es una pestaña que ya existe con Cancelar y Reenviar. Diferencias: **en
-tarjetas de dos columnas** en vez de filas, y con la fecha de envío. (≈)
+Funcionalmente completa: pestaña propia, Cancelar, Reenviar y la fecha de
+envío («Invitado el 14 ago 2026»). La única diferencia es de forma: el
+wireframe usa **tarjetas de dos columnas** y hoy son filas. (≈)
 
 ## 15 · Ficha de cliente
 
 | Punto | Estado |
 | --- | --- |
-| Foto + nombre + estado + grupo | ✗ (lo mismo que la 11) |
-| Pestaña se llama **«Calendario»** | ≈ hoy «Entrenos» |
-| Sin pestaña «Historial» | ≈ hoy hay cinco pestañas, el wireframe enseña cuatro |
+| Foto + nombre | ✓ (y la foto se cambia pulsándola) |
+| Pestaña se llama «Calendario» | ✓ |
 | Botón «Programar» + Semana/Mes | ✓ |
+| **Estado y grupo junto al nombre** | ✗ el estado está, el grupo no |
+| Sin pestaña «Historial» | ≈ tenemos cinco, el wireframe enseña cuatro |
 | **Editar series y pesos en la misma pantalla** | ✗ hoy se entra al día |
-| Barra inferior Deshacer · Cancelar · Guardar | ✗ |
+| **Barra inferior Deshacer · Cancelar · Guardar** | ✗ |
 
 La edición en línea del día es, con diferencia, **lo más caro de las quince
 pantallas**: cambia el constructor entero, necesita estado local de un
@@ -164,3 +178,30 @@ frente a los doce o catorce de la lista densa. Con quince clientes es más
 bonito; con sesenta, es scroll. Por eso el conmutador lista/rejilla importa
 más que la rejilla en sí, y por eso la lista debería seguir siendo la
 predeterminada.
+
+---
+
+## Estado a 19 de agosto
+
+**Cerradas:** 1 (cajón), 2 (inicio), 3 salvo una decisión, 4-6 (ejercicios),
+7 salvo un matiz de forma, 11 (clientes), 14 (funcional).
+
+**Lo que queda, por coste creciente:**
+
+1. **Detalles de entrenamientos** — buscador en la lista y acordeón de los
+   ejercicios. Un rato, sin riesgo.
+2. **Formulario de invitar** — nombre y apellidos, crear grupo desde el modal,
+   pantalla de confirmación y la explicación de qué recibe el cliente.
+3. **Tarjetas en Pendientes** — solo forma.
+4. **Modal de añadir ejercicios con multiselección** — cambia una interacción
+   entera.
+5. **Edición en línea del día (pantalla 15)** — lo más caro con diferencia:
+   estado local de un formulario grande, guardado en lote y deshacer.
+
+**Decisiones abiertas**, que no son mías:
+
+- La cuarta pestaña de Avisos, «Sin entreno»: ¿se queda?
+- El `+3` de las pastillas frente al `⌄` del wireframe.
+- El «Deshacer» de la barra inferior: ¿deshacer de verdad, o basta Cancelar?
+- Nombre y apellidos: ¿dos campos de verdad o dos campos que se guardan
+  juntos?
