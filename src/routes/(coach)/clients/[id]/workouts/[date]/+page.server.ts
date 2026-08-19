@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   const { data: tplRaw } = await supabase
     .from('workout_templates')
     .select(
-      `id, name,
+      `id, name, client_notes,
        workout_template_items(
          exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
          exercise:exercises(id, name, muscle_group, description, video_url)
@@ -60,6 +60,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
     (tplRaw ?? []) as unknown as {
       id: string;
       name: string;
+      client_notes: string | null;
       workout_template_items: {
         exercise_id: string;
         order_index: number;
@@ -74,6 +75,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   ).map((t) => ({
     id: t.id,
     name: t.name,
+    clientNotes: t.client_notes,
     items: [...(t.workout_template_items ?? [])]
       .sort((a, b) => a.order_index - b.order_index)
       .map((it) => ({

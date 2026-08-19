@@ -6,7 +6,6 @@ import type { PageServerLoad, Actions } from './$types';
 type TemplateRow = {
   id: string;
   name: string;
-  notes: string | null;
   category: string | null;
   updated_at: string;
   workout_template_items: { id: string }[] | null;
@@ -17,14 +16,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   const { data: rows } = await supabase
     .from('workout_templates')
-    .select('id, name, notes, category, updated_at, workout_template_items(id)')
+    .select('id, name, category, updated_at, workout_template_items(id)')
     .eq('coach_id', user.id)
     .order('name', { ascending: true });
 
   const templates = ((rows ?? []) as unknown as TemplateRow[]).map((t) => ({
     id: t.id,
     name: t.name,
-    notes: t.notes,
     category: t.category,
     itemCount: (t.workout_template_items ?? []).length
   }));

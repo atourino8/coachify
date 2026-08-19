@@ -82,11 +82,13 @@ forma.
 | Ejercicios como acordeón plegable | ✗ hoy están siempre abiertos |
 | Barra inferior fija: Deshacer · Cancelar · Guardar | ✗ |
 
-**El campo doble de notas es un cambio de modelo, no de pantalla.** Hoy
-`workout_templates.notes` es un único texto que, cuando se aplica a un cliente,
-acaba viéndolo él. Separarlo obliga a decidir qué pasa con lo ya escrito: se
-queda como nota del cliente (visible) o como nota del entrenador (privada).
-Elegir mal expone a los clientes notas que no eran para ellos.
+**El campo doble de notas** (hecho en la migración 0025). Y corrijo lo que
+escribí aquí primero: dije que la nota de la plantilla «acaba viéndola el
+cliente», y era falso. Comprobado en el código, `materializeTemplateWorkout`
+copiaba el nombre y los ejercicios, **nunca las notas**. O sea que lo escrito
+hasta hoy se escribió sabiendo que no lo leía nadie más, y por eso lo antiguo
+se queda como nota privada del entrenador: mantener esa promesa, no romperla
+de golpe en todas las plantillas a la vez.
 
 ## 10 · Modal de añadir ejercicios
 

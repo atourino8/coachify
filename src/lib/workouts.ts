@@ -28,13 +28,17 @@ export async function materializeTemplateWorkout(
   const { data: tpl, error: tplErr } = await supabase
     .from('workout_templates')
     .select(
-      'id, name, workout_template_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
+      'id, name, client_notes, workout_template_items(exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes)'
     )
     .eq('id', templateId)
     .eq('coach_id', coachId)
     .single();
   if (tplErr || !tpl) return { error: 'Entrenamiento no encontrado.' };
-  const template = tpl as unknown as { name: string; workout_template_items: TemplateItem[] };
+  const template = tpl as unknown as {
+    name: string;
+    client_notes: string | null;
+    workout_template_items: TemplateItem[];
+  };
 
   // ¿Ya hay entreno ese día?
   const { data: existing } = await supabase
@@ -46,18 +50,34 @@ export async function materializeTemplateWorkout(
 
   if (existing && !opts.overwrite) return { skipped: 'exists' };
 
+  // Las notas PARA EL CLIENTE viajan con la plantilla; las del entrenador no
+  // salen de aquí (migración 0025). Esto es lo que hace que el campo signifique
+  // algo: hasta ahora ninguna nota de plantilla llegaba al cliente.
   let workoutId: string;
   if (existing) {
     workoutId = (existing as { id: string }).id;
+    // Al sobrescribir, la nota solo se pisa si la plantilla trae una.
+    //
+    // Con una plantilla sin notas, copiar el nulo borraría lo que el
+    // entrenador hubiera escrito para ESE día concreto —«hoy suave, que
+    // vienes de gripe»—, y lo borraría sin decirlo.
+    const cambios: Record<string, unknown> = { title: template.name };
+    if (template.client_notes) cambios.notes = template.client_notes;
     await supabase
       .from('workouts')
-      .update({ title: template.name } as never)
+      .update(cambios as never)
       .eq('id', workoutId);
     await supabase.from('workout_items').delete().eq('workout_id', workoutId);
   } else {
     const { data: created, error: createErr } = await supabase
       .from('workouts')
-      .insert({ client_id: clientId, coach_id: coachId, date, title: template.name } as never)
+      .insert({
+        client_id: clientId,
+        coach_id: coachId,
+        date,
+        title: template.name,
+        notes: template.client_notes
+      } as never)
       .select('id')
       .single();
     if (createErr || !created)

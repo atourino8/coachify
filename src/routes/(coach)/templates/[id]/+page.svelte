@@ -26,8 +26,16 @@
 
   // svelte-ignore state_referenced_locally
   let name = $state(data.template.name);
+  // Dos notas, y el orden importa: primero la que va a leer alguien más.
+  // Escribir en el campo privado es lo natural cuando solo hay uno; con el
+  // visible arriba, la nota para el cliente deja de ser la que se olvida.
+  //
+  // El svelte-ignore va en CADA una: la directiva solo cubre la línea
+  // siguiente, y al meter un comentario en medio dejó de cubrir la segunda.
   // svelte-ignore state_referenced_locally
-  let notes = $state(data.template.notes ?? '');
+  let clientNotes = $state(data.template.client_notes ?? '');
+  // svelte-ignore state_referenced_locally
+  let coachNotes = $state(data.template.coach_notes ?? '');
   // svelte-ignore state_referenced_locally
   let category = $state(data.template.category ?? '');
   // svelte-ignore state_referenced_locally
@@ -121,7 +129,8 @@
       }}
     >
       <input type="hidden" name="name" value={name} />
-      <input type="hidden" name="notes" value={notes} />
+      <input type="hidden" name="client_notes" value={clientNotes} />
+      <input type="hidden" name="coach_notes" value={coachNotes} />
       <input type="hidden" name="category" value={category} />
       <input type="hidden" name="items" value={itemsJSON()} />
       <button type="submit" disabled={saving || !name.trim()} class="btn-primary py-2 px-5">
@@ -163,16 +172,42 @@
                placeholder:font-normal placeholder:text-text-mute/40"
       />
     </div>
+    <!--
+      Las etiquetas dicen QUIÉN LEE cada campo, no cómo se llama.
+
+      «Notas para el cliente» y «Notas para el entrenador» se distinguen por
+      una palabra en medio, y quien va con prisa escribe en el primero que
+      pilla. Lo que no se confunde es «la ve tu cliente» frente a «no la ve
+      nadie más»: eso responde a la pregunta que importa antes de escribir.
+    -->
     <div>
-      <label for="tpl-notes" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
-        Notas <span class="normal-case tracking-normal">(opcional)</span>
+      <label for="tpl-client-notes" class="block text-xs uppercase tracking-wider text-text-mute">
+        Notas para el cliente
       </label>
+      <p class="text-2xs text-text-mute mb-2">La ve él en su pantalla de Hoy.</p>
       <textarea
-        id="tpl-notes"
-        bind:value={notes}
+        id="tpl-client-notes"
+        bind:value={clientNotes}
         rows="2"
         maxlength="300"
-        placeholder="ej: descanso 90s entre series, progresar carga cada semana"
+        placeholder="ej: si un grupo muscular sigue fatigado, cambia el ejercicio por 30 min de cinta"
+        class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
+               focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none
+               placeholder:text-text-mute/40"
+      ></textarea>
+    </div>
+
+    <div>
+      <label for="tpl-coach-notes" class="block text-xs uppercase tracking-wider text-text-mute">
+        Notas para ti
+      </label>
+      <p class="text-2xs text-text-mute mb-2">Privadas: no las ve nadie más.</p>
+      <textarea
+        id="tpl-coach-notes"
+        bind:value={coachNotes}
+        rows="2"
+        maxlength="300"
+        placeholder="ej: progresar carga en principiantes hasta el fallo con 90s de reposo"
         class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md text-sm
                focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none
                placeholder:text-text-mute/40"

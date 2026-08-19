@@ -7,7 +7,8 @@ import type { PageServerLoad, Actions } from './$types';
 type TemplateWithItems = {
   id: string;
   name: string;
-  notes: string | null;
+  coach_notes: string | null;
+  client_notes: string | null;
   category: string | null;
   workout_template_items:
     | {
@@ -30,7 +31,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
   const { data: tplRaw, error: tplErr } = await supabase
     .from('workout_templates')
     .select(
-      `id, name, notes, category,
+      `id, name, coach_notes, client_notes, category,
        workout_template_items(
          id, exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
          exercise:exercises(id, name, muscle_group)
@@ -61,7 +62,8 @@ export const actions: Actions = {
 
     const fd = await request.formData();
     const name = ((fd.get('name') as string) || '').trim();
-    const notes = ((fd.get('notes') as string) || '').trim() || null;
+    const coachNotes = ((fd.get('coach_notes') as string) || '').trim() || null;
+    const clientNotes = ((fd.get('client_notes') as string) || '').trim() || null;
     const category = ((fd.get('category') as string) || '').trim() || null;
     const rawItems = fd.get('items') as string;
     if (!name) return fail(400, { error: 'El entrenamiento necesita un nombre.' });
@@ -83,7 +85,7 @@ export const actions: Actions = {
     // Verificar propiedad y actualizar cabecera
     const { error: updErr } = await supabase
       .from('workout_templates')
-      .update({ name, notes, category } as never)
+      .update({ name, coach_notes: coachNotes, client_notes: clientNotes, category } as never)
       .eq('id', params.id)
       .eq('coach_id', user.id);
     if (updErr) return fail(500, { error: updErr.message });

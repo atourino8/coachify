@@ -284,7 +284,10 @@ export interface WorkoutTemplate {
   id: string;
   coach_id: string;
   name: string;
-  notes: string | null;
+  /** Privada del entrenador. NUNCA se copia al entreno del cliente. */
+  coach_notes: string | null;
+  /** La lee el cliente: se copia a workouts.notes al aplicar la plantilla. */
+  client_notes: string | null;
   category: TemplateCategory | null;
   created_at: string;
   updated_at: string;

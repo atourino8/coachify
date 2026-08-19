@@ -81,6 +81,26 @@ porque la decisión no fue del cliente.
 
 ---
 
+## 0d · Que la nota privada no se escape (migración 0025)
+
+**Qué probar.**
+
+1. Entrenamientos → uno cualquiera → escribe algo distinto en los dos campos:
+   en «Notas para el cliente», *«trae toalla»*; en «Notas para ti», *«ojo con
+   el hombro, no forzar»*. Guarda.
+2. Aplícalo a un cliente desde su Calendario.
+3. Entra como ese cliente y abre Hoy.
+
+**Qué tiene que pasar.** Ve *«trae toalla»* y **no** ve lo del hombro. En
+ninguna pantalla, tampoco en el detalle del ejercicio.
+
+**Y el caso que se olvida:** escribe una nota a mano en el entreno de un día
+concreto —*«hoy suave, que vienes de gripe»*— y luego aplica encima una
+plantilla que **no** tenga notas para el cliente. La nota del día **debe
+seguir ahí**: aplicar una plantilla sin notas no borra lo que había.
+
+---
+
 ## 1 · Guardar un ejercicio (migraciones 0016 y 0019)
 
 **Qué probar.** Biblioteca → cualquier ejercicio → marcar tres grupos

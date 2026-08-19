@@ -79,6 +79,12 @@
       rest_seconds: it.rest_seconds,
       notes: it.notes
     }));
+
+    // La nota de la plantilla PARA EL CLIENTE se propone, pero solo si el día
+    // no tiene ya una escrita. Pisarla sería borrar sin avisar algo puesto para
+    // ESE día concreto, que es justo lo que una plantilla no debe hacer.
+    if (tpl.clientNotes && !notes.trim()) notes = tpl.clientNotes;
+
     selectedTemplate = '';
   }
 
