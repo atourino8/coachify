@@ -31,6 +31,7 @@ type WorkoutRow = {
         reps_prescribed: string | null;
         weight_prescribed: string | null;
         rest_seconds: number | null;
+        notes: string | null;
         exercise: { id: string; name: string } | null;
       }[]
     | null;
@@ -77,7 +78,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
     .select(
       `id, date, title, notes,
        workout_items(
-         id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds,
+         id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
          exercise:exercises(id, name)
        )`
     )
@@ -124,6 +125,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
         reps: string;
         peso: string;
         descanso: number | null;
+        nota: string;
       }[];
     }
   > = {};
@@ -142,7 +144,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
         sets: it.sets,
         reps: it.reps_prescribed ?? '',
         peso: it.weight_prescribed ?? '',
-        descanso: it.rest_seconds
+        descanso: it.rest_seconds,
+        nota: it.notes ?? ''
       }))
     };
   }
@@ -483,12 +486,22 @@ export const actions: Actions = {
       .maybeSingle();
     if (!propio) return fail(403, { error: 'Ese entreno no es tuyo.' });
 
+    // `notes` va en la lista a propósito, y esto no es un campo más.
+    //
+    // Esta acción BORRA los items del día y los vuelve a insertar con lo que
+    // llega del formulario. Mientras el editor en línea no mandaba la nota, la
+    // nota no se quedaba como estaba: desaparecía. Y era la nota que lee el
+    // cliente, así que abrir un día desde la ficha, tocar una serie y guardar
+    // le borraba de la pantalla el «baja despacio» sin decir nada a nadie.
+    //
+    // Lo que reemplaza tiene que mandar TODO lo que reemplaza.
     let filas: {
       exercise_id: string;
       sets: number;
       reps_prescribed: string | null;
       weight_prescribed: string | null;
       rest_seconds: number | null;
+      notes: string | null;
     }[];
     try {
       filas = JSON.parse(String(fd.get('items') ?? '[]'));
@@ -507,7 +520,8 @@ export const actions: Actions = {
           sets: Number(f.sets) || 1,
           reps_prescribed: f.reps_prescribed || null,
           weight_prescribed: f.weight_prescribed || null,
-          rest_seconds: f.rest_seconds === null ? null : Number(f.rest_seconds) || null
+          rest_seconds: f.rest_seconds === null ? null : Number(f.rest_seconds) || null,
+          notes: f.notes || null
         })) as never
       );
       if (errIns) return fail(500, { error: errIns.message });

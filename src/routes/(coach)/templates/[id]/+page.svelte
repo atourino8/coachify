@@ -456,6 +456,29 @@
                   />
                 </div>
               </div>
+
+              <!--
+                Este campo existía en la base de datos, se guardaba, se copiaba
+                al entreno del cliente al aplicar la plantilla y el cliente lo
+                LEÍA. Lo único que faltaba era la caja para escribirlo: los
+                ejercicios nuevos nacían con la nota vacía y no había manera de
+                rellenarla. Una plantilla es justo donde más sentido tiene
+                —«baja despacio» se dice una vez y vale para los cuarenta días
+                que salgan de ella—, así que era el sitio donde más se notaba
+                la ausencia.
+              -->
+              <div class="mt-2">
+                <label for="n-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                  >Nota para el cliente</label
+                >
+                <input
+                  id="n-{item.id}"
+                  type="text"
+                  bind:value={item.notes}
+                  placeholder="«Baja despacio, 3 segundos»"
+                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
+                />
+              </div>
             {/if}
           </div>
         {/each}

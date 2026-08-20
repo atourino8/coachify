@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import Icono from '$lib/components/Icono.svelte';
 
   let { data, form } = $props();
 
@@ -8,6 +9,17 @@
   let duration = $state('60');
   let modPresencial = $state(true);
   let modOnline = $state(false);
+
+  /**
+   * La regla, ya que hay que elegir una y que valga en todas partes: los
+   * formularios que INSERTAN una fila se frenan mientras van; los que
+   * actualizan algo que ya existe, no. Actualizar dos veces deja lo mismo;
+   * insertar dos veces deja dos.
+   *
+   * Aquí insertar dos veces son dos huecos idénticos el mismo martes, que
+   * luego hay que borrar a mano uno a uno.
+   */
+  let anadiendo = $state(false);
 
   const DAYS = [
     { v: '1', label: 'Lunes' },
@@ -75,7 +87,18 @@
   {/if}
 
   <!-- Añadir hueco -->
-  <form method="POST" action="?/add" use:enhance class="card space-y-4">
+  <form
+    method="POST"
+    action="?/add"
+    use:enhance={() => {
+      anadiendo = true;
+      return async ({ update }) => {
+        await update();
+        anadiendo = false;
+      };
+    }}
+    class="card space-y-4"
+  >
     <h2 class="font-semibold">Añadir hueco semanal</h2>
     <div class="grid grid-cols-2 gap-3">
       <div>
@@ -137,7 +160,9 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn-primary w-full">Añadir hueco</button>
+    <button type="submit" disabled={anadiendo} class="btn-primary w-full disabled:opacity-60">
+      {anadiendo ? 'Añadiendo…' : 'Añadir hueco'}
+    </button>
   </form>
 
   <!-- Huecos actuales -->
@@ -160,12 +185,19 @@
                 </div>
                 <form method="POST" action="?/remove" use:enhance>
                   <input type="hidden" name="slot_id" value={s.id} />
+                  <!-- La papelera y no una ×: es la misma acción que quitar un
+                       ejercicio de un día o un ejercicio del acordeón, y allí
+                       ya es una papelera. Una × además significa «cerrar» en
+                       otras tres partes de la aplicación. -->
                   <button
                     type="submit"
-                    aria-label="Borrar hueco de disponibilidad"
-                    class="text-text-mute hover:text-danger transition-colors text-lg leading-none"
-                    >×</button
+                    aria-label="Borrar hueco de disponibilidad de {hhmm(s.start_time)} a {hhmm(
+                      s.end_time
+                    )}"
+                    class="text-text-mute hover:text-danger transition-colors"
                   >
+                    <Icono nombre="papelera" class="w-4 h-4" />
+                  </button>
                 </form>
               </div>
             {/each}

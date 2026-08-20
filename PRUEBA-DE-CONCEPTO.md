@@ -131,6 +131,35 @@ que de una teoría intermedia.
 
 ---
 
+## Acto 7 · Lo que encontró la revisión por patrones
+
+37. **La nota que sobrevive.** Constructor del día de un cliente: escribe en
+    **«Nota para el cliente»** de un ejercicio, por ejemplo «baja despacio».
+    Guarda. Vuelve a la ficha, pestaña Calendario, abre **ese mismo día ahí
+    dentro**, cambia una serie y guarda. Entra como el cliente: **la nota tiene
+    que seguir estando**. Antes desaparecía en ese segundo guardado.
+
+38. **La nota en plantillas.** Abre un entrenamiento, despliega un ejercicio:
+    ahora hay «Nota para el cliente». Escribe una, guarda, aplica esa plantilla
+    a un día y entra como el cliente: tiene que verla.
+
+39. **Buscar en Ejercicios.** Busca «press» y luego «frances» sin tilde: las
+    dos encuentran. Con un filtro de material puesto, la pastilla **«Todos (N)»
+    tiene que decir cuántos quedan, no cuántos hay**. Busca algo que no exista:
+    debe salir una frase, no una pantalla en blanco.
+
+40. **El doble clic del cobro.** En la ficha de un cliente, abre «Registrar
+    cobro» y pulsa el botón **dos veces seguidas, rápido**. Tiene que quedarse
+    en «Registrando…» y apuntar **un solo cobro**. Comprueba en Pagos que no hay
+    dos apuntes y que el «pagado hasta» avanzó **un** mes.
+
+41. **Las filas se comportan igual.** En Grupos, la fila ahora tiene los **tres
+    puntos** con Abrir y Borrar, como en Ejercicios y Entrenamientos. En
+    Disponibilidad, borrar un hueco es una **papelera**. No debe quedar ninguna
+    × de borrar en toda la aplicación: la × solo cierra cosas.
+
+---
+
 ## Lo que esta prueba no cubre
 
 - **El correo de invitación** sale por el envío por defecto de Supabase, que

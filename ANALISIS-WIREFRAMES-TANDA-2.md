@@ -300,3 +300,133 @@ dibujadas.
 Ahora las tres comparten el modal, el historial, las mismas palabras y la
 misma papelera. Comprobado con una tabla que cruza los diez rasgos por las
 tres pantallas, en vez de mirarlas de una en una.
+
+---
+
+# Quinta revisión · por patrones, no por imágenes
+
+*«Pues haz esto para todos los wireframes, porque te pedí que lo revisaras.»*
+
+Lo de la cuarta revisión no era un despiste concreto, era el método. Repasar
+imagen por imagen contesta «¿está dibujado esto?». La pregunta buena es otra:
+
+> **¿Hacen lo mismo todas las pantallas que hacen lo mismo?**
+
+Así que esta vez el inventario no es de imágenes. Es de **oficios**: se lista
+lo que la aplicación sabe hacer —buscar en una lista, borrar una fila, avisar
+de que algo se está guardando, decir quién lee un texto— y se busca **cada
+sitio donde se hace ese oficio**, esté dibujado o no. Después se mira si todos
+lo hacen igual.
+
+Salieron treinta y siete pantallas y nueve oficios. La tabla completa está
+abajo; primero lo que apareció al cruzarlos.
+
+## Lo que salió
+
+### 1. Una nota que el cliente lee y nadie decía que la leía
+
+`workout_items.notes` sale en la pantalla del cliente, debajo del ejercicio.
+Se escribía en una caja **sin etiqueta**, con el texto gris «Nota técnica
+(opcional)…».
+
+Es exactamente la regla que diste con las notas de plantilla —lo privado no se
+lee, lo dirigido a él sí— pero un escalón más abajo, en el ejercicio suelto. Y
+ahí no había forma de saberlo: «nota técnica» suena a apunte de profesional.
+Alguien escribe «ojo, que este viene flojo de hombro» creyendo que es para él
+y se lo está mandando al cliente.
+
+Ahora la caja se llama **«Nota para el cliente»** en las tres pantallas que
+montan ejercicios, con el mismo ejemplo debajo.
+
+### 2. La misma nota, que el editor de la ficha borraba
+
+Esto no es de estilo. Es pérdida de datos, y la encontró el cruce.
+
+`guardarDia` —el que guarda el día desde la ficha— **borra los ejercicios y
+los vuelve a insertar** con lo que le llega del formulario. El editor en línea
+nunca mandó la nota, porque ni siquiera la leía.
+
+Resultado: abrías un día desde la ficha, cambiabas una serie, guardabas, y el
+«baja despacio, 3 segundos» que habías escrito en el constructor **desaparecía
+de la pantalla del cliente**. Sin error, sin aviso y sin manera de saber que
+había pasado.
+
+La regla que faltaba escrita: **lo que reemplaza tiene que mandar todo lo que
+reemplaza.**
+
+### 3. En plantillas la nota ni siquiera se podía escribir
+
+Peor y más raro: el campo existía en la base, se guardaba, se copiaba al
+entreno del cliente al aplicar la plantilla y el cliente lo leía. Lo único que
+faltaba era **la caja**. Los ejercicios de plantilla nacían con la nota vacía y
+no había manera de rellenarla nunca.
+
+Y es donde más sentido tiene: «baja despacio» se dice una vez en la plantilla y
+vale para los cuarenta días que salgan de ella.
+
+### 4. La biblioteca se podía buscar desde fuera y no desde dentro
+
+Ejercicios es la lista **más larga** de la aplicación y era la única lista
+grande sin buscador. Entrenamientos, más corta, sí lo tenía.
+
+Pero la comparación buena no era con Entrenamientos: **el modal de «+ Añadir
+ejercicio» busca en estos mismos ejercicios desde el primer día**. O sea que la
+misma lista se podía buscar al meterla en un entreno y no se podía buscar al ir
+a arreglarla.
+
+De paso, la pastilla «Todos (48)» contaba el total **sin filtrar**: con
+«mancuerna» marcado ponía 48 encima de una lista de doce. El comentario del
+código avisaba de ese fallo exacto cincuenta líneas más arriba, y el fallo
+estaba en la línea de al lado.
+
+### 5. El cobro no se defendía del doble clic
+
+Casi toda la aplicación aguanta pulsar dos veces: se guarda dos veces lo mismo
+y queda lo mismo. **Registrar un cobro no.** Cada envío apunta un cobro y
+adelanta un mes el «pagado hasta», así que un doble clic —o un móvil con mala
+cobertura donde no pasa nada durante dos segundos— deja al cliente pagado hasta
+dentro de dos meses y dos apuntes en la caja del mes.
+
+Era el sitio donde repetir sale más caro y de los pocos sin freno.
+
+La regla, ya escrita en el código: **los formularios que insertan una fila se
+frenan; los que actualizan algo que ya existe, no.** Con eso entró también
+«Añadir hueco» en Disponibilidad, que creaba martes duplicados.
+
+### 6. Cosas pequeñas que ya solo estaban en un sitio
+
+- La **última × de texto** para borrar (Grupos y Disponibilidad). Ahora
+  papelera y menú de tres puntos, como en Ejercicios y Entrenamientos. La × ya
+  solo significa «cerrar».
+- El **normalizador de acentos** estaba copiado letra por letra en tres
+  archivos y el buscador nuevo iba a ser el cuarto. Ahora es `lib/texto.ts`,
+  con lo de la ñ escrito y decidido a propósito en vez de heredado sin mirar.
+- **Buscar y no encontrar nada** en Ejercicios dejaba la pantalla en blanco,
+  que parece rota. Ahora lo dice, y distingue si sobra lo escrito o sobra el
+  filtro.
+
+## Lo que se miró y NO se tocó
+
+Porque no era incoherencia, era una regla que ya se cumplía. Se deja escrita
+para que la próxima revisión no la «arregle»:
+
+| Oficio | La regla que ya seguía |
+|---|---|
+| Cara de la persona | **Listas de personas** sí (clientes, miembros de un grupo, apuntados a una clase). **Listas de sucesos** no (agenda, avisos, inicio): ahí la fila es una cita, no una persona. |
+| Menú de tres puntos | Dos acciones o más, menú. Una sola, botón suelto («Quitar» de un grupo o de una clase). |
+| Confirmar antes de borrar | Se confirma lo que **destruye algo que escribiste** (un ejercicio, una plantilla, un grupo). No se confirma **deshacer una relación** (sacar a alguien de un grupo, quitar un hueco): se rehace en un clic. |
+| Buscador | Listas que se recorren **por nombre** (clientes, entrenamientos, ejercicios). No las que se recorren **por fecha** (clases, pagos): ahí buscar por texto no es lo que se quiere. |
+| Flecha de desplazamiento | Las siete filas de pestañas horizontales de la aplicación usan `FilaDesplazable`. No queda ningún `overflow-x-auto` suelto. |
+
+## Cómo se comprobó
+
+Un guion que cruza los treinta y siete archivos de pantalla con los nueve
+oficios y saca la tabla. Los sitios donde la casilla está vacía y **debería**
+estar marcada son los seis hallazgos de arriba.
+
+No basta con la tabla: `svelte-check` no ve que un JSON se deje un campo por el
+camino. Para el punto 2 hay una comprobación aparte que sigue la nota por
+**las diez etapas** de su viaje —tipo, carga, alta, serialización, caja,
+consulta al servidor, tipo del servidor, exposición, aceptación e inserción— y
+falla si se cae en cualquiera. Es el tipo de fallo que no da error: solo
+desaparece un texto.

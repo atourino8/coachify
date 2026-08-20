@@ -8,6 +8,7 @@
   import MenuFila from '$lib/components/MenuFila.svelte';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
+  import { contiene } from '$lib/texto';
   let { data, form } = $props();
 
   let seeding = $state(false);
@@ -46,8 +47,23 @@
    * dicen cuántos hay de cada grupo CON mancuerna, no el total. Si no fuera
    * así, entrarías en "Pecho 24" y encontrarías tres.
    */
+  /**
+   * El buscador que faltaba.
+   *
+   * La biblioteca de ejercicios es la lista MÁS LARGA de la aplicación —viene
+   * precargada con decenas y el entrenador añade las suyas—, y era la única
+   * lista grande sin buscar. Entrenamientos, que es más corta, sí lo tenía.
+   *
+   * Lo raro no era la comparación con Entrenamientos, era la comparación
+   * consigo misma: el modal de «+ Añadir ejercicio» busca en ESTOS MISMOS
+   * ejercicios desde el primer día. O sea que la misma lista se podía buscar
+   * al meterla en un entreno y no se podía buscar al ir a arreglarla.
+   */
+  let busqueda = $state('');
+
   const conFiltro = $derived(
     data.exercises.filter((e) => {
+      if (!contiene(e.name, busqueda)) return false;
       if (soloSinVideo && (e.video_url || e.video_path)) return false;
       if (filtroMaterial.length > 0) {
         const suyos = e.equipment_types ?? [];
@@ -198,6 +214,25 @@
       {data.exercises.length === 1 ? 'ejercicio' : 'ejercicios'} activos
     </p>
   </div>
+
+  <!-- El buscador, encima de la barra y no dentro: en Entrenamientos está
+       exactamente así, y son las dos pestañas de la misma biblioteca. -->
+  {#if data.exercises.length > 0}
+    <div class="relative max-w-sm">
+      <label for="buscar-ej" class="sr-only">Buscar ejercicios</label>
+      <input
+        id="buscar-ej"
+        type="search"
+        bind:value={busqueda}
+        placeholder="Buscar ejercicios"
+        class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
+               focus:outline-none focus:border-accent"
+      />
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute pointer-events-none">
+        <Icono nombre="buscar" class="w-4 h-4" />
+      </span>
+    </div>
+  {/if}
 
   <!-- Filtro y «+ Añadir» a la IZQUIERDA, conmutador de vista a la DERECHA.
        No es simetría: los dos primeros cambian QUÉ hay en la lista y el
@@ -525,7 +560,15 @@
             ? 'bg-primary text-bg border-primary'
             : 'border-line text-text-mute hover:text-text'}"
         >
-          Todos ({data.exercises.length})
+          <!--
+            `conFiltro` y no `data.exercises`: esta cuenta tiene que decir
+            cuántos hay DESPUÉS del buscador y del embudo, no cuántos hay en
+            total. Con «mancuerna» marcado ponía «Todos (48)» encima de una
+            lista de doce, que es justo el fallo contra el que avisa el
+            comentario de `conFiltro` cincuenta líneas más arriba, cometido en
+            la línea de al lado.
+          -->
+          Todos ({conFiltro.length})
         </button>
         {#each presentGroups as g (g)}
           <button
@@ -699,6 +742,17 @@
          casilla y el enlace son hermanos, y el área táctil del enlace sigue
          ocupando todo lo demás. -->
     <div class="border-t border-line">
+      <!-- Buscar y no encontrar nada tiene que decirlo. Sin esto la pantalla
+           se queda en blanco y parece que se ha roto, no que no hay ninguno.
+           La frase distingue las dos causas porque la salida es distinta:
+           borrar lo escrito o limpiar el embudo. -->
+      {#if filtered.length === 0}
+        <p class="py-6 text-sm text-text-mute">
+          {busqueda.trim()
+            ? 'Ningún ejercicio con ese nombre.'
+            : 'Ninguno con los filtros puestos.'}
+        </p>
+      {/if}
       {#each filtered as ex (ex.id)}
         {@const marcado = marcados.has(ex.id)}
         <div class="row {marcado ? 'bg-surface-2/60' : ''}">

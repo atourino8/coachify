@@ -507,4 +507,48 @@ Verificación byte a byte tras la escritura. Sin excusas.
 
 ---
 
+## Lo que reemplaza tiene que mandar todo lo que reemplaza
+
+**Síntoma:** un texto escrito por el entrenador desaparecía de la pantalla del
+cliente. Sin error, sin aviso, sin rastro.
+
+**Causa:** la acción que guarda un día BORRA los ejercicios y los vuelve a
+insertar con lo que llega del formulario. Una pantalla nueva editaba ese mismo
+día sin leer ni mandar el campo `notes`, así que al guardar lo insertaba vacío.
+El campo no se quedaba como estaba: se perdía.
+
+**Regla:** un `delete` + `insert` no es una actualización parcial. Cualquier
+formulario que use ese camino tiene que llevar **todas** las columnas, no solo
+las que esa pantalla deja tocar. Si una pantalla no quiere editar un campo,
+tiene que **reenviarlo tal cual**, no omitirlo.
+
+**Cómo se caza:** comparar la lista de columnas del `insert` con la lista de
+campos de CADA formulario que llama a esa acción. Si un formulario tiene menos,
+ahí hay una pérdida silenciosa. Los tipos no avisan: el objeto que se manda es
+válido, solo que incompleto.
+
+---
+
+## Revisar contra el dibujo encuentra lo que el dibujo enseña
+
+**Síntoma:** dos revisiones seguidas dieron «todo hecho» y las dos veces
+faltaban cosas de verdad, incluida funcionalidad.
+
+**Causa:** revisar imagen por imagen contesta «¿está dibujado esto?». Nunca
+contesta «¿qué otras pantallas hacen este mismo trabajo?». Las pantallas que el
+diseñador no dibujó —porque no hacía falta dibujarlas dos veces— quedan fuera
+del repaso por construcción.
+
+**Regla:** inventariar **oficios**, no pantallas. Listar lo que la aplicación
+sabe hacer (buscar en una lista, borrar una fila, decir quién lee un texto) y
+buscar todos los sitios donde se hace, estén dibujados o no. Después cruzar en
+una tabla oficios × pantallas: los huecos de la tabla son la lista de tareas.
+
+**Extra:** la tabla también sirve para lo contrario. Un hueco que resulta estar
+BIEN es una regla que se estaba cumpliendo sin haberla escrito nunca —«cara en
+las listas de personas, no en las de sucesos»—. Escribirla evita que la próxima
+revisión la «arregle».
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+  import MenuFila from '$lib/components/MenuFila.svelte';
 
   let { data, form } = $props();
 
@@ -143,17 +144,26 @@
               {g.memberCount === 1 ? 'persona' : 'personas'}{g.company ? ' · ' + g.company : ''}
             </div>
           </a>
-          <a href="/groups/{g.id}" class="text-xs text-accent hover:underline flex-shrink-0"
-            >Abrir</a
-          >
-          <button
-            type="button"
-            class="text-text-mute hover:text-danger transition-colors text-lg leading-none flex-shrink-0"
-            aria-label="Eliminar grupo {g.name}"
-            onclick={() => askDelete(g.id, g.name)}
-          >
-            ×
-          </button>
+          <!--
+            Antes había aquí un «Abrir» y una × de texto sueltos. Los dos
+            sobraban por motivos distintos: «Abrir» repetía lo que ya hace
+            pulsar la fila entera, y la × era la última de la aplicación —en
+            Ejercicios y en Entrenamientos las dos acciones viven ya en los tres
+            puntos—. Una fila con dos acciones se comporta igual en todas
+            partes o no se aprende en ninguna.
+          -->
+          <MenuFila etiqueta={g.name}>
+            <a href="/groups/{g.id}" class="block px-4 py-2.5 hover:bg-surface-2">Abrir</a>
+            <button
+              type="button"
+              data-cierra
+              onclick={() => askDelete(g.id, g.name)}
+              class="block w-full text-left px-4 py-2.5 text-danger hover:bg-danger/10
+                     border-t border-line"
+            >
+              Borrar
+            </button>
+          </MenuFila>
         </div>
       {/each}
     </div>

@@ -435,12 +435,27 @@
                 </div>
               </div>
 
-              <input
-                type="text"
-                bind:value={item.notes}
-                placeholder="Nota técnica (opcional)..."
-                class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
-              />
+              <!--
+                Esta nota LA LEE EL CLIENTE, en su pantalla de hoy, debajo del
+                ejercicio. Antes era una caja sin etiqueta que solo ponía «Nota
+                técnica (opcional)» y no había forma de saberlo: se podía
+                escribir aquí «ojo, que este viene flojo» pensando que era un
+                recordatorio para uno mismo. Lo privado va en «Notas para ti»,
+                arriba, y eso solo se puede saber si cada caja dice para quién
+                escribe.
+              -->
+              <div>
+                <label for="nota-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
+                  >Nota para el cliente</label
+                >
+                <input
+                  id="nota-{item.id}"
+                  type="text"
+                  bind:value={item.notes}
+                  placeholder="«Baja despacio, 3 segundos»"
+                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
+                />
+              </div>
             </div>
           {:else}
             <div class="text-center text-text-mute text-sm">

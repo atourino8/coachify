@@ -1,5 +1,6 @@
 <script lang="ts">
   import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
+  import { normalizar } from '$lib/texto';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -42,12 +43,6 @@
   // entrenamiento no tiene más texto que buscar, y la categoría ya tiene sus
   // pastillas justo al lado.
   let busqueda = $state('');
-  const normalizar = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
   const filtered = $derived.by(() => {
     const q = normalizar(busqueda.trim());
     return data.templates.filter((t) => {

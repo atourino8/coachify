@@ -16,6 +16,20 @@
     form,
     abierto = $bindable()
   }: { data: PageData; form: ActionData; abierto: boolean } = $props();
+
+  /**
+   * El freno del doble envío.
+   *
+   * En casi toda la aplicación pulsar dos veces es inofensivo: se guarda dos
+   * veces lo mismo y queda lo mismo. Aquí no. Cada envío INSERTA un cobro y
+   * ADELANTA un mes el «pagado hasta», así que un doble clic —o un móvil con
+   * mala cobertura donde no pasa nada durante dos segundos— deja al cliente
+   * pagado hasta dentro de dos meses y dos apuntes en la caja del mes.
+   *
+   * Es el sitio de la aplicación donde repetir sale más caro, y era de los
+   * pocos que no se defendía.
+   */
+  let registrando = $state(false);
 </script>
 
 <!-- Registrar un cobro.
@@ -27,8 +41,10 @@
     method="POST"
     action="?/markPaid"
     use:enhance={() => {
+      registrando = true;
       return async ({ update }) => {
         await update();
+        registrando = false;
         abierto = false;
       };
     }}
@@ -88,7 +104,9 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-      <button type="submit" class="btn-primary">Registrar cobro</button>
+      <button type="submit" disabled={registrando} class="btn-primary disabled:opacity-60">
+        {registrando ? 'Registrando…' : 'Registrar cobro'}
+      </button>
       <a href="/pagos" class="text-sm text-text-mute hover:text-text transition-colors">
         Ver todos los pagos →
       </a>

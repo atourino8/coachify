@@ -53,6 +53,15 @@
     reps: string;
     peso: string;
     descanso: number | null;
+    /**
+     * La nota que LEE EL CLIENTE debajo del ejercicio.
+     *
+     * Faltaba aquí, y no era solo que no se pudiera escribir desde la ficha:
+     * al guardar, el servidor reemplaza los items con lo que le llega, así que
+     * lo que no viajara en este tipo se BORRABA. El editor de la ficha era una
+     * trituradora de notas.
+     */
+    nota: string;
   };
 
   let diaAbierto = $state<string | null>(null);
@@ -79,7 +88,8 @@
       sets: it.sets,
       reps: it.reps,
       peso: it.peso,
-      descanso: it.descanso
+      descanso: it.descanso,
+      nota: it.nota
     }));
     originalDia = JSON.stringify(itemsDia);
     historialDia.limpiar();
@@ -161,7 +171,8 @@
         sets: 4,
         reps: '8-10',
         peso: '',
-        descanso: 90
+        descanso: 90,
+        nota: ''
       }))
     ];
   }
@@ -173,7 +184,8 @@
         sets: i.sets,
         reps_prescribed: i.reps,
         weight_prescribed: i.peso,
-        rest_seconds: i.descanso
+        rest_seconds: i.descanso,
+        notes: i.nota
       }))
     )
   );
@@ -357,6 +369,19 @@
               />
             </div>
           </div>
+
+          <div class="mt-2">
+            <label for="dn-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
+              Nota para el cliente
+            </label>
+            <input
+              id="dn-{item.key}"
+              type="text"
+              bind:value={item.nota}
+              placeholder="«Baja despacio, 3 segundos»"
+              class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
+            />
+          </div>
         </div>
       {/each}
 
@@ -365,13 +390,16 @@
           + Añadir ejercicio
         </button>
         <!-- Lo que este editor NO hace vive en la pantalla del día, y se dice
-             en vez de dejar que se busque: título, notas, reordenar y aplicar
-             una plantilla. -->
+             en vez de dejar que se busque: el título, las notas DEL DÍA —la
+             del cliente y la privada— y aplicar una plantilla. Reordenar sí se
+             hace aquí desde que se añadieron las flechas, y la nota de cada
+             ejercicio también; el enlace ya no puede prometer menos de lo que
+             hay ni más. -->
         <a
           href="/clients/{data.client.id}/workouts/{iso}"
           class="text-sm text-text-mute hover:text-text transition-colors"
         >
-          Abrir el día (título, notas, plantillas) →
+          Abrir el día (título, notas del día, plantillas) →
         </a>
 
         <div class="flex-1"></div>

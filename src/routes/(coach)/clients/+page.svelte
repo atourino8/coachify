@@ -1,5 +1,6 @@
 <script lang="ts">
   import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
+  import { normalizar } from '$lib/texto';
   import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
   import Avatar from '$lib/components/Avatar.svelte';
@@ -25,12 +26,6 @@
   // es lo único que el entrenador tiene cuando alguien le escribe desde una
   // dirección y no recuerda de quién era.
   let busqueda = $state('');
-  const normalizar = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-
   // ---- Vista ----
   //
   // La LISTA es la predeterminada la PRIMERA vez, no la rejilla, aunque el

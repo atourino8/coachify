@@ -16,6 +16,7 @@
    * ELECCIONES, no ejercicios distintos.
    */
   import type { Exercise } from '$lib/supabase/types';
+  import { normalizar } from '$lib/texto';
   import Icono from './Icono.svelte';
 
   interface Props {
@@ -33,12 +34,6 @@
   let busqueda = $state('');
   let grupo = $state('');
   let elegidos = $state<string[]>([]);
-
-  const normalizar = (s: string) =>
-    s
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
 
   /**
    * Los grupos de un ejercicio como texto suelto.
