@@ -8,6 +8,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { urlsDeAvatar } from '$lib/avatares.server';
+import { COOKIE_VISTA_CLIENTES, leerPreferencia } from '$lib/preferencias';
 import type { PageServerLoad, Actions } from './$types';
 
 type ClientRow = {
@@ -23,8 +24,14 @@ type ClientRow = {
   accepted: boolean;
 };
 
-export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+const VISTAS = ['lista', 'rejilla'] as const;
+
+export const load: PageServerLoad = async ({ cookies, locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
+
+  // Igual que en la biblioteca: la vista se lee en el servidor para que la
+  // primera pantalla ya salga como la dejó, sin cambiar delante de los ojos.
+  const vista = leerPreferencia(cookies.get(COOKIE_VISTA_CLIENTES), VISTAS, 'lista');
 
   const { data: profiles } = await supabase
     .from('profiles')
@@ -145,7 +152,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .order('name');
   const groups = (groupsRaw ?? []) as { id: string; name: string }[];
 
-  return { active, pending, groups };
+  return { active, pending, groups, vista };
 };
 
 // Envía (o reenvía) la invitación a un email, vinculando el cliente al coach.

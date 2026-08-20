@@ -25,8 +25,9 @@
     <h2 class="text-2xl font-semibold text-text">1. Resumen</h2>
     <p>
       Treno usa <strong class="text-text">únicamente cookies estrictamente necesarias</strong>
-      para que puedas iniciar sesión y seguir dentro mientras navegas. No usamos cookies de publicidad,
-      ni de analítica, ni de redes sociales, ni compartimos nada con terceros con fines comerciales.
+      para que puedas iniciar sesión y seguir dentro mientras navegas, y dos que recuerdan cómo prefieres
+      ver tus listados. No usamos cookies de publicidad, ni de analítica, ni de redes sociales, ni compartimos
+      nada con terceros con fines comerciales.
     </p>
     <p>
       Por eso <strong class="text-text">no verás un banner de cookies</strong>. La normativa
@@ -38,7 +39,8 @@
     <h2 class="text-2xl font-semibold text-text">2. Qué es una cookie</h2>
     <p>
       Un archivo pequeño que un sitio guarda en tu navegador para recordar algo entre una página y
-      la siguiente. En nuestro caso, lo único que recordamos es que ya has iniciado sesión.
+      la siguiente. En nuestro caso recordamos dos cosas: que ya has iniciado sesión y cómo
+      prefieres ver tus listados.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">3. Cookies que usamos</h2>
@@ -63,6 +65,17 @@
         </span>
         <span class="text-xs whitespace-nowrap">Sesión</span>
       </div>
+      <div class="row flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-4">
+        <span class="flex-1 min-w-0">
+          <span class="font-medium text-text block">Preferencias de vista</span>
+          <span class="text-sm">
+            Recuerdan si dejaste tu lista de clientes o tu biblioteca de ejercicios en modo lista o
+            en modo rejilla, para que al volver salga como la dejaste. Guardan solo esa palabra, no
+            identifican a nadie y caducan al año.
+          </span>
+        </span>
+        <span class="text-xs whitespace-nowrap">Preferencia · propia</span>
+      </div>
     </div>
 
     <h2 class="text-2xl font-semibold text-text">4. Lo que NO usamos</h2>
@@ -84,7 +97,8 @@
     <p>
       Puedes borrar o bloquear las cookies desde los ajustes de tu navegador. Ten en cuenta que si
       bloqueas las nuestras <strong class="text-text">no podrás iniciar sesión</strong>, porque son
-      justamente las que mantienen la sesión abierta.
+      justamente las que mantienen la sesión abierta. Las de preferencias sí puedes borrarlas sin
+      consecuencias: los listados volverán a salir en su vista inicial.
     </p>
 
     <h2 class="text-2xl font-semibold text-text">7. Cambios</h2>

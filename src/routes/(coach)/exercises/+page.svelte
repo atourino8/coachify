@@ -3,6 +3,7 @@
   import { SvelteSet } from 'svelte/reactivity';
   import Icono from '$lib/components/Icono.svelte';
   import Pastillas from '$lib/components/Pastillas.svelte';
+  import { COOKIE_VISTA_EJERCICIOS, guardarPreferencia } from '$lib/preferencias';
   import MenuFila from '$lib/components/MenuFila.svelte';
   import { untrack } from 'svelte';
   import { SEED_EXERCISES } from '$lib/seed-exercises';
@@ -83,9 +84,18 @@
   // de más para ver lo que le cabía en pantalla.
   const UMBRAL_REJILLA = 12;
   let panelFiltro: HTMLDetailsElement | undefined = $state();
+
+  // Manda lo que eligió la última vez; el tamaño de la biblioteca solo decide
+  // la PRIMERA. Una preferencia expresada gana siempre a una adivinada.
   let vista = $state<'grupos' | 'lista'>(
-    untrack(() => data.exercises.length) > UMBRAL_REJILLA ? 'grupos' : 'lista'
+    untrack(() => data.vistaGuardada) ??
+      (untrack(() => data.exercises.length) > UMBRAL_REJILLA ? 'grupos' : 'lista')
   );
+
+  function cambiarVista(nueva: 'grupos' | 'lista') {
+    vista = nueva;
+    guardarPreferencia(COOKIE_VISTA_EJERCICIOS, nueva);
+  }
 
   // Cuenta por grupo. Un ejercicio con varios grupos cuenta en CADA uno, así
   // que la suma de las tarjetas es mayor que el total. Se avisa en pantalla en
@@ -312,7 +322,7 @@
       >
         <button
           onclick={() => {
-            vista = 'grupos';
+            cambiarVista('grupos');
             filterGroup = '';
           }}
           aria-pressed={vista === 'grupos'}
@@ -324,7 +334,7 @@
           Grupos
         </button>
         <button
-          onclick={() => (vista = 'lista')}
+          onclick={() => cambiarVista('lista')}
           aria-pressed={vista === 'lista'}
           class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
                    transition-colors {vista === 'lista'

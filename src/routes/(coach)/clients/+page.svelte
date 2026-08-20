@@ -3,6 +3,7 @@
   import { enhance } from '$app/forms';
   import Avatar from '$lib/components/Avatar.svelte';
   import Icono from '$lib/components/Icono.svelte';
+  import { COOKIE_VISTA_CLIENTES, guardarPreferencia } from '$lib/preferencias';
   import { page } from '$app/state';
   import { paymentStatus } from '$lib/supabase/types';
   import { todayISOLocal } from '$lib/week';
@@ -31,12 +32,20 @@
 
   // ---- Vista ----
   //
-  // La LISTA es la predeterminada, no la rejilla, aunque el wireframe enseñe
-  // la rejilla: caben doce o catorce clientes por pantalla frente a siete. Con
-  // quince clientes la rejilla es más bonita; con sesenta, es desplazamiento.
-  // Quien la prefiera la elige, y esa es justo la razón de que haya
-  // conmutador.
-  let vista = $state<'lista' | 'rejilla'>('lista');
+  // La LISTA es la predeterminada la PRIMERA vez, no la rejilla, aunque el
+  // wireframe enseñe la rejilla: caben doce o catorce clientes por pantalla
+  // frente a siete. Con quince clientes la rejilla es más bonita; con sesenta,
+  // es desplazamiento.
+  //
+  // A partir de ahí manda lo que eligió: la preferencia viaja en una cookie y
+  // la lee el servidor, así que al recargar ya sale como la dejó.
+  // svelte-ignore state_referenced_locally
+  let vista = $state<'lista' | 'rejilla'>(data.vista);
+
+  function cambiarVista(nueva: 'lista' | 'rejilla') {
+    vista = nueva;
+    guardarPreferencia(COOKIE_VISTA_CLIENTES, nueva);
+  }
   const etiquetasEnUso = $derived(
     [...new Set(data.active.flatMap((c) => c.tags ?? []))].sort((a, b) =>
       (data.vocabulario.client[a] ?? a).localeCompare(data.vocabulario.client[b] ?? b)
@@ -253,7 +262,7 @@
           aria-label="Vista"
         >
           <button
-            onclick={() => (vista = 'lista')}
+            onclick={() => cambiarVista('lista')}
             aria-pressed={vista === 'lista'}
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors {vista ===
             'lista'
@@ -264,7 +273,7 @@
             Lista
           </button>
           <button
-            onclick={() => (vista = 'rejilla')}
+            onclick={() => cambiarVista('rejilla')}
             aria-pressed={vista === 'rejilla'}
             class="flex items-center gap-1.5 px-3 py-1.5 text-sm border-l border-line
                    transition-colors {vista === 'rejilla'

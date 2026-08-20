@@ -4,6 +4,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { SEED_EXERCISES } from '$lib/seed-exercises';
 import { BUCKET } from '$lib/technique';
 import { BUCKET_COACH } from '$lib/coach-media';
+import { COOKIE_VISTA_EJERCICIOS, leerPreferencia } from '$lib/preferencias';
 import type { PageServerLoad, Actions } from './$types';
 
 /** Campos que tiene sentido cambiar a varios ejercicios de golpe. */
@@ -25,8 +26,15 @@ function idsDelFormulario(fd: FormData): string[] {
   return [...new Set(ids)].slice(0, 200);
 }
 
-export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+const VISTAS = ['grupos', 'lista'] as const;
+
+export const load: PageServerLoad = async ({ cookies, locals: { supabase, user } }) => {
   if (!user) redirect(303, '/login');
+
+  // La vista elegida la última vez. Se lee AQUÍ y no en el navegador para que
+  // la primera pantalla ya salga bien: leerla al arrancar el JavaScript sería
+  // pintar la lista y cambiarla a rejilla delante de los ojos.
+  const vistaGuardada = cookies.get(COOKIE_VISTA_EJERCICIOS);
 
   const { data: exercises, error } = await supabase
     .from('exercises')
@@ -37,10 +45,13 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
   if (error) {
     console.error('Error cargando ejercicios:', error);
-    return { exercises: [] };
+    return { exercises: [], vistaGuardada: null };
   }
 
-  return { exercises: exercises ?? [] };
+  return {
+    exercises: exercises ?? [],
+    vistaGuardada: vistaGuardada ? leerPreferencia(vistaGuardada, VISTAS, 'lista') : null
+  };
 };
 
 export const actions: Actions = {
