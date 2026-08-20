@@ -274,3 +274,29 @@ notas aparecieron cuatro cosas reales y seis cosméticas. Las diez, arregladas.
 - La barra Deshacer/Cancelar/Guardar del editor del día vive **dentro** del
   día desplegado, no pegada al fondo de la pantalla: hay un día abierto entre
   catorce filas, y una barra fija abajo no diría a cuál pertenece.
+
+---
+
+## Cuarta revisión (20 de agosto) · la pantalla que no miré
+
+Toni: «en la parte de nuevo entrenamiento no veo nada del wireframe nuevo».
+
+Tenía razón, y el fallo es de método. **Hay TRES pantallas que montan
+ejercicios**, no dos:
+
+1. El editor de entrenamientos, `/templates/[id]` — hecho en la tanda de la
+   pantalla 9.
+2. El editor en línea del día, dentro de la ficha — hecho en la pantalla 15.
+3. **El constructor del día, `/clients/[id]/workouts/[date]`** — el que se
+   abre al pulsar un día sin entreno o «crear entreno desde cero» desde la
+   agenda. Ese se quedó como estaba: biblioteca en un panel lateral, sin
+   deshacer, sin barra inferior y con «Reps» y «Desc. (s)».
+
+Yo repasé las quince imágenes una por una, y por eso no lo vi: **el wireframe
+no dibuja esa pantalla**. Repasar contra el dibujo encuentra lo que el dibujo
+enseña; no encuentra las pantallas que hacen el mismo trabajo y no salen
+dibujadas.
+
+Ahora las tres comparten el modal, el historial, las mismas palabras y la
+misma papelera. Comprobado con una tabla que cruza los diez rasgos por las
+tres pantallas, en vez de mirarlas de una en una.

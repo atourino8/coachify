@@ -2,6 +2,9 @@
   import { dndzone, type DndEvent } from 'svelte-dnd-action';
   import { flip } from 'svelte/animate';
   import { enhance } from '$app/forms';
+  import { Historial } from '$lib/historial.svelte';
+  import ModalEjercicios from '$lib/components/ModalEjercicios.svelte';
+  import Icono from '$lib/components/Icono.svelte';
   import { formatHumanDate, todayISOLocal } from '$lib/week';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import type { Exercise, WorkoutItemWithRelations } from '$lib/supabase/types';
@@ -43,8 +46,6 @@
   // svelte-ignore state_referenced_locally
   let notes = $state(data.workout?.notes ?? '');
   let saving = $state(false);
-  let filterText = $state('');
-  let filterMuscle = $state<string>('');
   let selectedTemplate = $state('');
 
   // ---- Consultar vs. editar -------------------------------------------------
@@ -89,34 +90,34 @@
   }
 
   // Biblioteca filtrada
-  const filteredExercises = $derived(
-    data.exercises.filter((ex) => {
-      if (filterText && !ex.name.toLowerCase().includes(filterText.toLowerCase())) return false;
-      // "contiene", no "es igual": desde la migración 0016 un ejercicio puede
-      // trabajar varios grupos, y con la comparación antigua un press de banca
-      // marcado como pecho+hombro no salía al filtrar por hombro.
-      if (filterMuscle && !(ex.muscle_groups ?? []).includes(filterMuscle)) return false;
-      return true;
-    })
-  );
 
-  // Drag&drop SOLO para reordenar dentro del día (la biblioteca añade con "+").
-  function handleDayConsider(e: CustomEvent<DndEvent<DayItem>>) {
-    dayItems = e.detail.items;
-  }
-  function handleDayFinalize(e: CustomEvent<DndEvent<DayItem>>) {
-    dayItems = e.detail.items;
-  }
+  // ---- Deshacer paso a paso ----
+  //
+  // La MISMA pila que el editor de entrenamientos y que el editor en línea de
+  // la ficha. Esta pantalla se quedó fuera de la primera tanda y era la que
+  // más lo necesitaba: es donde se monta un día desde cero.
+  const historial = new Historial<DayItem[]>();
 
-  function removeItem(id: string) {
-    dayItems = dayItems.filter((it) => it.id !== id);
+  function antesDeCambiar() {
+    historial.marcar(dayItems);
+  }
+  function alSalirDelCampo() {
+    historial.olvidarSiIgual(dayItems);
+  }
+  function deshacer() {
+    const anterior = historial.deshacer();
+    if (anterior) dayItems = anterior;
   }
 
-  function addExercise(ex: Exercise) {
-    // Atajo: añade al final por tap (alternativa a drag&drop, útil en móvil)
+  let modalAbierto = $state(false);
+
+  /** Añade los elegidos de golpe. Un solo paso de deshacer para los seis. */
+  function anadirVarios(elegidos: Exercise[]) {
+    if (elegidos.length === 0) return;
+    antesDeCambiar();
     dayItems = [
       ...dayItems,
-      {
+      ...elegidos.map((ex) => ({
         id: crypto.randomUUID(),
         exercise: ex,
         sets: 4,
@@ -124,8 +125,25 @@
         weight_prescribed: '',
         rest_seconds: 90,
         notes: ''
-      }
+      }))
     ];
+  }
+
+  // Drag&drop SOLO para reordenar dentro del día.
+  function handleDayConsider(e: CustomEvent<DndEvent<DayItem>>) {
+    dayItems = e.detail.items;
+  }
+  function handleDayFinalize(e: CustomEvent<DndEvent<DayItem>>) {
+    // La instantánea se toma al SOLTAR y no al empezar a arrastrar: mientras
+    // arrastras el orden cambia treinta veces, y guardarlas todas llenaría la
+    // pila de pasos intermedios que nadie quiere deshacer uno a uno.
+    antesDeCambiar();
+    dayItems = e.detail.items;
+  }
+
+  function removeItem(id: string) {
+    antesDeCambiar();
+    dayItems = dayItems.filter((it) => it.id !== id);
   }
 
   // Para el form submit: serializamos los items
@@ -167,25 +185,6 @@
         <p class="text-xs text-text-mute mt-1">Día pasado</p>
       {/if}
     </div>
-    <form
-      method="POST"
-      action="?/save"
-      class={editando ? '' : 'hidden'}
-      use:enhance={() => {
-        saving = true;
-        return async ({ update }) => {
-          await update();
-          saving = false;
-        };
-      }}
-    >
-      <input type="hidden" name="title" value={title} />
-      <input type="hidden" name="notes" value={notes} />
-      <input type="hidden" name="items" value={itemsJSON()} />
-      <button type="submit" disabled={saving} class="btn-primary">
-        {saving ? 'Guardando…' : 'Guardar entreno'}
-      </button>
-    </form>
   </div>
 
   {#if form?.success}
@@ -317,83 +316,23 @@
     {/if}
 
     <!-- Cuerpo: biblioteca + día.
-       En móvil el DÍA va primero: es el sujeto de la pantalla. Con la
-       biblioteca delante había que pasar 48 ejercicios para ver el entreno
-       que estabas montando. -->
-    <div class="grid lg:grid-cols-[1fr_1.5fr] gap-6">
-      <!-- BIBLIOTECA -->
-      <aside class="card space-y-4 order-2 lg:order-1">
-        <div>
-          <h2 class="text-sm uppercase tracking-wider text-text-mute mb-3">Biblioteca</h2>
-          <div class="relative mb-2">
-            <svg
-              class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-mute pointer-events-none"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="7" /><line
-                x1="21"
-                y1="21"
-                x2="16.65"
-                y2="16.65"
-                stroke-linecap="round"
-              />
-            </svg>
-            <input
-              type="search"
-              bind:value={filterText}
-              placeholder="Buscar ejercicio..."
-              class="w-full pl-9 pr-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <select
-            bind:value={filterMuscle}
-            class="w-full px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-          >
-            <option value="">Todos los grupos</option>
-            {#each Object.entries(muscleLabels) as [v, l]}
-              <option value={v}>{l}</option>
-            {/each}
-          </select>
-        </div>
-
-        {#if filteredExercises.length === 0}
-          <div class="text-center py-10 text-sm text-text-mute">
-            {data.exercises.length === 0
-              ? 'No tienes ejercicios. Crea algunos en la biblioteca.'
-              : 'Ningún ejercicio coincide.'}
-          </div>
-        {:else}
-          <div class="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-            {#each filteredExercises as ex (ex.id)}
-              <button
-                type="button"
-                onclick={() => addExercise(ex)}
-                class="w-full text-left bg-bg border border-text-mute/10 rounded-md p-3 flex items-center gap-3
-                     hover:border-primary/40 transition-colors group"
-                title="Añadir al día"
-              >
-                <div class="flex-1 min-w-0">
-                  <div class="font-medium text-sm truncate">{ex.name}</div>
-                  {#if ex.muscle_group}
-                    <div class="text-xs text-text-mute">{muscleLabels[ex.muscle_group]}</div>
-                  {/if}
-                </div>
-                <span class="text-primary group-hover:text-accent text-lg font-bold">+</span>
-              </button>
-            {/each}
-          </div>
-        {/if}
-      </aside>
-
+       La biblioteca se abre en un modal, como en el editor de entrenamientos:
+       era un panel al lado y en un móvil acababa debajo del todo, así que
+       había que pasar cuarenta y ocho ejercicios para ver el día que estabas
+       montando. -->
+    <div class="space-y-6">
       <!-- DÍA -->
-      <section class="card space-y-4 min-h-[400px] order-1 lg:order-2">
-        <h2 class="text-sm uppercase tracking-wider text-text-mute">
-          Ejercicios del día · {dayItems.length}
-        </h2>
+      <section class="card space-y-4 min-h-[400px]">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-sm uppercase tracking-wider text-text-mute">
+            Ejercicios - {dayItems.length}
+          </h2>
+          {#if editando}
+            <button type="button" onclick={() => (modalAbierto = true)} class="action-primary">
+              + Añadir ejercicio
+            </button>
+          {/if}
+        </div>
 
         <div
           class="space-y-3 min-h-[300px] rounded-md transition-colors {dayItems.length === 0
@@ -410,8 +349,12 @@
           onfinalize={handleDayFinalize}
         >
           {#each dayItems as item, i (item.id)}
+            <!-- Igual que en las otras dos pantallas: una instantánea al
+                 entrar en un campo y se descarta al salir si nada cambió. -->
             <div
               animate:flip={{ duration: 200 }}
+              onfocusin={antesDeCambiar}
+              onfocusout={alSalirDelCampo}
               class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
             >
               <div class="flex items-start gap-3">
@@ -427,10 +370,10 @@
                 <button
                   type="button"
                   onclick={() => removeItem(item.id)}
-                  class="text-text-mute hover:text-danger text-xl"
-                  title="Quitar"
+                  class="text-text-mute hover:text-danger flex-shrink-0"
+                  aria-label="Quitar {item.exercise.name}"
                 >
-                  ×
+                  <Icono nombre="papelera" class="w-4 h-4" />
                 </button>
               </div>
 
@@ -452,7 +395,7 @@
                 <div>
                   <label
                     for="reps-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Reps</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Repeticiones</label
                   >
                   <input
                     id="reps-{item.id}"
@@ -478,7 +421,7 @@
                 <div>
                   <label
                     for="rest-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Desc. (s)</label
+                    class="text-3xs uppercase tracking-wider text-text-mute">Descanso</label
                   >
                   <input
                     id="rest-{item.id}"
@@ -523,7 +466,65 @@
       </button>
     </div>
   {/if}
+
+  {#if editando}
+    <!--
+      Barra de acciones pegada abajo, la misma que el editor de entrenamientos.
+
+      `sticky` y no `fixed`: pegada al viewport taparía el último ejercicio
+      para siempre, y con `sticky` el contenido termina por encima.
+    -->
+    <div
+      class="sticky bottom-0 -mx-4 px-4 py-3 bg-surface/95 border-t border-line
+             flex flex-wrap items-center gap-3 backdrop-blur-sm"
+    >
+      <button
+        type="button"
+        onclick={deshacer}
+        disabled={!historial.puedeDeshacer}
+        class="action-neutral disabled:opacity-40 disabled:cursor-not-allowed"
+        title={historial.puedeDeshacer
+          ? 'Deshacer el último cambio en los ejercicios'
+          : 'No hay nada que deshacer'}
+      >
+        Deshacer <span aria-hidden="true">↩</span>
+      </button>
+
+      <div class="flex-1"></div>
+
+      <a href="/clients/{data.client.id}" class="action-neutral">Cancelar</a>
+
+      <form
+        method="POST"
+        action="?/save"
+        use:enhance={() => {
+          saving = true;
+          return async ({ update }) => {
+            await update();
+            saving = false;
+            // Lo guardado ya no se deshace desde aquí: el botón no debe
+            // ofrecer volver a un estado anterior a lo que está en la base.
+            historial.limpiar();
+          };
+        }}
+      >
+        <input type="hidden" name="title" value={title} />
+        <input type="hidden" name="notes" value={notes} />
+        <input type="hidden" name="items" value={itemsJSON()} />
+        <button type="submit" disabled={saving} class="btn-primary py-2 px-5">
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </form>
+    </div>
+  {/if}
 </div>
+
+<ModalEjercicios
+  bind:abierto={modalAbierto}
+  ejercicios={data.exercises}
+  etiquetas={muscleLabels}
+  onanadir={anadirVarios}
+/>
 
 <ConfirmModal
   bind:open={confirmTpl}
