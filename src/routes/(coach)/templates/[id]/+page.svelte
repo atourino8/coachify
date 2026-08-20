@@ -5,6 +5,7 @@
   import { Historial } from '$lib/historial.svelte';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import ModalEjercicios from '$lib/components/ModalEjercicios.svelte';
+  import Icono from '$lib/components/Icono.svelte';
   import type { Exercise } from '$lib/supabase/types';
 
   let { data, form } = $props();
@@ -306,7 +307,7 @@
     <section class="card space-y-4 min-h-[300px]">
       <div class="flex items-center justify-between gap-3">
         <h2 class="text-sm uppercase tracking-wider text-text-mute">
-          Ejercicios · {items.length}
+          Ejercicios - {items.length}
         </h2>
         <div class="flex items-center gap-3">
           {#if items.length > 1}
@@ -396,8 +397,10 @@
                 type="button"
                 onclick={() => removeItem(item.id)}
                 aria-label="Quitar ejercicio"
-                class="text-text-mute hover:text-danger text-xl leading-none">×</button
+                class="text-text-mute hover:text-danger flex-shrink-0"
               >
+                <Icono nombre="papelera" class="w-4 h-4" />
+              </button>
             </div>
             {#if !plegados.has(item.id)}
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -416,7 +419,7 @@
                 </div>
                 <div>
                   <label for="r-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                    >Reps</label
+                    >Repeticiones</label
                   >
                   <input
                     id="r-{item.id}"
@@ -440,7 +443,7 @@
                 </div>
                 <div>
                   <label for="d-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                    >Desc. (s)</label
+                    >Descanso</label
                   >
                   <input
                     id="d-{item.id}"

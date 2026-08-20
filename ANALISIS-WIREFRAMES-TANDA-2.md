@@ -231,3 +231,46 @@ Dos reglas que conviene fijar antes de escribirlo:
    una vez borra el «0» y parece roto.
 2. **El botón se apaga cuando no queda nada que deshacer.** Un «Deshacer» que
    siempre se puede pulsar y a veces no hace nada es peor que no tenerlo.
+
+---
+
+## Tercera revisión (20 de agosto) · lo que encontré mirando otra vez
+
+Dije que estaban las quince. Repasando **contra las imágenes** y no contra mis
+notas aparecieron cuatro cosas reales y seis cosméticas. Las diez, arregladas.
+
+### Reales
+
+1. **Reordenar en el editor del día.** El wireframe 15 pone las mismas flechas
+   `^ v` que el 9 en cada tarjeta. Yo las leí como un acordeón y monté el
+   acordeón, pero en el editor del día no había NI acordeón ni reordenar. Un
+   día se monta en un orden que importa —lo pesado antes de fallar— y sin
+   reordenar hay que borrar y volver a añadir.
+2. **El grupo bajo el nombre en la ficha.** Estaba en la lista de clientes y
+   no en la ficha, y el wireframe lo pone en las dos.
+3. **Apellidos era opcional** y el wireframe lo marca con asterisco.
+4. **El buscador de Entrenamientos decía «Buscar ejercicios».** Eso es un
+   descuido del wireframe —copió el campo de la pestaña de al lado— y yo lo
+   copié literal. Copiar el error no es fidelidad.
+
+### Cosméticas
+
+- «Reps» y «Desc. (s)» → **«Repeticiones»** y **«Descanso»**. Las abrevié yo
+  para ahorrar ancho; en dos columnas caben enteras y son las palabras del
+  diseñador.
+- «Ejercicios · 4» → **«Ejercicios - 4»**.
+- La × de quitar → **papelera**, que es lo que dibuja, en las dos pantallas.
+
+### Lo que sigue distinto a propósito
+
+- Los ✓ y ✕ de las peticiones van **en horizontal** y el wireframe los apila.
+  Apilados son dos objetivos de pulgar de 24 px uno encima de otro, que es
+  justo cómo se acepta una cita queriendo rechazarla.
+- El separador de avisos dice **«Ya vistos (3)»** y no «Notificaciones
+  leídas»: el número dice cuántas hay sin abrir nada.
+- El grupo al invitar son un desplegable y un campo, no **dos botones
+  grandes**. Los dos botones llevan a un segundo paso —elegir de una lista, o
+  escribir— y aquí caben los dos a la vez.
+- La barra Deshacer/Cancelar/Guardar del editor del día vive **dentro** del
+  día desplegado, no pegada al fondo de la pantalla: hay un día abierto entre
+  catorce filas, y una barra fija abajo no diría a cuál pertenece.

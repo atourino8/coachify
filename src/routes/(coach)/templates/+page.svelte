@@ -167,7 +167,7 @@
           id="buscar-tpl"
           type="search"
           bind:value={busqueda}
-          placeholder="Buscar ejercicios"
+          placeholder="Buscar entrenamientos"
           class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
                  focus:outline-none focus:border-accent"
         />

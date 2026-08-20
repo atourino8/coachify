@@ -45,7 +45,8 @@
     filtro: 'M3 5h18l-7 8v6l-4 2v-8z',
     salir: 'M15 17l5-5-5-5M20 12H9M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5',
     video: 'M10 8.5v7l6-3.5zM3 5.5h18v13H3z',
-    buscar: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M21 21l-5-5'
+    buscar: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M21 21l-5-5',
+    papelera: 'M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3'
   } as const;
 </script>
 

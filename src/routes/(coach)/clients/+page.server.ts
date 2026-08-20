@@ -206,7 +206,12 @@ export const actions: Actions = {
     // recogidos en el orden correcto.
     const full_name = [nombre, apellidos].filter(Boolean).join(' ');
 
-    if (!email || !nombre) return fail(400, { error: 'El nombre y el correo son obligatorios.' });
+    // Los tres, como marca el wireframe con el asterisco. Y se comprueba
+    // aquí y no solo con el `required` del formulario: el `required` es una
+    // ayuda del navegador, no una validación.
+    if (!email || !nombre || !apellidos) {
+      return fail(400, { error: 'El nombre, los apellidos y el correo son obligatorios.' });
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       return fail(400, { error: 'Ese correo no tiene buena pinta. Revísalo.' });
     }

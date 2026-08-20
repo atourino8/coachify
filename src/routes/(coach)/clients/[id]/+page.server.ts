@@ -411,6 +411,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   const faltas = (await faltasPorCliente(supabase, user.id, [params.id])).get(params.id) ?? 0;
 
+  // Su grupo, para la cabecera (wireframe 15). Igual que en la lista: puede
+  // estar en varios y solo cabe uno, así que se enseña el primero por orden
+  // alfabético, que al menos es estable entre recargas.
+  const { data: pertenece } = await supabase
+    .from('client_group_members')
+    .select('client_groups!inner(name, coach_id)')
+    .eq('client_id', params.id);
+  const grupo =
+    ((pertenece ?? []) as unknown as { client_groups: { name: string; coach_id: string } | null }[])
+      .filter((p) => p.client_groups?.coach_id === user.id)
+      .map((p) => p.client_groups!.name)
+      .sort((a, b) => a.localeCompare(b))[0] ?? null;
+
   // La biblioteca, para el modal de añadir ejercicios del editor en línea.
   // Solo id, nombre y grupos: lo demás —vídeo, descripción, material— no se
   // usa para elegir, y son cincuenta filas que viajan en cada carga.
@@ -423,6 +436,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase, us
 
   return {
     client,
+    grupo,
     exercises: (bibliotecaRaw ?? []) as unknown as Exercise[],
     // La cara del cliente, firmada. El cubo es privado (migración 0024).
     avatar: await urlDeAvatar(supabase, (client as { avatar_path: string | null }).avatar_path),

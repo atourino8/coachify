@@ -25,6 +25,7 @@
 
   import { Historial } from '$lib/historial.svelte';
   import ModalEjercicios from '$lib/components/ModalEjercicios.svelte';
+  import Icono from '$lib/components/Icono.svelte';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import type { Exercise } from '$lib/supabase/types';
 
@@ -124,6 +125,23 @@
   function deshacerDia() {
     const anterior = historialDia.deshacer();
     if (anterior) itemsDia = anterior;
+  }
+
+  /**
+   * Subir o bajar un ejercicio.
+   *
+   * Estaba en el editor de entrenamientos y NO aquí, y el wireframe 15 pone
+   * las mismas flechas en las dos pantallas. Un día se monta con los
+   * ejercicios en un orden que importa —lo pesado antes de fallar— y no poder
+   * cambiarlo obliga a borrar y volver a añadir.
+   */
+  function moverEnDia(i: number, dir: -1 | 1) {
+    const j = i + dir;
+    if (j < 0 || j >= itemsDia.length) return;
+    antesDeCambiarDia();
+    const copia = [...itemsDia];
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+    itemsDia = copia;
   }
 
   function quitarDelDia(key: string) {
@@ -244,7 +262,7 @@
         </p>
       {/if}
 
-      {#each itemsDia as item (item.key)}
+      {#each itemsDia as item, i (item.key)}
         <!-- onfocusin/onfocusout en la fila: una instantánea al entrar y se
              descarta al salir si no cambió nada. Un paso por cambio. -->
         <div
@@ -253,14 +271,37 @@
           class="bg-bg border border-text-mute/20 rounded-md p-3 space-y-2"
         >
           <div class="flex items-start gap-2">
+            <!-- Las flechas a la izquierda, como en el wireframe. Van pegadas
+                 una encima de otra y no en línea: ocupan la mitad y se
+                 entienden igual. -->
+            <div class="flex flex-col gap-0.5 pt-0.5 flex-shrink-0">
+              <button
+                type="button"
+                onclick={() => moverEnDia(i, -1)}
+                disabled={i === 0}
+                aria-label="Subir {item.nombre}"
+                class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none"
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                onclick={() => moverEnDia(i, 1)}
+                disabled={i === itemsDia.length - 1}
+                aria-label="Bajar {item.nombre}"
+                class="text-text-mute hover:text-primary disabled:opacity-30 text-xs leading-none"
+              >
+                ▼
+              </button>
+            </div>
             <span class="flex-1 min-w-0 font-medium text-sm truncate">{item.nombre}</span>
             <button
               type="button"
               onclick={() => quitarDelDia(item.key)}
               aria-label="Quitar {item.nombre}"
-              class="text-text-mute hover:text-danger text-lg leading-none flex-shrink-0"
+              class="text-text-mute hover:text-danger flex-shrink-0"
             >
-              ×
+              <Icono nombre="papelera" class="w-4 h-4" />
             </button>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -279,7 +320,7 @@
             </div>
             <div>
               <label for="dr-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
-                Reps
+                Repeticiones
               </label>
               <input
                 id="dr-{item.key}"
@@ -303,7 +344,7 @@
             </div>
             <div>
               <label for="dd-{item.key}" class="text-3xs uppercase tracking-wider text-text-mute">
-                Desc. (s)
+                Descanso
               </label>
               <input
                 id="dd-{item.key}"

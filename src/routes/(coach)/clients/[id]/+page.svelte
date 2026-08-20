@@ -78,9 +78,15 @@
           <Avatar url={data.avatar} nombre={data.client.full_name} tamano="lg" />
           <span class="sr-only">Cambiar la foto de {data.client.full_name}</span>
         </button>
-        <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight">
-          {data.client.full_name}
-        </h1>
+        <div class="min-w-0">
+          <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight truncate">
+            {data.client.full_name}
+          </h1>
+          <!-- El grupo bajo el nombre, como en el wireframe y como en la
+               lista. «Individual» y no un hueco: en la lista se decidió así y
+               dos pantallas que enseñan lo mismo no pueden decirlo distinto. -->
+          <p class="text-sm text-text-mute truncate">{data.grupo ?? 'Individual'}</p>
+        </div>
       </div>
       <p class="text-text-mute text-sm mt-1">
         Cliente desde {fechaCorta(data.client.created_at)}
