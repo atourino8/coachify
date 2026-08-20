@@ -197,7 +197,7 @@
   {/if}
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line overflow-x-auto">
+  <div class="flex gap-1 border-b border-line fila-desplazable">
     <button
       onclick={() => (tab = 'active')}
       class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors
@@ -289,7 +289,7 @@
       {#if etiquetasEnUso.length > 0}
         <!-- La fila de filtros solo existe si hay algo que filtrar: con cero
              etiquetas puestas sería una barra vacía en todas las visitas. -->
-        <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        <div class="flex gap-2 fila-desplazable pb-1 -mx-1 px-1">
           <button
             onclick={() => (filtroEtiqueta = '')}
             aria-pressed={filtroEtiqueta === ''}
@@ -513,7 +513,7 @@
         </div>
 
         <!-- Selector de modo -->
-        <div class="flex gap-1 border-b border-line overflow-x-auto">
+        <div class="flex gap-1 border-b border-line fila-desplazable">
           <button
             type="button"
             onclick={() => (inviteMode = 'one')}

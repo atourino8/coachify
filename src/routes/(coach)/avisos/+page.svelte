@@ -42,7 +42,7 @@
 
   <!-- Pestañas con el número al lado. El número es lo SIN VER, no el total:
        lo que ya has mirado no debería seguir pidiéndote atención. -->
-  <div class="flex gap-1 border-b border-line overflow-x-auto">
+  <div class="flex gap-1 border-b border-line fila-desplazable">
     {#each data.porTipo as g (g.tipo)}
       <button
         onclick={() => (activa = g.tipo)}

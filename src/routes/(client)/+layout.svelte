@@ -76,7 +76,7 @@
         </div>
       </div>
 
-      <nav class="flex sm:hidden items-center gap-5 text-sm pt-2.5 overflow-x-auto">
+      <nav class="flex sm:hidden items-center gap-5 text-sm pt-2.5 fila-desplazable">
         {@render navLinks()}
       </nav>
     </div>

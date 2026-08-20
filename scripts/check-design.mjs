@@ -61,6 +61,13 @@ const REGLAS = [
     soloEn: ['.svelte']
   },
   {
+    id: 'scroll-horizontal-a-pelo',
+    patron: /\boverflow-x-auto\b|\boverflow-x-scroll\b/g,
+    mensaje:
+      'Usa la clase .fila-desplazable. `overflow-x: auto` obliga al eje vertical a valer `auto` también, y aparece un scrollbar vertical de dos flechas en una fila de cuarenta píxeles (se ve en Firefox y en Windows con scrollbars clásicos).',
+    soloEn: ['.svelte']
+  },
+  {
     id: 'valor-inventado',
     patron: new RegExp(`\\b(?:${ARBITRARIO_PROHIBIDO})-\\[[^\\]]+\\]`, 'g'),
     mensaje:

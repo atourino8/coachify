@@ -166,7 +166,7 @@
   <CobroRapido {data} {form} bind:abierto={registrandoCobro} />
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line overflow-x-auto">
+  <div class="flex gap-1 border-b border-line fila-desplazable">
     {#each [{ v: 'entrenos', l: 'Calendario' }, { v: 'ficha', l: 'Ficha' }, { v: 'progreso', l: 'Progreso' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}

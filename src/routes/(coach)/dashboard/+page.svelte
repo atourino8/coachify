@@ -64,7 +64,9 @@
       <!-- Tira horizontal, como en el wireframe. La tarjeta cortada del borde
            es lo que indica que hay más: sin ella parecería que se acaban ahí.
            snap-x para que el arrastre no deje una tarjeta a medias. -->
-      <div class="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div
+        class="flex gap-3 fila-desplazable pb-1 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
+      >
         {#each data.proximas as s (s.id)}
           <a
             href="/clients/{s.clientId}"

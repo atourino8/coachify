@@ -62,7 +62,7 @@
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
-  <div class="flex gap-1 border-b border-line overflow-x-auto">
+  <div class="flex gap-1 border-b border-line fila-desplazable">
     <a
       href="/exercises"
       class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-transparent text-text-mute hover:text-text"

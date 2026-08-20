@@ -140,6 +140,29 @@ algo que el texto no dice*.
 - Líneas de acento bajo los títulos.
 - Degradados, en cualquier sitio.
 - Colores literales en las plantillas: siempre tokens.
+- `overflow-x-auto` suelto: va la clase `.fila-desplazable` (ver 3.10).
+
+### 3.10 Las filas que se desplazan en horizontal
+
+Pestañas, pastillas de filtro, la tira de próximas sesiones. Todas llevan
+`.fila-desplazable` y ninguna `overflow-x-auto` a pelo.
+
+**El motivo lo encontró Toni en una captura.** `overflow-x: auto` obliga al eje
+vertical a valer `auto` también —lo dice la especificación: cuando un eje deja
+de ser `visible`, el otro pasa de `visible` a `auto`—. Y como el contenido de
+esas filas sobresale un pelo por la insignia del contador o el anillo de foco,
+el navegador dibuja un **scrollbar vertical de dos flechas dentro de una fila
+de cuarenta píxeles**.
+
+En Chrome no se ve, porque esconde los scrollbars hasta que te acercas. En
+Firefox, y en Windows con los scrollbars clásicos, se ve siempre: dos flechitas
+flotando a la derecha de las pestañas, como en la captura que las descubrió.
+
+**No se arregla con `overflow-y: hidden`**, aunque sea lo primero que uno
+escribe: eso quita el scrollbar pero recorta lo que sobresale, que es justo la
+insignia y el anillo de foco. Lo que hace la clase es esconder el scrollbar y
+dejar el desplazamiento intacto: sigue funcionando con el dedo, con la rueda y
+con el tabulador.
 
 ---
 
