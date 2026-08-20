@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
   /**
    * Ficha del cliente.
    *
@@ -166,7 +167,7 @@
   <CobroRapido {data} {form} bind:abierto={registrandoCobro} />
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line fila-desplazable">
+  <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Secciones del cliente">
     {#each [{ v: 'entrenos', l: 'Calendario' }, { v: 'ficha', l: 'Ficha' }, { v: 'progreso', l: 'Progreso' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}
@@ -183,7 +184,7 @@
         {/if}
       </button>
     {/each}
-  </div>
+  </FilaDesplazable>
 
   {#if form?.error}
     <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">

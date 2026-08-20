@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
   import Avatar from '$lib/components/Avatar.svelte';
   import { page } from '$app/state';
 
@@ -76,9 +77,12 @@
         </div>
       </div>
 
-      <nav class="flex sm:hidden items-center gap-5 text-sm pt-2.5 fila-desplazable">
+      <FilaDesplazable
+        class="flex sm:hidden items-center gap-5 text-sm pt-2.5"
+        etiqueta="Navegación"
+      >
         {@render navLinks()}
-      </nav>
+      </FilaDesplazable>
     </div>
   </header>
 

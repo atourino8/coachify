@@ -211,6 +211,19 @@ summary::-webkit-details-marker {
     display: none; /* Chrome, Safari */
   }
 
+  /*
+    La flecha que asoma en el borde de una fila desplazable.
+
+    Fondo sólido y no transparente: se sienta ENCIMA de una pestaña o una
+    pastilla, y translúcida dejaría dos textos superpuestos. El borde la
+    separa de lo que tapa.
+  */
+  .flecha-fila {
+    @apply absolute top-1/2 -translate-y-1/2 z-10 grid place-items-center
+           w-7 h-7 rounded-full bg-surface border border-line text-text-mute
+           shadow-sm transition-colors hover:text-text hover:border-line-strong;
+  }
+
   .row-link {
     @apply row hover:bg-surface-2/60 -mx-3 px-3 rounded-md;
   }

@@ -64,7 +64,7 @@ const REGLAS = [
     id: 'scroll-horizontal-a-pelo',
     patron: /\boverflow-x-auto\b|\boverflow-x-scroll\b/g,
     mensaje:
-      'Usa la clase .fila-desplazable. `overflow-x: auto` obliga al eje vertical a valer `auto` también, y aparece un scrollbar vertical de dos flechas en una fila de cuarenta píxeles (se ve en Firefox y en Windows con scrollbars clásicos).',
+      'Usa el componente FilaDesplazable. Desbordar en horizontal obliga al eje vertical a valer `auto` también, y aparece un scrollbar vertical de dos flechas en una fila de cuarenta píxeles (se ve en Firefox y en Windows con scrollbars clásicos). Y sin scrollbar hace falta una flecha que avise de que hay más al lado, que es lo que pone el componente.',
     soloEn: ['.svelte']
   },
   {

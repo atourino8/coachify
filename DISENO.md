@@ -160,9 +160,26 @@ flotando a la derecha de las pestañas, como en la captura que las descubrió.
 
 **No se arregla con `overflow-y: hidden`**, aunque sea lo primero que uno
 escribe: eso quita el scrollbar pero recorta lo que sobresale, que es justo la
-insignia y el anillo de foco. Lo que hace la clase es esconder el scrollbar y
-dejar el desplazamiento intacto: sigue funcionando con el dedo, con la rueda y
-con el tabulador.
+insignia y el anillo de foco. Lo que hace es esconder el scrollbar y dejar el
+desplazamiento intacto: sigue funcionando con el dedo, con la rueda y con el
+tabulador.
+
+**Y esconder el scrollbar tuvo su propia consecuencia**, que encontró Toni al
+día siguiente: era la única pista de que había más pestañas a la derecha. En
+un móvil, «Pagos · Citas · Revisiones» parecía la lista entera aunque hubiera
+una cuarta fuera de la pantalla. Eso no es estética: es información que se
+pierde sin que nadie sepa que existe.
+
+Por eso `.fila-desplazable` no se usa suelta, sino dentro del componente
+`FilaDesplazable`, que asoma una **flecha en el borde** cuando —y solo
+cuando— hay más contenido en esa dirección. Flecha y no un desvanecido en
+degradado: los degradados están prohibidos (3.8), y un desvanecido avisa pero
+no se puede pulsar.
+
+Las flechas van con `aria-hidden` y fuera del tabulador: las pestañas ya son
+alcanzables con el teclado y al enfocar una que está fuera el navegador la
+trae sola. Dos paradas más en el tabulador para hacer lo que ya se hace sería
+ruido.
 
 ---
 

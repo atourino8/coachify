@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
   import { enhance } from '$app/forms';
   import { hora, diaConSemana } from '$lib/formato';
 
@@ -64,8 +65,9 @@
       <!-- Tira horizontal, como en el wireframe. La tarjeta cortada del borde
            es lo que indica que hay más: sin ella parecería que se acaban ahí.
            snap-x para que el arrastre no deje una tarjeta a medias. -->
-      <div
-        class="flex gap-3 fila-desplazable pb-1 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
+      <FilaDesplazable
+        class="flex gap-3 pb-1 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
+        etiqueta="Próximas sesiones"
       >
         {#each data.proximas as s (s.id)}
           <a
@@ -83,7 +85,7 @@
             </span>
           </a>
         {/each}
-      </div>
+      </FilaDesplazable>
 
       <a href="/agenda" class="inline-block text-sm underline hover:text-accent transition-colors">
         Ver todas las citas

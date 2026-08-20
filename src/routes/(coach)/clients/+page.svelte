@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
   import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
   import Avatar from '$lib/components/Avatar.svelte';
@@ -197,7 +198,7 @@
   {/if}
 
   <!-- Pestañas -->
-  <div class="flex gap-1 border-b border-line fila-desplazable">
+  <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Activos y pendientes">
     <button
       onclick={() => (tab = 'active')}
       class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors
@@ -221,7 +222,7 @@
         >
       {/if}
     </button>
-  </div>
+  </FilaDesplazable>
 
   {#if tab === 'active'}
     {#if data.active.length === 0}
@@ -289,7 +290,7 @@
       {#if etiquetasEnUso.length > 0}
         <!-- La fila de filtros solo existe si hay algo que filtrar: con cero
              etiquetas puestas sería una barra vacía en todas las visitas. -->
-        <div class="flex gap-2 fila-desplazable pb-1 -mx-1 px-1">
+        <FilaDesplazable class="flex gap-2 pb-1 -mx-1 px-1" etiqueta="Filtrar por etiqueta">
           <button
             onclick={() => (filtroEtiqueta = '')}
             aria-pressed={filtroEtiqueta === ''}
@@ -312,7 +313,7 @@
               {data.vocabulario.client[slug] ?? slug}
             </button>
           {/each}
-        </div>
+        </FilaDesplazable>
       {/if}
 
       {#if vista === 'lista'}
@@ -513,7 +514,7 @@
         </div>
 
         <!-- Selector de modo -->
-        <div class="flex gap-1 border-b border-line fila-desplazable">
+        <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Una persona o varias">
           <button
             type="button"
             onclick={() => (inviteMode = 'one')}
@@ -534,7 +535,7 @@
           >
             Varias a la vez
           </button>
-        </div>
+        </FilaDesplazable>
 
         {#if inviteMode === 'bulk'}
           <form

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
   import { enhance } from '$app/forms';
   import { untrack } from 'svelte';
 
@@ -42,7 +43,7 @@
 
   <!-- Pestañas con el número al lado. El número es lo SIN VER, no el total:
        lo que ya has mirado no debería seguir pidiéndote atención. -->
-  <div class="flex gap-1 border-b border-line fila-desplazable">
+  <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Tipos de aviso">
     {#each data.porTipo as g (g.tipo)}
       <button
         onclick={() => (activa = g.tipo)}
@@ -69,7 +70,7 @@
         {/if}
       </button>
     {/each}
-  </div>
+  </FilaDesplazable>
 
   {#if grupo.sinVer.length === 0 && grupo.vistos.length === 0}
     <p class="text-text-mute">Nada por aquí.</p>
