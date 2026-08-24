@@ -11,12 +11,29 @@ seguir el progreso del cliente.
 
 ## 0. Premisas inamovibles
 
-Cuatro reglas que rigen todas las decisiones de diseño:
+Cinco reglas que rigen todas las decisiones de diseño:
 
 1. **SIMPLE**. Si una funcionalidad no es obvia en 30 segundos, se replantea o se quita.
 2. **UX-FRIENDLY**. El cliente abre la app en el gym, con manos sudadas, prisas y el móvil con grasa. *Tap* y *swipe*, no formularios.
 3. **CAMBIABLE**. Arquitectura modular. Una nueva funcionalidad no requiere refactor del core.
 4. **PRODUCTIZABLE DESDE EL DÍA 1**. Multi-tenant nativo. Cualquier coach se registra solo y empieza a usar el producto. Los hermanos son nuestros **primeros usuarios reales**, no los únicos.
+5. **QUIEN EVALÚA ES EL ENTRENADOR, NO LA APLICACIÓN**. Treno enseña lo que pasó y le ahorra trabajo; no juzga, no decide y no sustituye su criterio. Es la premisa que nos separa de las apps de entrenar solo, donde la aplicación tiene que hacer de entrenador porque no hay ninguno.
+
+> **El caso que la fijó: el cronómetro de descanso.** Strong, Hevy, FitNotes y
+> openGym lo llevan como función central, y aun así aquí está **descartado para
+> siempre**. El descanso lo evalúa el entrenador con su ojo —cómo respira, cómo
+> le ha salido la serie, qué día lleva—, y una cuenta atrás en el móvil le
+> quita esa decisión y le dice al cliente que la máquina sabe más.
+>
+> Que cuatro competidores lo tengan **no** es motivo para reabrirlo. Solo se
+> reabre si lo pide un entrenador de verdad, usándolo, y explicando para qué.
+>
+> La misma premisa resuelve de antemano las **progresiones automáticas** («sube
+> 2,5 kg porque completaste las series»), las rutinas generadas por IA y
+> cualquier sugerencia «inteligente» futura: si la decisión es del entrenador,
+> la aplicación no la toma. Puede prepararle el trabajo para que la tome él
+> —«esta plantilla sube 2,5 kg por semana, aplícamela ocho semanas»— y eso sí
+> encaja, porque quien decide sigue siendo él.
 
 ---
 
@@ -62,7 +79,8 @@ Listado completo de funcionalidades de v1:
 
 **Lo que NO hace v1 explícitamente:**
 
-- Cronómetro de descanso (cada cliente descansa lo suyo).
+- Cronómetro de descanso: cada cliente descansa lo suyo y **eso lo evalúa el
+  entrenador** (premisa 5). No es un «todavía no», es un no.
 - Chat coach↔cliente (usan WhatsApp).
 - Plan de nutrición.
 - Pagos del cliente final al coach (eso es v3 vía Stripe Connect).
@@ -103,7 +121,9 @@ Listado completo de funcionalidades de v1:
 - Multi-coach por organización ("Team plan" para gimnasios) → **ADR-003**.
 - Chat ligero coach ↔ cliente.
 - IA: "genera una rutina full-body de 4 días para principiante."
-- Cronómetro inteligente de descanso (descartado v1 por feedback explícito).
+- ~~Cronómetro inteligente de descanso~~ · **CERRADO, no vuelve.** El descanso
+  lo evalúa el entrenador con su ojo. Ver premisa 5 en «Premisas inamovibles»:
+  ahí está el motivo escrito, que es lo que a esta línea le faltaba.
 - Mapa corporal de dolor (interesante pero no prioritario).
 - Sistema de referidos.
 - API pública + webhooks.

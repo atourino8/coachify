@@ -551,4 +551,31 @@ revisión la «arregle».
 
 ---
 
+## Un «no» sin su motivo vuelve solo
+
+**Síntoma:** propuse una función que estaba descartada a propósito desde hacía
+meses. El dueño del producto tuvo que volver a rechazarla y a explicar por qué.
+
+**Causa:** el backlog decía *«descartado por feedback explícito»* sin decir qué
+decía ese feedback. Una línea así no defiende nada: dentro de seis meses, quien
+la lea —o quien vea que cuatro competidores sí lo tienen— la vuelve a abrir,
+porque no hay con qué rebatirlo.
+
+**Regla:** cuando algo se descarta, se escribe **el motivo, no el veredicto**.
+«Descartado» es un dato inútil; «el descanso lo evalúa el entrenador con su
+ojo» cierra la discusión y además resuelve las diez preguntas siguientes que se
+parecen a esa.
+
+**Y ponerlo donde se busca.** El motivo de este caso sí estaba escrito, en las
+exclusiones de otra versión, a ochenta líneas del sitio donde figuraba el
+descarte. Estar escrito en algún sitio no basta: si no está pegado a la
+decisión, no existe.
+
+**Extra que salió gratis:** al escribir el motivo se vio que no era una
+decisión sobre un cronómetro, era **una premisa del producto** —quien evalúa es
+el entrenador, no la aplicación— que ya decidía sola otras tres cosas
+pendientes. Los motivos escalan; los veredictos no.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

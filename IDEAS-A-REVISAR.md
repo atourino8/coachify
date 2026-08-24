@@ -87,7 +87,7 @@ trabajo funciona. Es una función de retención del *entrenador*, no del cliente
 
 ---
 
-## 4 · Dos correcciones a lo que dije yo
+## 4 · El cronómetro, cerrado · y dos correcciones mías
 
 Las apunto porque me equivoqué en las dos y conviene que no se repita.
 
@@ -96,18 +96,20 @@ planificado: SPEC-TRAINER.md, v2, *«Tracking enriquecido (peso + medidas +
 fotos progreso + feedback emocional)»*, 14 h. Confirmado que no hay ninguna
 tabla de medidas hoy, pero la decisión ya estaba tomada; esto solo la respalda.
 
-**El cronómetro de descanso estaba descartado a propósito.** SPEC-TRAINER.md,
-backlog v3: *«Cronómetro inteligente de descanso (descartado v1 por feedback
-explícito)»*. Yo lo propuse sin mirar.
+**El cronómetro de descanso estaba descartado a propósito, y lo sigue estando.**
+Lo propuse sin mirar el backlog. Y me equivoqué dos veces, porque además dije
+que el motivo no estaba escrito: sí lo estaba, en las exclusiones de la v1
+—*«cada cliente descansa lo suyo»*—, solo que en otro sitio distinto de la
+línea del backlog.
 
-Ahora bien, esto merece volver a abrirse **por un motivo nuevo, no por
-capricho**: cuando se descartó no sabíamos que las tres apps líderes —Strong,
-Hevy y FitNotes— lo tienen como función central, y openGym también. Puede que
-el feedback siguiera teniendo razón, pero **no está escrito qué decía ese
-feedback**, y sin eso no se puede saber si aplica.
+Toni lo ha cerrado y ha dado el motivo entero: **el descanso lo evalúa el
+entrenador con su ojo.** Eso ha subido a SPEC-TRAINER.md como **premisa 5 de
+las inamovibles**, porque no es una función menos: es la frontera con las apps
+de entrenar solo, y resuelve de antemano las progresiones automáticas, las
+rutinas por IA y cualquier sugerencia «inteligente» futura.
 
-→ *Tarea concreta: recuperar de quién vino y qué decía. Si no aparece, el
-descarte no se sostiene solo.*
+**Que cuatro competidores lo tengan no es motivo para reabrirlo.** Solo se
+reabre si lo pide un entrenador de verdad, usándolo, y explicando para qué.
 
 ---
 
