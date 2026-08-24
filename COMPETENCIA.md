@@ -389,3 +389,107 @@ que estas apps se adoren no son funciones grandes; es que **no estorban**:
   (appfigures, Tracxn, prensa), no datos publicados por la empresa.
 - **No he probado Hevy Coach.** Habría que abrir una cuenta de prueba —tienen
   30 días gratis— y ver qué hace de verdad con un cliente.
+
+---
+
+# 4 · openGym · el repositorio del post
+
+`gitlab.com/DuarteSantos8/opengym` · React + Node + Docker + Capacitor +
+WebAuthn · **AGPL-3.0** · 227 commits, 15 etiquetas, 1 release · un solo autor
+(Duarte Santos), con Discord y Buy Me a Coffee · demo en vivo.
+
+*Leí la ficha del proyecto; **el README no lo pude cargar** (GitLab lo pinta
+con JavaScript). La lista de funciones de aquí abajo es la que me pasaste tú.*
+
+**Conclusión de una línea:** no es competencia nuestra, es competencia de Hevy.
+Pero trae una trampa legal que conviene saber antes de mirarlo, y un dato de
+mercado que vale más que todo el estudio de Harbiz.
+
+---
+
+## 4.1 Por qué NO es competencia
+
+Es un **cuaderno de una sola persona, autoalojado**. No hay entrenador, no hay
+cliente, no hay relación entre dos cuentas, no hay cobros, ni agenda, ni
+clases, ni facturas.
+
+Y su argumento de venta —*«sin suscripción, sin depender de los servidores de
+una empresa»*— apunta justo al contrario de nuestro comprador. Nuestro cliente
+es un entrenador que **quiere** que los servidores los lleve otro; si tuviera
+ganas de montarse un Docker, no nos pagaría 29 € al mes. El público de openGym
+es el que ya se ha instalado un Nextcloud.
+
+## 4.2 La trampa: AGPL-3.0
+
+**Esto es lo importante de todo el apartado.** La AGPL es la licencia copyleft
+más agresiva que existe: si usas código AGPL en un servicio al que se accede
+**por red** —exactamente lo que es Treno—, estás obligado a publicar **todo el
+código de Treno** bajo AGPL. No hace falta ni distribuir nada: basta con que
+alguien lo use desde un navegador.
+
+En la práctica, y sin rodeos:
+
+- **No se copia código.** Ni una función, ni un fragmento pegado «para ver cómo
+  lo hacen».
+- **No se copian los 1.324 ejercicios sin comprobar de dónde salen.** Es
+  justo el activo que apetece llevarse, y si viene del repositorio va con la
+  AGPL detrás. (Hay bases de ejercicios de dominio público —del tipo
+  *free-exercise-db*— que sí se pueden usar; habría que mirar si es esa.)
+- **Mirarlo funcionando, sí.** Las ideas y el comportamiento no se licencian.
+  Lo que se licencia es el código. Ver la demo y tomar notas es legítimo;
+  abrir el fuente y teclear lo mismo, no.
+
+Lo apunto aquí porque el riesgo no es teórico: es exactamente la clase de atajo
+que se toma un martes por la tarde sin pensarlo.
+
+## 4.3 El dato que vale: importa desde FitNotes, Strong y Hevy
+
+Esto es lo mejor del hallazgo. Un desarrollador solo, en sus ratos, decidió que
+lo primero que había que construir era **importar el historial de los tres
+grandes**.
+
+Sabe algo que nosotros no habíamos escrito en ninguna parte: en este mercado
+**el coste de cambiar no son las funciones, es el historial**. Nadie se cambia
+de app por una pantalla más bonita; se cambia cuando puede llevarse sus tres
+años de series.
+
+Para Treno son dos cosas concretas:
+
+- **Importar.** Cuando un entrenador da de alta a un cliente que lleva años en
+  Hevy o Strong, poder traerse ese historial quita la única objeción real del
+  cliente. Y es una objeción que hoy no tenemos ni contemplada.
+- **Exportar los entrenos.** Ya exportamos clientes y pagos a CSV; los entrenos
+  no. Y exportar no es una función para irse: es lo que hace que alguien se
+  atreva a entrar. Es barato y va en la dirección de lo que ya defendemos.
+
+**Y fíjate en quién no lo va a hacer:** Hevy Coach no tiene ningún incentivo en
+dejarte sacar el historial de Hevy, y Harbiz tampoco en importar de nadie. Es
+una diferencia que podemos sostener porque a ellos les cuesta dinero hacerla.
+
+## 4.4 Lo demás que se saca
+
+- **La lista de funciones es el listón de 2026.** Sin conexión, passkeys,
+  superseries, progresiones automáticas, PRs, análisis de qué músculos entrenas,
+  peso corporal, exportar en JSON. Lo ha hecho **una persona**. Confirma lo de
+  ayer: en la pantalla del cliente no se compite, pero tampoco se puede dar
+  pena.
+- **Capacitor** es su respuesta a «cómo llego a las tiendas de apps sin escribir
+  nativo»: envolver la web. Con SvelteKit funciona igual. Si algún día hace
+  falta estar en la App Store —recuerda que en Harbiz la app de marca blanca es
+  un add-on de 30 €/mes—, ese es el camino barato.
+- **Es una señal de mercado, no una amenaza.** Que un aficionado monte esto y
+  que el post corra quiere decir que entre los que levantan pesas hay ganas de
+  «mis datos son míos». Eso toca a nuestro lado cliente: alguien que entrena
+  puede no querer que su historial viva dentro de la herramienta de su
+  entrenador. Nuestra respuesta a eso es exportar, y no la tenemos.
+
+## 4.5 Lo que no sé
+
+- **No pude leer el README ni el CHANGELOG** (GitLab los pinta con JavaScript y
+  la extensión de Chrome no está conectada). No sé de dónde salen los 1.324
+  ejercicios ni con qué licencia, que es justo lo que habría que saber.
+- El proyecto figura **creado en GitLab el 23 de agosto de 2026**, con 227
+  commits ya dentro: o viene importado de otro sitio, o es muy nuevo. No sé
+  cuánta gente lo usa de verdad.
+- **No he probado la demo.** Es lo que sí se puede hacer sin tocar el código, y
+  es lo que habría que hacer antes de copiarle ninguna idea de interfaz.
