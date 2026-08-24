@@ -263,9 +263,12 @@ notas aparecieron cuatro cosas reales y seis cosméticas. Las diez, arregladas.
 
 ### Lo que sigue distinto a propósito
 
-- Los ✓ y ✕ de las peticiones van **en horizontal** y el wireframe los apila.
-  Apilados son dos objetivos de pulgar de 24 px uno encima de otro, que es
-  justo cómo se acepta una cita queriendo rechazarla.
+- Aceptar o rechazar una cita: el wireframe apila un ✓ y una ✕, y la
+  aplicación pone **«Confirmar» y el «Rechazar» dentro del menú de tres
+  puntos**. (Esto estaba mal apuntado aquí como «✓ y ✕ en horizontal»: la
+  pantalla había cambiado después y la nota se quedó vieja.) Apilados son dos
+  zonas de pulgar de 24 px una encima de otra, y además aceptar se deshace
+  solo mientras que rechazar avisa al cliente y no tiene vuelta atrás.
 - El separador de avisos dice **«Ya vistos (3)»** y no «Notificaciones
   leídas»: el número dice cuántas hay sin abrir nada.
 - El grupo al invitar son un desplegable y un campo, no **dos botones
@@ -430,3 +433,7 @@ camino. Para el punto 2 hay una comprobación aparte que sigue la nota por
 consulta al servidor, tipo del servidor, exposición, aceptación e inserción— y
 falla si se cae en cualquiera. Es el tipo de fallo que no da error: solo
 desaparece un texto.
+
+> Las seis desviaciones vivas están recogidas en
+> **DESVIACIONES-PARA-REVISAR.md**, escrito para enseñárselo al socio: qué
+> dibuja, qué hace, por qué, y lo que cuesta cambiar cada una.
