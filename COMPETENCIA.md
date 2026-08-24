@@ -493,3 +493,6 @@ una diferencia que podemos sostener porque a ellos les cuesta dinero hacerla.
   cuánta gente lo usa de verdad.
 - **No he probado la demo.** Es lo que sí se puede hacer sin tocar el código, y
   es lo que habría que hacer antes de copiarle ninguna idea de interfaz.
+
+> Lo que salió de mirar openGym buscando **en qué ser distintos** —no qué
+> copiar— está en **IDEAS-A-REVISAR.md**. Sin decidir y sin priorizar.
