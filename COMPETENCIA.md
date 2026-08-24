@@ -1,4 +1,12 @@
-# Análisis de competencia · Dupla
+# Análisis de competencia
+
+Dos estudios. **Dupla** (abajo) es el vecino: producto pequeño, a medio hacer.
+**Harbiz** (al final) es el líder del mercado español, con 5 M€ levantados. Son
+dos lecturas muy distintas y la segunda es la que importa para decidir.
+
+---
+
+# 1 · Dupla
 
 Estudio del competidor más cercano (duplapp.win), a partir de su web pública,
 sus precios y capturas de todo su panel de entrenador.
@@ -127,3 +135,154 @@ ve gente en persona.
 Ellos construyeron a lo ancho. Nosotros vamos a lo hondo en un segmento que no
 tocan. La defensa no es tener más secciones que ellos: es tener **menos y
 mejores**, y que cada una sirva al presencial e híbrido.
+
+---
+
+# 2 · Harbiz · el líder del mercado español
+
+*Estudio hecho el 24 de agosto de 2026 a partir de prensa económica, reseñas
+públicas (Capterra, Trustpilot, App Store) y las tablas de precios que
+publican sus competidores. **No he podido cargar harbiz.io directamente**, así
+que los precios vienen de terceros y hay que verificarlos antes de usarlos en
+ninguna parte — y buena parte de esos terceros son rivales suyos vendiendo
+contra ellos.*
+
+**Conclusión de una línea:** Harbiz demuestra que el mercado existe y paga,
+pero la guerra que se está librando —precio y lista de funciones— ya la están
+peleando cuatro españoles más y no la vamos a ganar. Lo que nadie está
+atacando es que **el producto pierde el trabajo de la gente**.
+
+---
+
+## 2.1 Qué son
+
+Fundada por **Mario Morante y Javier Ortega**. Empezaron como **marketplace**
+de entrenadores personales y **pivotaron a SaaS** de gestión. Antes se
+llamaban **Dudyfit**: es la misma empresa con otro nombre (misma ficha en
+Capterra, id 201790).
+
+- **5 M€ de ronda** en enero de 2024, liderada por Octopus Ventures, con
+  Entrecanales, Athos y Enzo.
+- **~4 M€ de ARR** proyectados para cerrar 2024, después de triplicar en 2022
+  y doblar en 2023.
+- **6.000-10.000 profesionales** (según la fuente), **más de 150.000 clientes
+  finales**, presencia en **35 países**.
+- Producto: rutinas, nutrición, cuestionarios, agenda, reservas, cobros
+  recurrentes, facturación, app de marca blanca e IA de dietas.
+
+**Lo primero que hay que sacar de aquí no es competitivo, es de mercado:** un
+señor levantó 5 M€ de un fondo británico serio vendiendo esto a entrenadores
+españoles. La tesis de NEGOCIO.md no era optimista. Era correcta.
+
+**Lo segundo, para el backlog:** en SPEC-TRAINER.md tenemos apuntada una épica
+de *marketplace*. Ellos empezaron ahí y se salieron. Merece la pena entender
+por qué antes de gastar un mes en eso.
+
+## 2.2 Cómo cobran, y por qué es su herida
+
+Cobran por **tramos de número de clientes**, en tres planes (Basic, Pro, My
+APP), y encima **tres add-ons que se acumulan**: app de marca blanca (~30
+€/mes), IA de nutrición (~18 €/mes) y biblioteca de vídeos (~24 €/mes).
+
+Un entrenador con 100 clientes que quiera marca blanca, IA y vídeos acaba
+pagando del orden de **300 €/mes con IVA**. Los add-ons **no entran en el
+descuento anual**.
+
+Esto es exactamente lo contrario de nuestra decisión de NEGOCIO.md —precio
+plano por entrenador, no por cliente— y es la grieta que **todo el mundo** les
+está atacando.
+
+## 2.3 El problema: esa grieta ya tiene cuatro personas dentro
+
+Buscando «Harbiz» aparece un ecosistema entero de españoles cuya estrategia
+completa es *«alternativa a Harbiz, más barato»*: **TotalGains** (29,90 €/mes,
+IA y marca blanca incluidas, un solo desarrollador en Granada), **TrainerStudio**,
+**Hexfit**, **wayoai**… Todos con páginas «vs Harbiz», tablas comparativas y
+migración asistida gratis.
+
+**Esto es lo más importante de todo el estudio.** Nuestra diferenciación
+prevista —29 €/mes planos frente a los tramos de Harbiz— **ya no diferencia**:
+TotalGains está en 29,90 € con más funciones que nosotros. Si salimos con el
+mensaje «somos como Harbiz pero plano y barato», salimos los quintos a decir lo
+mismo, sin ARR, sin app en las tiendas y sin marca.
+
+El eje de precio está saturado. Hay que competir por otro lado.
+
+## 2.4 Dónde sí están débiles: pierden el trabajo de la gente
+
+Las quejas repetidas en Trustpilot, App Store y Capterra no son de funciones.
+Son de **fiabilidad**:
+
+- **«Pérdida de planificaciones después de horas de trabajo.»** Repetida.
+- La app móvil **se cuelga**, va lenta, **se reinicia sola** al bloquear el
+  teléfono y **pierde el entrenamiento registrado**.
+- Soporte que tarda **meses** en algunos casos, y dificultad para darse de baja.
+- Un entrenador: *«casi 200 € al mes»* con fallos frecuentes.
+- Base de datos de alimentos *«un poco pobre»*, CRM *«sin demasiada
+  información»*.
+
+Nota justa: también hay muchas reseñas buenas —4,4/5 en Capterra, 4 en
+Trustpilot— y el soporte sale elogiado tantas veces como criticado. No están
+rotos. Pero el patrón de «perder trabajo hecho» aparece una y otra vez.
+
+**Y aquí está lo interesante para nosotros, que no es una casualidad:** el
+fallo que encontré esta misma semana —guardar un día desde la ficha borraba la
+nota del cliente sin avisar— es **exactamente esa clase de fallo**. La
+diferencia es que nosotros lo cazamos con una comprobación antes de que llegara
+a nadie, y que el editor tiene deshacer paso a paso.
+
+Eso no es una funcionalidad que se ponga en una tabla comparativa. Es una
+propiedad del producto, y es la única en la que salimos por delante del líder
+del mercado hoy mismo.
+
+## 2.5 Dónde no están: presencial, clases y estudios
+
+Harbiz está diseñado para el **entrenador online** con clientes a distancia.
+Tiene reservas de sesiones individuales y grupales, pero las reseñas señalan la
+**gestión de clases** como punto flojo, y las guías de software para gimnasios
+lo recomiendan para *«entrenadores online o gimnasios grandes con mucho volumen
+virtual»*, no para el estudio de barrio con clases presenciales.
+
+Nosotros acabamos de meter clases con **plazas limitadas, lista de espera,
+faltas por avisar tarde y bloqueo de fila para que dos personas no se lleven la
+misma plaza**. Eso, más ADR-003 (gimnasio con varios entrenadores) y el plan
+Studio de 79 €, apunta a un sitio donde ellos no están mirando.
+
+## 2.6 Lo que NO hay que hacer
+
+- **No entrar en la guerra de la nutrición y la IA de dietas.** Base de 240.000
+  alimentos, generación de dietas, cuestionarios: ahí están todos, cuesta caro
+  y llegaríamos los últimos.
+- **No competir por precio.** Está ocupado por alguien que ya lo hace bien.
+- **No copiar su menú.** Es la misma conclusión que con Dupla y por otro
+  motivo: con Dupla porque su menú está vacío; con Harbiz porque está lleno y
+  no podemos llenarlo igual.
+
+## 2.7 Lo que sí
+
+1. **Vender fiabilidad, no funciones.** «No te vamos a perder la planificación»
+   es un mensaje que ningún competidor español puede decir con la cara seria
+   ahora mismo, y que a un entrenador que ha perdido dos horas de trabajo le
+   dice más que una lista de treinta funciones. Deshacer paso a paso, guardado
+   que no pisa lo que no toca, y que la app no se caiga.
+2. **Presencial y estudios**, no coach online. Es donde ellos no están y donde
+   ya tenemos clases, agenda de huecos y ADR-003.
+3. **Precio plano, pero como consecuencia y no como titular.** Que no sea el
+   argumento principal, porque ese argumento ya no es nuestro.
+4. **Antes de nada, tener usuarios.** Ellos tienen 6.000 profesionales, seis
+   años y 5.400 búsquedas de marca al mes. Nosotros tenemos cero de las tres
+   cosas. Nada de esto importa hasta que haya diez entrenadores usándolo de
+   verdad.
+
+## 2.8 Lo que este estudio no sabe
+
+- **No he podido leer harbiz.io.** Precios y funciones vienen de terceros, casi
+  todos rivales suyos. Antes de poner una tabla comparativa en la web hay que
+  verificarlos en su web, y fecharlos.
+- **No he probado el producto.** Todo lo de la lentitud y las pérdidas de datos
+  son reseñas de otros, no observación propia. Merecería la pena que alguien se
+  abra una cuenta de prueba y lo mire.
+- **Los datos de ARR y clientes son de 2024** y salen de entrevistas a los
+  fundadores en prensa. Ni auditados ni recientes.
+- **No sé qué han hecho con los 5 M€** desde enero de 2024, ni si hay ronda
+  nueva. Dos años y medio dan para mucho.
