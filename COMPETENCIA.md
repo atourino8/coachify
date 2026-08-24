@@ -1,8 +1,10 @@
 # Análisis de competencia
 
-Dos estudios. **Dupla** (abajo) es el vecino: producto pequeño, a medio hacer.
-**Harbiz** (al final) es el líder del mercado español, con 5 M€ levantados. Son
-dos lecturas muy distintas y la segunda es la que importa para decidir.
+Tres estudios. **Dupla** es el vecino: producto pequeño, a medio hacer.
+**Harbiz** es el líder del mercado español, con 5 M€ levantados. **Hevy,
+Strong y FitNotes** son otra categoría —apps para el que entrena, no para el
+entrenador— y por eso mismo son las más peligrosas: una de ellas ya se ha
+metido en nuestro mercado por la puerta de al lado.
 
 ---
 
@@ -286,3 +288,104 @@ Studio de 79 €, apunta a un sitio donde ellos no están mirando.
   fundadores en prensa. Ni auditados ni recientes.
 - **No sé qué han hecho con los 5 M€** desde enero de 2024, ni si hay ronda
   nueva. Dos años y medio dan para mucho.
+
+---
+
+# 3 · Hevy, Strong y FitNotes · el otro lado del mostrador
+
+*Estudio del 24 de agosto de 2026. **No pude leer el post de X que lo motivó**
+—la página no devuelve texto sin JavaScript y la extensión de Chrome no está
+conectada—, así que esto sale de buscar las tres apps por separado. Si el post
+menciona un repositorio concreto, hace falta el enlace o el nombre.*
+
+**Conclusión de una línea:** estas tres no son competencia de Treno… salvo que
+una de ellas, Hevy, ha lanzado **Hevy Coach** con 12 millones de usuarios
+detrás. Eso es un problema mayor que Harbiz, y de otro tipo.
+
+---
+
+## 3.1 Qué son las tres
+
+No son software de gestión. Son **cuadernos de gimnasio**: las usa la persona
+que entrena, para apuntar series, repeticiones y peso. Nuestro equivalente no
+es el panel del entrenador, es la pantalla de **Hoy** del cliente.
+
+| | Qué es | Precio | Escala |
+| --- | --- | --- | --- |
+| **FitNotes** | Solo Android, de un desarrollador (James Gay). Sin cuenta, sin anuncios, funciona **sin conexión**. Copia de seguridad a Drive/Dropbox y CSV. | **Gratis**, sin anuncios «nunca» | 4,1 M descargas · **4,85/5** |
+| **Strong** | iOS y Android. Superseries, calculadora de discos, temporizador automático, RPE, 1RM, Apple Health, exportar CSV. | Gratis con 3 rutinas · Premium 9,99 $/mes | El clásico del sector |
+| **Hevy** | iOS, Android, web y Apple Watch. Lo mismo que Strong más **red social** de entrenos. | Gratis (4 rutinas, 3 meses de historial) · Pro 2,99 $/mes o 74,99 $ de por vida | **12 M de usuarios** |
+
+## 3.2 Lo que de verdad importa: Hevy Coach
+
+Hevy no es una app de aficionados. Es una empresa **sin inversión externa**,
+con unos 30 empleados, y estimaciones de **~600.000 $ de facturación en un solo
+mes** (febrero de 2026) y ~400.000 descargas mensuales.
+
+Y han lanzado **Hevy Coach**: software para entrenadores personales, **desde 25
+$/mes por tramos de clientes**, hasta 500 clientes, 30 días de prueba.
+
+**El detalle que lo cambia todo:** *el cliente no paga nada y entrena desde la
+app normal de Hevy*. Es decir:
+
+- El entrenador no tiene que convencer a nadie de instalarse una app nueva.
+  **Muchos de sus clientes ya la tienen puesta**, y les gusta.
+- Hevy tiene un embudo gratis de 12 millones de personas al que decirle «dile a
+  tu entrenador que programe aquí».
+- No tienen prisa de fondo: son rentables y no deben nada a nadie.
+
+Harbiz levantó 5 M€ para competir con esto. Nosotros no tenemos ni lo uno ni lo
+otro.
+
+**Lo único bueno:** Hevy Coach **también cobra por tramos de clientes**, la
+misma herida que Harbiz. Y a día de hoy está en inglés y pensado para el coach
+*online*, sin cobros en euros, sin facturación española y sin clases
+presenciales.
+
+## 3.3 Lo que sacamos de las tres para nuestra pantalla de Hoy
+
+Esto es lo accionable de verdad, y es de diseño, no de estrategia. Lo que hace
+que estas apps se adoren no son funciones grandes; es que **no estorban**:
+
+1. **Los números de la última vez, ahí mismo.** Strong enseña el peso y las
+   repeticiones de la sesión anterior de ese ejercicio sin que busques en el
+   historial. Es lo primero que mira alguien antes de una serie. Nosotros hoy
+   **no lo enseñamos**.
+2. **Temporizador de descanso que arranca solo** al apuntar la serie. Nosotros
+   hoy escribimos «· descanso 90s» **como texto**. No cuenta nada.
+3. **Calculadora de discos**: qué poner en la barra para llegar a 82,5 kg.
+   Barato de hacer y se usa en cada serie.
+4. **Que funcione sin cobertura.** Es media razón del 4,85 de FitNotes. **Treno
+   no tiene nada offline** —ni service worker, ni manifiesto— y muchos
+   gimnasios están en un sótano. Si el cliente no puede apuntar la serie porque
+   no hay línea, se acabó: se vuelve a Hevy y no vuelve.
+5. **Exportar a CSV.** Las tres lo tienen. Es lo que le dice al usuario que sus
+   datos son suyos. Nosotros ya exportamos clientes y pagos; los entrenos no.
+
+## 3.4 Cómo cambia esto la estrategia
+
+- **La pantalla del cliente no es donde competir.** Hevy y Strong llevan diez
+  años puliendo exactamente esa pantalla. El objetivo ahí es **no dar pena**:
+  los cuatro puntos de arriba y punto. Cada hora extra que le echemos a esa
+  pantalla es una hora que no le echamos a lo que ellos no hacen.
+- **Lo que ellos no hacen es el mundo presencial.** Hevy Coach y Harbiz están
+  los dos construidos para **programar a distancia**. Ninguno lleva agenda de
+  huecos, clases con plazas y lista de espera, cobros en euros, impagos o
+  varios entrenadores bajo una marca. Eso ya lo tenemos nosotros.
+- **El riesgo real a vigilar:** que Hevy Coach se traduzca al español y añada
+  facturación. Ese día se llevan por delante a Harbiz y a los cuatro que le
+  hacen sombra. Nuestra defensa no puede ser la lista de funciones; tiene que
+  ser lo que un entrenador presencial español necesita y a una empresa de
+  Ottawa no le compensa hacer.
+- **FitNotes es la lección barata:** 4,1 millones de descargas y 4,85 de nota
+  con cero funciones de más, sin cuenta y sin conexión. Gana la que no estorba.
+
+## 3.5 Lo que este estudio no sabe
+
+- **No he leído el post de X.** Si menciona un repositorio de código abierto
+  parecido a Treno, eso merece un estudio aparte: no es lo mismo un rival de
+  pago que uno que cualquiera puede autoalojar gratis.
+- Las cifras de facturación de Hevy son **estimaciones de terceros**
+  (appfigures, Tracxn, prensa), no datos publicados por la empresa.
+- **No he probado Hevy Coach.** Habría que abrir una cuenta de prueba —tienen
+  30 días gratis— y ver qué hace de verdad con un cliente.
