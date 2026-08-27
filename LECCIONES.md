@@ -578,4 +578,30 @@ pendientes. Los motivos escalan; los veredictos no.
 
 ---
 
+## El guion que comprueba también se comprueba
+
+**Síntoma:** mi propio script de verificación dio dos falsos negativos
+seguidos —«falta esto», «no está aquello»— sobre código que sí estaba. Antes
+había dado dos falsos POSITIVOS, marcando como error mis propios comentarios.
+
+**Causa:** el filtro que quitaba comentarios antes de buscar. Primero no
+quitaba nada y encontraba las frases dentro de los comentarios que yo mismo
+acababa de escribir. Después, al arreglarlo, `^\s*//.*$` se compiló con
+`DOTALL`, así que el `.*` se comía **el resto del fichero** desde el primer
+comentario de línea. El guion decía que faltaba todo porque no estaba mirando
+nada.
+
+**Regla:** un comprobador que solo dice «pasa» o «no pasa» no se puede creer.
+Cuando falle, **hay que mirar el fichero de verdad** antes de tocar el código:
+la mitad de las veces el que está roto es el comprobador. Y cuando pase, tiene
+que haberse visto fallar alguna vez con un fallo real, o no se sabe si mira
+algo.
+
+**Concreto, para no repetirlo:** al quitar comentarios de línea nunca se usa
+`DOTALL` —`.` dejaría de parar en el salto de línea, que es justo lo único que
+delimita ese comentario—. Y buscar una frase de interfaz en el fuente encuentra
+también los comentarios que hablan de ella.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*
