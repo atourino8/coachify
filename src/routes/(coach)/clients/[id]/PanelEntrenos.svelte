@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PageData, ActionData } from './$types';
+  import ModalProgramar from '$lib/components/ModalProgramar.svelte';
   /**
    * Calendario de entrenos del cliente: vista de catorce días o mensual, con
    * duplicar un día y programar una plantilla en varios.
@@ -71,6 +72,9 @@
   let confirmarDescartar = $state(false);
   let diaSiguiente = $state<string | null>(null);
   const historialDia = new Historial<ItemDia[]>();
+
+  /** Día que se está programando en el modal. `null` = cerrado. */
+  let fechaAProgramar = $state<string | null>(null);
 
   const muscleLabels = $derived(data.vocabulario.muscle);
 
@@ -500,14 +504,13 @@
   <div class="space-y-2">
     {#each windowCells as day (day.iso)}
       {@const workout = data.workoutsByDate[day.iso]}
-      <!-- Con entreno, la fila DESPLIEGA el editor; sin entreno sigue siendo
-           un enlace a la pantalla del día, que es donde se crea uno. -->
-      <svelte:element
-        this={workout ? 'button' : 'a'}
-        role={workout ? 'button' : undefined}
-        type={workout ? 'button' : undefined}
-        href={workout ? undefined : `/clients/${data.client.id}/workouts/${day.iso}`}
-        onclick={workout ? () => abrirDia(day.iso) : undefined}
+      <!-- Con entreno, la fila DESPLIEGA el editor. Sin entreno abre el modal
+           de programar, que es donde se contesta «¿qué pongo aquí?». Antes era
+           un enlace directo al constructor, o sea que de las tres formas de
+           llenar un día la fila solo ofrecía una. -->
+      <button
+        type="button"
+        onclick={() => (workout ? abrirDia(day.iso) : (fechaAProgramar = day.iso))}
         aria-expanded={workout ? diaAbierto === day.iso : undefined}
         class="w-full text-left card flex items-stretch gap-4 py-3 transition-all
             {day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
@@ -553,24 +556,48 @@
               </div>
             {/if}
           {:else}
-            <div class="text-sm text-text-mute/60 flex items-center gap-1.5">
-              <span class="text-lg leading-none">+</span> Añadir entreno
-            </div>
+            <!-- «Descanso» y no «+ Añadir entreno».
+                 Esta es la pantalla del ENTRENADOR y él sabe leerlo: un día sin
+                 nada puesto es un día de descanso en su plan. Al cliente NO se
+                 le dice: en su pantalla un día vacío no promete un descanso que
+                 nadie ha decidido, solo que no hay nada. -->
+            <div class="text-sm text-text-mute/60">Descanso</div>
           {/if}
         </div>
 
         <!-- Acción -->
         <div class="flex items-center text-xs text-primary flex-shrink-0">
-          {#if workout}
-            <span aria-hidden="true">{diaAbierto === day.iso ? '▾' : '▸'}</span>
-          {/if}
+          <span aria-hidden="true">
+            {#if workout}{diaAbierto === day.iso ? '▾' : '▸'}{:else}+{/if}
+          </span>
         </div>
-      </svelte:element>
+      </button>
 
       {@render editorDelDia(day.iso, workout)}
     {/each}
   </div>
 {:else}
+  {#snippet celdaDelMes(
+    day: (typeof monthCells)[number],
+    workout: (typeof data.workoutsByDate)[string] | undefined
+  )}
+    <div class="flex items-center justify-between">
+      <span class="font-semibold {day.isToday ? 'text-primary' : ''}">{day.dayNum}</span>
+      {#if workout?.done}<span class="text-success text-xs" title="Completado">✓</span>{/if}
+    </div>
+    {#if workout}
+      <!-- En móvil no cabe el título: un punto basta para decir «aquí hay
+         entreno», y el nombre se lee al abrir el día. -->
+      <div class="mt-auto">
+        <span class="sm:hidden block h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+        <div class="hidden sm:block">
+          <div class="text-2xs font-medium truncate">{workout.title ?? 'Entreno'}</div>
+          <div class="text-3xs text-text-mute">{workout.itemCount} ej.</div>
+        </div>
+      </div>
+    {/if}
+  {/snippet}
+
   <!-- ===== VISTA MENSUAL ===== -->
   <div class="flex items-center justify-between gap-4">
     <button onclick={() => gotoMonth(-1)} class="btn-ghost text-sm py-2 px-4">← Mes anterior</button
@@ -595,34 +622,39 @@
     {/each}
     {#each monthCells as day (day.iso)}
       {@const workout = data.workoutsByDate[day.iso]}
-      <a
-        href="/clients/{data.client.id}/workouts/{day.iso}"
-        class="card p-1.5 sm:p-2 min-h-[52px] sm:min-h-[84px] flex flex-col transition-all text-xs sm:text-sm
-            {!day.inMonth ? 'opacity-30' : ''}
-            {day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
-            {day.isPast && day.inMonth ? 'opacity-55 hover:opacity-90' : 'hover:border-primary/50'}
-            {workout && !day.isToday ? 'border-primary/30' : ''}"
-      >
-        <div class="flex items-center justify-between">
-          <span class="font-semibold {day.isToday ? 'text-primary' : ''}">{day.dayNum}</span>
-          {#if workout?.done}<span class="text-success text-xs" title="Completado">✓</span>{/if}
-        </div>
-        {#if workout}
-          <!-- En móvil no cabe el título: un punto basta para decir "aquí
-                   hay entreno", y el nombre se lee al abrir el día. -->
-          <div class="mt-auto">
-            <span class="sm:hidden block h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"
-            ></span>
-            <div class="hidden sm:block">
-              <div class="text-2xs font-medium truncate">{workout.title ?? 'Entreno'}</div>
-              <div class="text-3xs text-text-mute">{workout.itemCount} ej.</div>
-            </div>
-          </div>
-        {/if}
-      </a>
+      {@const clases = `card p-1.5 sm:p-2 min-h-[52px] sm:min-h-[84px] flex flex-col transition-all text-xs sm:text-sm text-left w-full
+            ${!day.inMonth ? 'opacity-30' : ''}
+            ${day.isToday ? 'ring-2 ring-primary border-primary/40' : ''}
+            ${day.isPast && day.inMonth ? 'opacity-55 hover:opacity-90' : 'hover:border-primary/50'}
+            ${workout && !day.isToday ? 'border-primary/30' : ''}`}
+      <!-- Con entreno se va a la pantalla del día y no se despliega nada: una
+           celda de 52 px no puede albergar el editor, así que aquí el mes SÍ
+           navega aunque la semana despliegue. Sin entreno, el mismo modal de
+           programar que en la semana: la pregunta es la misma mire donde mire.
+
+           Un enlace y un botón de verdad, no un <svelte:element> que elige:
+           así el navegador sabe cuál es cuál —abrir en otra pestaña funciona en
+           el que navega— y no hay que explicarle a nadie qué papel tiene. -->
+      {#if workout}
+        <a href="/clients/{data.client.id}/workouts/{day.iso}" class={clases}>
+          {@render celdaDelMes(day, workout)}
+        </a>
+      {:else}
+        <button type="button" onclick={() => (fechaAProgramar = day.iso)} class={clases}>
+          {@render celdaDelMes(day, workout)}
+        </button>
+      {/if}
     {/each}
   </div>
 {/if}
+
+<ModalProgramar
+  fecha={fechaAProgramar}
+  clienteId={data.client.id}
+  plantillas={data.templates}
+  entrenos={workoutDays}
+  cerrar={() => (fechaAProgramar = null)}
+/>
 
 <!-- ===== PANEL PROGRAMAR CON PLANTILLA ===== -->
 {#if data.templates.length > 0}
