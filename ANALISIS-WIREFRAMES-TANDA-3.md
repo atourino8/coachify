@@ -187,24 +187,24 @@ Revisada aparte porque Toni avisa de que no vio ese menú hecho en móvil.
 
 O sea que el contenido de la pantalla 7 **sí está hecho**, y en móvil.
 
-**Lo que hay que mirar de verdad es la cabecera.** El wireframe enseña, uno
-encima de otro:
+**La cabecera: resuelto, y era del prototipo.** El wireframe enseña encima del
+formulario la fila «Ejercicios / Entrenamientos», el embudo del filtro, «+
+Añadir» y el conmutador de vista. **Toni confirma que no va así.** Al editar,
+la cabecera se queda solo con la vuelta atrás y el título — que es como está
+hecho hoy, comprobado en `/exercises/[id]` y en `/exercises/new`.
 
-1. La fila de pestañas «Ejercicios · Entrenamientos»
-2. La barra de filtro + «+ Añadir» + conmutador de vista
-3. Y **debajo** el «← Editar ejercicio»
+El motivo, por si vuelve a salir: en 360 px esa barra son tres filas de mandos
+antes del primer campo, y **ninguno hace nada mientras editas**. El filtro no
+filtra, el conmutador no conmuta y «+ Añadir» te sacaría de lo que estás
+haciendo sin guardar. Es la premisa 2 de las inamovibles.
 
-Es decir, la pantalla de edición aparece **dentro** de la biblioteca, con los
-controles de la lista todavía visibles arriba. Eso en móvil son tres filas de
-controles antes de llegar al primer campo del formulario —en una pantalla de
-360 px de ancho, media pantalla gastada en cosas que no sirven mientras editas:
-el filtro no filtra nada, el conmutador de vista no conmuta nada y «+ Añadir»
-te sacaría de lo que estás haciendo sin guardar.
+**Único matiz vivo, y es de palabras:** el wireframe pone «← Editar ejercicio»
+—flecha pegada al título— y nosotros ponemos «← Volver a ejercicios» y debajo
+«Editar ejercicio». La nuestra dice a dónde vuelves; la suya no. Lo dejo así
+salvo que tu socio prefiera lo otro.
 
-**Sospecho que es una convención del prototipo y no una intención** —al maquetar
-en Figma se reaprovecha la cabecera—, pero hay que confirmarlo, porque si es
-intencionado es un cambio grande y en la dirección contraria a la premisa 2
-(«tap y swipe, no formularios»).
+**Conclusión de la pantalla 7: está hecha y en móvil.** No hay nada que
+implementar.
 
 ---
 
@@ -262,3 +262,5 @@ filtrar clases y la columna se llama `title`. No lo vi leyendo el diff.
 - **Progreso → «Editar»:** es meter medidas y peso a mano. Enlaza con
   «Tracking enriquecido», que ya está en la v2 de SPEC-TRAINER.md; esto le pone
   pantalla.
+- **Pantalla 7:** nada que hacer. La barra de la biblioteca encima del
+  formulario era cosa del prototipo (§ 8).
