@@ -24,8 +24,12 @@
   // Etiqueta de estado para cada fila del timeline.
   function badge(s: { status: string; proposedByCoach: boolean }) {
     if (s.status === 'confirmed') return { label: 'Confirmada', cls: 'bg-success/15 text-success' };
-    if (s.proposedByCoach)
-      return { label: 'Esperando al cliente', cls: 'bg-primary/15 text-primary' };
+    // «Propuesta» y no «Esperando al cliente» (pantalla 22). Las otras tres
+    // pastillas nombran el ESTADO de la cita —Confirmada, Pendiente,
+    // Cancelada—; «Esperando al cliente» nombraba lo que falta por pasar, que
+    // es otra categoría. Cuatro pastillas en la misma fila tienen que hablar
+    // de lo mismo para poder compararlas de un vistazo.
+    if (s.proposedByCoach) return { label: 'Propuesta', cls: 'bg-primary/15 text-primary' };
     return { label: 'Pendiente', cls: 'bg-warning/15 text-warning' };
   }
 
@@ -509,6 +513,23 @@
 
             <!-- Acciones: Confirmar (si lo pidió el cliente) + menú ⋮ -->
             <div class="flex items-center gap-1.5 flex-shrink-0">
+              <!-- El aviso de choque va JUNTO AL BOTÓN y no arriba en la
+                   tarjeta: se mira al decidir, no al leer. Y se dice también
+                   cuando NO hay conflicto, porque «Sin conflictos» solo
+                   tranquiliza si aparece siempre; si solo saliera el aviso
+                   malo, su ausencia podría ser que no se ha comprobado. -->
+              {#if s.status === 'requested'}
+                <span
+                  class="text-xs flex-shrink-0 hidden sm:inline {s.choca
+                    ? 'text-warning'
+                    : 'text-text-mute'}"
+                  title={s.choca
+                    ? 'Se solapa con otra cita confirmada o con una clase tuya'
+                    : 'No se solapa con ninguna cita confirmada ni con ninguna clase tuya'}
+                >
+                  {s.choca ? '⚠ Choca con otra' : 'Sin conflictos ✓'}
+                </span>
+              {/if}
               {#if s.status === 'requested' && !s.proposedByCoach}
                 <form method="POST" action="?/confirm" use:enhance>
                   <input type="hidden" name="session_id" value={s.id} />

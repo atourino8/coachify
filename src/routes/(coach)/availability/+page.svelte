@@ -3,6 +3,7 @@
   import PestanasRuta from '$lib/components/PestanasRuta.svelte';
   import { PESTANAS_AGENDA } from '$lib/navegacion';
   import Icono from '$lib/components/Icono.svelte';
+  import MenuFila from '$lib/components/MenuFila.svelte';
 
   let { data, form } = $props();
 
@@ -22,6 +23,16 @@
    * luego hay que borrar a mano uno a uno.
    */
   let anadiendo = $state(false);
+
+  /**
+   * El formulario se abre con un botón, no vive abierto.
+   *
+   * Es el mismo cambio que en Grupos, y por lo mismo: un formulario de alta
+   * permanente ocupa la primera pantalla del móvil, así que lo que vienes a
+   * mirar —tus huecos— queda debajo del pliegue. Se dan de alta una vez al mes
+   * y se consultan a diario.
+   */
+  let mostrarForm = $state(false);
 
   const DAYS = [
     { v: '1', label: 'Lunes' },
@@ -80,12 +91,23 @@
     activa="/availability"
   />
 
-  <div>
-    <span class="eyebrow">Agenda</span>
-    <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-2">Mis huecos</h1>
-    <p class="text-text-mute mt-2 text-sm">
-      Define tus huecos semanales. Tus clientes verán estas franjas al pedir cita.
-    </p>
+  <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+    <div class="min-w-0">
+      <span class="eyebrow">Agenda</span>
+      <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-2">
+        Mis huecos
+      </h1>
+      <p class="text-text-mute mt-2 text-sm max-w-lg">
+        Define tus huecos semanales. Tus clientes verán estas franjas al pedir cita.
+      </p>
+    </div>
+    <button
+      onclick={() => (mostrarForm = !mostrarForm)}
+      class="btn-primary whitespace-nowrap"
+      aria-expanded={mostrarForm}
+    >
+      {mostrarForm ? 'Cancelar' : '+ Nuevo hueco'}
+    </button>
   </div>
 
   {#if form?.error}
@@ -94,84 +116,86 @@
     </p>
   {/if}
 
-  <!-- Añadir hueco -->
-  <form
-    method="POST"
-    action="?/add"
-    use:enhance={() => {
-      anadiendo = true;
-      return async ({ update }) => {
-        await update();
-        anadiendo = false;
-      };
-    }}
-    class="card space-y-4"
-  >
-    <h2 class="font-semibold">Añadir hueco semanal</h2>
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label for="dow" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-          >Día</label
-        >
-        <select
-          id="dow"
-          name="day_of_week"
-          bind:value={dayOfWeek}
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
-        >
-          {#each DAYS as d}<option value={d.v}>{d.label}</option>{/each}
-        </select>
-      </div>
-      <div>
-        <label for="start" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-          >Hora inicio</label
-        >
-        <input
-          id="start"
-          type="time"
-          name="start_time"
-          bind:value={startTime}
-          required
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
-        />
-      </div>
-      <div>
-        <label for="dur" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
-          >Duración</label
-        >
-        <select
-          id="dur"
-          name="duration_minutes"
-          bind:value={duration}
-          class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
-        >
-          <option value="30">30 min</option>
-          <option value="45">45 min</option>
-          <option value="60">60 min</option>
-          <option value="90">90 min</option>
-        </select>
-      </div>
-      <div>
-        <span class="block text-xs uppercase tracking-wider text-text-mute mb-2">Modalidad</span>
-        <div class="flex gap-3 items-center pt-2">
-          <label class="flex items-center gap-1.5 text-sm">
-            <input
-              type="checkbox"
-              name="modalities"
-              value="presencial"
-              bind:checked={modPresencial}
-            /> Presencial
-          </label>
-          <label class="flex items-center gap-1.5 text-sm">
-            <input type="checkbox" name="modalities" value="online" bind:checked={modOnline} /> Online
-          </label>
+  {#if mostrarForm}
+    <!-- Añadir hueco -->
+    <form
+      method="POST"
+      action="?/add"
+      use:enhance={() => {
+        anadiendo = true;
+        return async ({ update }) => {
+          await update();
+          anadiendo = false;
+        };
+      }}
+      class="card space-y-4"
+    >
+      <h2 class="font-semibold">Añadir hueco semanal</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="dow" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+            >Día</label
+          >
+          <select
+            id="dow"
+            name="day_of_week"
+            bind:value={dayOfWeek}
+            class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+          >
+            {#each DAYS as d}<option value={d.v}>{d.label}</option>{/each}
+          </select>
+        </div>
+        <div>
+          <label for="start" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+            >Hora inicio</label
+          >
+          <input
+            id="start"
+            type="time"
+            name="start_time"
+            bind:value={startTime}
+            required
+            class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+          />
+        </div>
+        <div>
+          <label for="dur" class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+            >Duración</label
+          >
+          <select
+            id="dur"
+            name="duration_minutes"
+            bind:value={duration}
+            class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary"
+          >
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+          </select>
+        </div>
+        <div>
+          <span class="block text-xs uppercase tracking-wider text-text-mute mb-2">Modalidad</span>
+          <div class="flex gap-3 items-center pt-2">
+            <label class="flex items-center gap-1.5 text-sm">
+              <input
+                type="checkbox"
+                name="modalities"
+                value="presencial"
+                bind:checked={modPresencial}
+              /> Presencial
+            </label>
+            <label class="flex items-center gap-1.5 text-sm">
+              <input type="checkbox" name="modalities" value="online" bind:checked={modOnline} /> Online
+            </label>
+          </div>
         </div>
       </div>
-    </div>
-    <button type="submit" disabled={anadiendo} class="btn-primary w-full disabled:opacity-60">
-      {anadiendo ? 'Añadiendo…' : 'Añadir hueco'}
-    </button>
-  </form>
+      <button type="submit" disabled={anadiendo} class="btn-primary w-full disabled:opacity-60">
+        {anadiendo ? 'Añadiendo…' : 'Añadir hueco'}
+      </button>
+    </form>
+  {/if}
 
   <!-- Huecos actuales -->
   <section class="space-y-3">
@@ -191,22 +215,22 @@
                     {(s.modalities ?? []).map((m) => modalityLabel[m] ?? m).join(', ')}
                   </span>
                 </div>
-                <form method="POST" action="?/remove" use:enhance>
-                  <input type="hidden" name="slot_id" value={s.id} />
-                  <!-- La papelera y no una ×: es la misma acción que quitar un
-                       ejercicio de un día o un ejercicio del acordeón, y allí
-                       ya es una papelera. Una × además significa «cerrar» en
-                       otras tres partes de la aplicación. -->
-                  <button
-                    type="submit"
-                    aria-label="Borrar hueco de disponibilidad de {hhmm(s.start_time)} a {hhmm(
-                      s.end_time
-                    )}"
-                    class="text-text-mute hover:text-danger transition-colors"
-                  >
-                    <Icono nombre="papelera" class="w-4 h-4" />
-                  </button>
-                </form>
+                <!-- El menú de tres puntos y no la papelera suelta (pantalla
+                     24). Hoy la única acción es borrar, pero la fila se
+                     comporta ya como las de Ejercicios, Entrenamientos y
+                     Grupos, y la siguiente acción que llegue no le come sitio
+                     a la hora, que es lo que se viene a leer. -->
+                <MenuFila etiqueta="el hueco de {hhmm(s.start_time)} a {hhmm(s.end_time)}">
+                  <form method="POST" action="?/remove" use:enhance>
+                    <input type="hidden" name="slot_id" value={s.id} />
+                    <button
+                      type="submit"
+                      class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-danger hover:bg-danger/10"
+                    >
+                      <Icono nombre="papelera" class="w-4 h-4" /> Borrar hueco
+                    </button>
+                  </form>
+                </MenuFila>
               </div>
             {/each}
           </div>

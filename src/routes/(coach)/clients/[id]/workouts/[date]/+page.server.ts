@@ -88,12 +88,72 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
       }))
   }));
 
+  // Otros días de ESTE cliente, para «Importar → Otro entrenamiento».
+  //
+  // Por qué solo de este cliente y no de toda la cartera: copiar el lunes de
+  // Nadia al martes de Lucía suena útil hasta que te acuerdas de que las cargas
+  // son de Nadia. Para eso están las plantillas, que son de nadie a propósito.
+  //
+  // El día que se está editando se excluye aquí y no en la plantilla: si
+  // llegara y hubiera que filtrarlo en pantalla, el desplegable diría «3
+  // entrenos» y enseñaría dos.
+  const { data: otrosRaw } = await supabase
+    .from('workouts')
+    .select(
+      `id, date, title,
+       workout_items(
+         exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
+         exercise:exercises(id, name, muscle_group, description, video_url)
+       )`
+    )
+    .eq('client_id', params.id)
+    .eq('coach_id', user.id)
+    .neq('date', params.date)
+    .order('date', { ascending: false })
+    .limit(40);
+
+  const otrosDias = (
+    (otrosRaw ?? []) as unknown as {
+      id: string;
+      date: string;
+      title: string | null;
+      workout_items: {
+        order_index: number;
+        sets: number;
+        reps_prescribed: string | null;
+        weight_prescribed: string | null;
+        rest_seconds: number | null;
+        notes: string | null;
+        exercise: unknown;
+      }[];
+    }[]
+  )
+    // Un día sin ejercicios no se ofrece: importarlo dejaría el día vacío, que
+    // es justo lo que ya tenías antes de pulsar.
+    .filter((w) => (w.workout_items ?? []).length > 0)
+    .map((w) => ({
+      id: w.id,
+      date: w.date,
+      title: w.title,
+      items: [...(w.workout_items ?? [])]
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((it) => ({
+          exercise: it.exercise,
+          sets: it.sets,
+          reps_prescribed: it.reps_prescribed ?? '',
+          weight_prescribed: it.weight_prescribed ?? '',
+          rest_seconds: it.rest_seconds,
+          notes: it.notes ?? ''
+        }))
+    }));
+
   return {
     client,
     date: params.date,
     exercises: exercises ?? [],
     workout,
-    templates
+    templates,
+    otrosDias
   };
 };
 

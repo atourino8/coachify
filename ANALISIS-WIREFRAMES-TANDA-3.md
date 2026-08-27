@@ -264,3 +264,56 @@ filtrar clases y la columna se llama `title`. No lo vi leyendo el diff.
   pantalla.
 - **Pantalla 7:** nada que hacer. La barra de la biblioteca encima del
   formulario era cosa del prototipo (§ 8).
+
+---
+
+## 12 · Cerrado el resto de la tanda
+
+**Importar (pantallas 17 y 18).** Botón «Importar» en la cabecera del editor
+del día, con Biblioteca u **Otro entrenamiento** —otro día de ese mismo
+cliente, que es lo que se hace de verdad al repetir la semana—. El aviso de
+sobrescritura va **antes** de elegir, no después: lo que puede costar trabajo
+se dice antes de que trabajes.
+
+Solo se ofrecen días **de ese cliente**, no de la cartera: copiar el lunes de
+Nadia al martes de Lucía suena útil hasta que recuerdas que las cargas son de
+Nadia. Para eso están las plantillas, que no son de nadie a propósito.
+
+De paso se fue el desplegable suelto «Cargar entrenamiento» que vivía a media
+pantalla, y con él dos funciones y un modal que ya no llamaba nadie.
+
+**Historial (pantalla 21).** Conmutador **Entrenos | Citas** con el número de
+cada uno, más el filtro: en entrenos por «Hechos / Sin registrar» —la pregunta
+del entrenador es «¿me está siguiendo?»— y en citas por estado. Antes eran dos
+secciones apiladas, y con un cliente de un año las citas quedaban a un scroll
+enorme.
+
+**Mis huecos (pantalla 24).** El formulario de alta ya no vive abierto: botón
+«+ Nuevo hueco», como en Grupos. Y borrar se fue al menú de tres puntos.
+
+**Las palabras:** «Pasadas» → **«Completadas»**, y «Esperando al cliente» →
+**«Propuesta»**. Esta segunda importa más de lo que parece: las otras tres
+pastillas nombran el **estado** de la cita —Confirmada, Pendiente, Cancelada— y
+«Esperando al cliente» nombraba lo que falta por pasar, que es otra categoría.
+Cuatro pastillas en la misma columna tienen que hablar de lo mismo.
+
+**«Sin conflictos ✓» (pantalla 22).** Se calcula en el servidor. La regla, que
+había que decidir y no adivinar:
+
+> Choca si se **solapa con otra cita confirmada** suya o con una **clase suya
+> publicada**. Las rechazadas y las canceladas no ocupan a nadie, y dos
+> pendientes solapadas no son un conflicto todavía: confirmar una es lo que
+> decide cuál gana.
+
+**Sin margen entre medias, a propósito.** Dos citas pegadas —una acaba a las
+10:00 y la otra empieza a las 10:00— no se marcan. Un margen para desplazarse
+sería útil, pero es una política que nadie ha decidido y quince minutos
+inventados llenarían la pantalla de avisos falsos. Si tu socio quiere margen,
+es un número y una línea.
+
+Y se dice **también cuando no hay conflicto**, porque «Sin conflictos» solo
+tranquiliza si aparece siempre: si únicamente saliera el aviso malo, su
+ausencia podría significar que no se ha comprobado.
+
+**Sin migraciones.** Todo esto es interfaz y consultas sobre columnas que ya
+existían.

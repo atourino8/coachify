@@ -349,7 +349,7 @@
         aria-expanded={verPasadas}
         class="text-sm uppercase tracking-wider text-text-mute hover:text-text transition-colors"
       >
-        Pasadas ({pasadas.length})
+        Completadas ({pasadas.length})
         <span aria-hidden="true">{verPasadas ? '−' : '+'}</span>
       </button>
       {#if verPasadas}

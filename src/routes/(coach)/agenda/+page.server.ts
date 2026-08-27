@@ -44,10 +44,49 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
   }));
   const now = Date.now();
 
-  const pending = all.filter((s) => s.status === 'requested');
-  const confirmed = all.filter(
-    (s) => s.status === 'confirmed' && new Date(s.starts_at).getTime() >= now
-  );
+  // ---- Conflictos de horario (pantalla 22, «Sin conflictos ✓») ------------
+  //
+  // QUÉ CUENTA COMO CONFLICTO, que es la parte que hay que decidir y no
+  // adivinar:
+  //
+  //   · Otra cita CONFIRMADA suya que se solape. Las rechazadas y las
+  //     canceladas no ocupan a nadie, y dos PENDIENTES solapadas tampoco son
+  //     un conflicto todavía: confirmar una es justo lo que decide cuál gana.
+  //   · Una CLASE suya que se solape. Da igual cuánta gente haya apuntada: si
+  //     está dando una clase, no puede estar en una sesión individual.
+  //
+  // SIN MARGEN ENTRE MEDIAS, a propósito. Dos citas pegadas —una acaba a las
+  // 10:00 y otra empieza a las 10:00— no se marcan. Un margen para desplazarse
+  // sería útil pero es una política que nadie ha decidido, y quince minutos
+  // inventados por mí llenarían la pantalla de avisos falsos.
+  const { data: clasesRaw } = await supabase
+    .from('group_classes')
+    .select('starts_at, ends_at')
+    .eq('coach_id', user.id)
+    .eq('status', 'published');
+
+  const ocupados = [
+    ...all
+      .filter((s) => s.status === 'confirmed')
+      .map((s) => ({ id: s.id, ini: s.starts_at, fin: s.ends_at })),
+    ...((clasesRaw ?? []) as { starts_at: string; ends_at: string }[]).map((c) => ({
+      id: null as string | null,
+      ini: c.starts_at,
+      fin: c.ends_at
+    }))
+  ];
+
+  /** Dos tramos se solapan si cada uno empieza antes de que acabe el otro. */
+  function chocaCon(s: (typeof all)[number]) {
+    return ocupados.some((o) => o.id !== s.id && o.ini < s.ends_at && s.starts_at < o.fin);
+  }
+
+  const pending = all
+    .filter((s) => s.status === 'requested')
+    .map((s) => ({ ...s, choca: chocaCon(s) }));
+  const confirmed = all
+    .filter((s) => s.status === 'confirmed' && new Date(s.starts_at).getTime() >= now)
+    .map((s) => ({ ...s, choca: chocaCon(s) }));
   const history = all
     .filter(
       (s) =>

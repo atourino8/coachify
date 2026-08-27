@@ -1,5 +1,6 @@
 <script lang="ts">
   import { dndzone, type DndEvent } from 'svelte-dnd-action';
+  import ModalImportar from '$lib/components/ModalImportar.svelte';
   import { flip } from 'svelte/animate';
   import { enhance } from '$app/forms';
   import { Historial } from '$lib/historial.svelte';
@@ -11,8 +12,8 @@
 
   let { data, form } = $props();
 
-  // Modales de confirmación (cargar plantilla local / borrar entreno POST).
-  let confirmTpl = $state(false);
+  let modalImportar = $state(false);
+  /** Confirmación de borrar el entreno entero (va por POST, sí toca la base). */
   let confirmDelete = $state(false);
 
   // Tipo del item del día: copia del exercise + parámetros prescritos.
@@ -46,7 +47,6 @@
   // svelte-ignore state_referenced_locally
   let notes = $state(data.workout?.notes ?? '');
   let saving = $state(false);
-  let selectedTemplate = $state('');
 
   // ---- Consultar vs. editar -------------------------------------------------
   // Un día pasado se abre para MIRAR qué se hizo, no para montarlo. Enseñar la
@@ -57,21 +57,22 @@
   // svelte-ignore state_referenced_locally
   let editando = $state(!(data.date < todayISOLocal()));
 
-  // Cargar los ejercicios de una plantilla en el día (reemplaza los actuales).
-  // Si ya hay ejercicios, pide confirmación en modal antes de reemplazar.
-  function loadTemplate() {
-    const tpl = data.templates?.find((t) => t.id === selectedTemplate);
-    if (!tpl) return;
-    if (dayItems.length > 0) {
-      confirmTpl = true;
-      return;
-    }
-    applyTemplate();
-  }
-  function applyTemplate() {
-    const tpl = data.templates?.find((t) => t.id === selectedTemplate);
-    if (!tpl) return;
-    dayItems = tpl.items.map((it) => ({
+  /**
+   * Traer los ejercicios de una plantilla o de otro día.
+   *
+   * Pasa por `antesDeCambiar()` como cualquier otra edición, así que
+   * «Deshacer» devuelve el día tal y como estaba. Por eso el aviso del modal
+   * puede prometerlo.
+   */
+  function importarDesde(origen: 'biblioteca' | 'otro', id: string) {
+    const fuente =
+      origen === 'biblioteca'
+        ? data.templates?.find((x) => x.id === id)
+        : data.otrosDias?.find((x) => x.id === id);
+    if (!fuente) return;
+
+    antesDeCambiar();
+    dayItems = fuente.items.map((it) => ({
       id: crypto.randomUUID(),
       exercise: it.exercise as Exercise,
       sets: it.sets,
@@ -81,15 +82,15 @@
       notes: it.notes
     }));
 
-    // La nota de la plantilla PARA EL CLIENTE se propone, pero solo si el día
-    // no tiene ya una escrita. Pisarla sería borrar sin avisar algo puesto para
-    // ESE día concreto, que es justo lo que una plantilla no debe hacer.
-    if (tpl.clientNotes && !notes.trim()) notes = tpl.clientNotes;
+    // La nota PARA EL CLIENTE de una plantilla se propone si el día no tiene
+    // ya la suya. De otro día NO se trae: esa nota se escribió para aquel día.
+    if (origen === 'biblioteca') {
+      const tpl = data.templates?.find((x) => x.id === id);
+      if (tpl?.clientNotes && !notes.trim()) notes = tpl.clientNotes;
+    }
 
-    selectedTemplate = '';
+    modalImportar = false;
   }
-
-  // Biblioteca filtrada
 
   // ---- Deshacer paso a paso ----
   //
@@ -185,6 +186,16 @@
         <p class="text-xs text-text-mute mt-1">Día pasado</p>
       {/if}
     </div>
+
+    <!-- «Importar» arriba, donde lo pone el wireframe 17. Antes esto era un
+         desplegable suelto a media pantalla que decía «Cargar entrenamiento» y
+         solo ofrecía plantillas; ahora ofrece también otro día del cliente, que
+         es lo que se hace de verdad cuando repites la semana. -->
+    {#if editando}
+      <button type="button" onclick={() => (modalImportar = true)} class="btn-ghost text-sm">
+        <Icono nombre="subir" class="w-4 h-4 inline-block -mt-0.5" /> Importar
+      </button>
+    {/if}
   </div>
 
   {#if form?.success}
@@ -292,28 +303,6 @@
         ></textarea>
       </div>
     </div>
-
-    <!-- Cargar plantilla -->
-    {#if data.templates && data.templates.length > 0}
-      <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
-        <span class="text-xs uppercase tracking-wider text-text-mute whitespace-nowrap"
-          >Cargar entrenamiento</span
-        >
-        <select
-          bind:value={selectedTemplate}
-          onchange={loadTemplate}
-          class="flex-1 px-3 py-2 bg-bg border border-text-mute/20 rounded-md text-sm focus:border-primary"
-        >
-          <option value="">Elige un entrenamiento para rellenar el día…</option>
-          {#each data.templates as t (t.id)}
-            <option value={t.id}>{t.name} ({t.items.length} ej.)</option>
-          {/each}
-        </select>
-        <a href="/templates" class="text-xs text-primary hover:underline whitespace-nowrap"
-          >Gestionar entrenamientos →</a
-        >
-      </div>
-    {/if}
 
     <!-- Cuerpo: biblioteca + día.
        La biblioteca se abre en un modal, como en el editor de entrenamientos:
@@ -542,20 +531,21 @@
 />
 
 <ConfirmModal
-  bind:open={confirmTpl}
-  title="Cargar entrenamiento"
-  message="Esto reemplazará los ejercicios actuales del día por los del entrenamiento."
-  confirmLabel="Reemplazar"
-  danger={false}
-  onconfirm={applyTemplate}
-/>
-
-<ConfirmModal
   bind:open={confirmDelete}
   action="?/delete"
   title="Borrar entreno del día"
   message="Se borrará el entreno completo de este día. No se puede deshacer."
   confirmLabel="Borrar entreno"
+/>
+
+<ModalImportar
+  abierto={modalImportar}
+  fecha={data.date}
+  tieneEjercicios={dayItems.length > 0}
+  plantillas={data.templates ?? []}
+  otrosDias={data.otrosDias ?? []}
+  importar={importarDesde}
+  cerrar={() => (modalImportar = false)}
 />
 
 <style>
