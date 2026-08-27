@@ -187,14 +187,26 @@
       {/if}
     </div>
 
-    <!-- «Importar» arriba, donde lo pone el wireframe 17. Antes esto era un
-         desplegable suelto a media pantalla que decía «Cargar entrenamiento» y
-         solo ofrecía plantillas; ahora ofrece también otro día del cliente, que
-         es lo que se hace de verdad cuando repites la semana. -->
+    <!-- «Importar» y «Borrar» JUNTOS arriba, como en el wireframe 17.
+         Los dos hacen lo mismo: cambiar el día entero de golpe, frente a los
+         retoques de más abajo. «Borrar» vivía centrado al final de la página,
+         que es donde uno acaba después de editar y el peor sitio para poner lo
+         único irreversible de la pantalla. -->
     {#if editando}
-      <button type="button" onclick={() => (modalImportar = true)} class="btn-ghost text-sm">
-        <Icono nombre="subir" class="w-4 h-4 inline-block -mt-0.5" /> Importar
-      </button>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button type="button" onclick={() => (modalImportar = true)} class="btn-ghost text-sm">
+          <Icono nombre="subir" class="w-4 h-4 inline-block -mt-0.5" /> Importar
+        </button>
+        {#if data.workout}
+          <button
+            type="button"
+            onclick={() => (confirmDelete = true)}
+            class="btn-ghost text-sm text-danger hover:text-danger/80"
+          >
+            Borrar <Icono nombre="papelera" class="w-4 h-4 inline-block -mt-0.5" />
+          </button>
+        {/if}
+      </div>
     {/if}
   </div>
 
@@ -456,18 +468,6 @@
           {/each}
         </div>
       </section>
-    </div>
-  {/if}
-
-  {#if data.workout && editando}
-    <div class="text-center pt-4">
-      <button
-        type="button"
-        onclick={() => (confirmDelete = true)}
-        class="text-sm text-danger hover:text-danger/80"
-      >
-        Borrar entreno del día
-      </button>
     </div>
   {/if}
 

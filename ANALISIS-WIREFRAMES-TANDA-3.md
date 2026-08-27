@@ -317,3 +317,56 @@ ausencia podría significar que no se ha comprobado.
 
 **Sin migraciones.** Todo esto es interfaz y consultas sobre columnas que ya
 existían.
+
+---
+
+## 13 · Lo que TODAVÍA falta (repaso final)
+
+Repasadas las once otra vez contra el código, no de memoria. Quedan tres cosas,
+y **una la había roto yo hoy mismo**.
+
+### Arreglado en el momento: «Borrar» se había quedado abajo
+
+Subí «Importar» a la cabecera, como pone el wireframe 17… y dejé «Borrar» donde
+estaba: centrado al final de la página. O sea que separé dos botones que el
+wireframe dibuja juntos, y en la misma tanda en la que iba persiguiendo
+incoherencias.
+
+Ya están los dos arriba. Y tienen que estarlo, porque hacen lo mismo —cambiar
+el día entero de golpe, frente a los retoques de abajo— y porque el final de la
+página es el peor sitio para lo único irreversible de la pantalla: es justo
+donde acabas después de editar.
+
+### Pendiente 1 · La ficha no tiene modo lectura (pantalla 19)
+
+**Esto lo di por bueno y no lo era.** Escribí «todos los campos de la ficha
+existen ✓», y es verdad. Lo que no miré es el MODO: el wireframe enseña los
+valores como texto con un botón **«Editar»** arriba, y `PanelFicha` es un
+formulario **siempre abierto**, con todos los campos editables desde que entras.
+
+Por qué importa y no es cosmético:
+
+- En un móvil, ocho campos de formulario ocupan el doble que ocho líneas de
+  texto. La ficha se consulta mucho más de lo que se edita.
+- Un formulario siempre vivo invita a tocar sin querer lo que solo venías a
+  mirar, y ahí dentro están la cuota y el «pagado hasta».
+
+Falta también el **«Actualizado el …»** bajo «Pagado hasta», que el wireframe
+pone y no está en ninguna parte.
+
+### Pendiente 2 · Progreso: meter medidas a mano (pantalla 20)
+
+Decidido y sin hacer. Es lo que edita el botón «Editar» de esa pantalla.
+
+**Y esta sí necesita migración**, a diferencia de todo lo demás de la tanda: no
+hay ninguna tabla de medidas. Encaja con «Tracking enriquecido» de la v2 de
+SPEC-TRAINER.md, así que conviene hacerla entera de una vez —peso, perímetros,
+fotos— en vez de improvisar una tabla ahora para tapar un botón.
+
+### Diferencia menor que dejo tal cual
+
+En el historial (21) el wireframe marca cada entreno con un **✓ verde o un ✕
+rojo** y nosotros ponemos el color **más la palabra** («Hecho» / «Sin
+registrar»). Es a propósito: DISENO.md no deja que el color lleve la
+información solo. Se puede añadir el icono junto a la palabra si tu socio lo
+quiere, pero la palabra no se va.
