@@ -171,6 +171,7 @@
     {#each [{ v: 'entrenos', l: 'Calendario' }, { v: 'ficha', l: 'Ficha' }, { v: 'progreso', l: 'Progreso' }, { v: 'tecnica', l: 'Técnica' }, { v: 'historial', l: 'Historial' }] as t (t.v)}
       <button
         onclick={() => (tab = t.v as typeof tab)}
+        aria-current={tab === t.v ? 'page' : undefined}
         class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 -mb-px transition-colors flex items-center gap-2
           {tab === t.v
           ? 'border-accent text-text'

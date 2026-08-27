@@ -1,5 +1,9 @@
 <script lang="ts">
   import { diaConSemana } from '$lib/formato';
+  import { contiene } from '$lib/texto';
+  import Icono from '$lib/components/Icono.svelte';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_AGENDA } from '$lib/navegacion';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -7,9 +11,15 @@
   let { data, form } = $props();
 
   // Timeline único: pendientes + confirmadas próximas, ordenadas cronológicamente.
-  const upcoming = $derived(
+  const todas = $derived(
     [...data.pending, ...data.confirmed].sort((a, b) => a.starts_at.localeCompare(b.starts_at))
   );
+
+  // Buscador por cliente (pantalla 22). Se busca por NOMBRE y no por fecha
+  // porque la fecha ya la ordena la lista: lo que no se puede hacer sin esto es
+  // «¿qué tengo con Nadia?» sin recorrer las cuarenta citas del mes.
+  let busqueda = $state('');
+  const upcoming = $derived(todas.filter((s) => contiene(s.client?.full_name ?? '', busqueda)));
 
   // Etiqueta de estado para cada fila del timeline.
   function badge(s: { status: string; proposedByCoach: boolean }) {
@@ -277,22 +287,14 @@
 {/snippet}
 
 <div class="space-y-8">
+  <PestanasRuta etiqueta="Secciones de la agenda" pestanas={PESTANAS_AGENDA} activa="/agenda" />
+
   <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
     <div class="min-w-0">
-      <span class="eyebrow">Citas</span>
-      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Agenda</h1>
+      <span class="eyebrow">Agenda</span>
+      <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Citas</h1>
     </div>
     <div class="flex items-center gap-3">
-      <a
-        href="/clases"
-        class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
-        >Clases</a
-      >
-      <a
-        href="/availability"
-        class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
-        >⚙ Mis huecos</a
-      >
       {#if data.clients.length > 0}
         <button onclick={() => (showPropose = !showPropose)} class="btn-primary whitespace-nowrap">
           + Proponer cita
@@ -434,6 +436,23 @@
     </form>
   {/if}
 
+  {#if todas.length > 0}
+    <div class="relative max-w-sm">
+      <label for="buscar-cita" class="sr-only">Buscar citas por cliente</label>
+      <input
+        id="buscar-cita"
+        type="search"
+        bind:value={busqueda}
+        placeholder="Buscar por cliente"
+        class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
+               focus:outline-none focus:border-accent"
+      />
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute pointer-events-none">
+        <Icono nombre="buscar" class="w-4 h-4" />
+      </span>
+    </div>
+  {/if}
+
   <!-- Timeline de próximas citas (pendientes + confirmadas, cronológico) -->
   <section class="space-y-3">
     <h2 class="text-lg font-semibold flex items-center gap-2">
@@ -445,7 +464,13 @@
       {/if}
     </h2>
     {#if upcoming.length === 0}
-      <p class="text-sm text-text-mute">No hay citas próximas. Propón una a un cliente.</p>
+      <!-- Dos vacíos distintos: no tener citas y no encontrar ninguna no son lo
+           mismo, y la salida tampoco: proponer una, o borrar lo escrito. -->
+      <p class="text-sm text-text-mute">
+        {busqueda.trim()
+          ? 'Ninguna cita con ese cliente.'
+          : 'No hay citas próximas. Propón una a un cliente.'}
+      </p>
     {:else}
       {#each upcoming as s (s.id)}
         {@const b = badge(s)}

@@ -226,3 +226,39 @@ Para que la próxima revisión no lo «arregle»:
   llama **«Esperando al cliente»** donde el wireframe pone **«Propuesta»**.
 - **Pantalla 23:** sala/ubicación ✓, «8/8 (+4 en espera)» ✓, agrupación por
   próximas ✓.
+
+---
+
+## 10 · Hecho en esta tanda
+
+**Las tres pestañas de la Agenda.** `PestanasRuta` es ahora el único sitio
+donde se pinta una fila de pestañas que son páginas, y `lib/navegacion.ts` la
+única lista de cuáles son. Citas, Clases y Mis huecos la llevan las tres y cada
+una se marca a sí misma; fuera el «← Agenda» y fuera el engranaje. La
+biblioteca (Ejercicios/Entrenamientos) pasa por el mismo componente.
+
+**Y de paso salieron dos cosas que no venían en los wireframes**, del tipo que
+solo aparece al mirar todas las filas de pestañas a la vez:
+
+- Había **dos colores** para «esta es la que estás viendo»: la biblioteca y los
+  avisos usaban `text-accent`, la ficha del cliente `text-text`. Ahora una.
+- **Ninguna fila de botones marcaba `aria-current`.** El estado activo iba solo
+  en el color, que es justo lo que prohíbe DISENO.md. Un lector de pantalla no
+  podía saber en qué pestaña estabas. Arreglado en las cuatro.
+
+**Los buscadores de Citas y Clases**, con `lib/texto.ts`, que ya es de donde
+busca todo lo demás. En Clases filtra las dos secciones —próximas y pasadas—
+porque quien escribe el nombre de una clase suele querer la que dio. Y los dos
+vacíos se distinguen: no tener citas y no encontrar ninguna tienen salidas
+distintas.
+
+**Un fallo mío cazado por el comprobador de tipos:** escribí `c.name` para
+filtrar clases y la columna se llama `title`. No lo vi leyendo el diff.
+
+## 11 · Decidido, pendiente de hacer
+
+- **Días vacíos:** «Descanso» va en la vista del ENTRENADOR, que sabe leerlo.
+  Al cliente no se le promete un descanso que nadie ha decidido.
+- **Progreso → «Editar»:** es meter medidas y peso a mano. Enlaza con
+  «Tracking enriquecido», que ya está en la v2 de SPEC-TRAINER.md; esto le pone
+  pantalla.

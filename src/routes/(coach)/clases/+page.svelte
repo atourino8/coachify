@@ -1,13 +1,23 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_AGENDA } from '$lib/navegacion';
   import { diaConSemana, hora } from '$lib/formato';
   import Icono from '$lib/components/Icono.svelte';
+  import { contiene } from '$lib/texto';
 
   let { data, form } = $props();
 
   let showForm = $state(false);
   let creating = $state(false);
   let verPasadas = $state(false);
+
+  // El buscador filtra las DOS secciones, próximas y pasadas. Buscar solo en
+  // las próximas sería la mitad de un buscador: quien escribe el nombre de una
+  // clase suele querer la que dio, no la que dará.
+  let busqueda = $state('');
+  const proximas = $derived(data.proximas.filter((c) => contiene(c.title, busqueda)));
+  const pasadas = $derived(data.pasadas.filter((c) => contiene(c.title, busqueda)));
 
   // Días marcados = alta en lote. Vacío = una clase suelta, y entonces la
   // fecha de fin sobra: se oculta en vez de dejarla ahí sin efecto.
@@ -69,6 +79,8 @@
 {/snippet}
 
 <div class="space-y-8">
+  <PestanasRuta etiqueta="Secciones de la agenda" pestanas={PESTANAS_AGENDA} activa="/clases" />
+
   <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
     <div class="min-w-0">
       <span class="eyebrow">Agenda</span>
@@ -283,11 +295,32 @@
     </form>
   {/if}
 
+  <!-- Buscador. En la quinta revisión razoné que una lista por fecha no lo
+       necesita, y el wireframe dice lo contrario. Tenía razón el wireframe: se
+       recorre por fecha mientras es corta, y con treinta clases al mes buscar
+       «Espalda sana» es más rápido que bajar. -->
+  {#if data.proximas.length + data.pasadas.length > 0}
+    <div class="relative max-w-sm">
+      <label for="buscar-clase" class="sr-only">Buscar clases por nombre</label>
+      <input
+        id="buscar-clase"
+        type="search"
+        bind:value={busqueda}
+        placeholder="Buscar por nombre"
+        class="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-md text-sm
+               focus:outline-none focus:border-accent"
+      />
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute pointer-events-none">
+        <Icono nombre="buscar" class="w-4 h-4" />
+      </span>
+    </div>
+  {/if}
+
   <section class="space-y-3">
     <h2 class="text-sm uppercase tracking-wider text-text-mute">
-      Próximas ({data.proximas.length})
+      Próximas ({proximas.length})
     </h2>
-    {#if data.proximas.length === 0}
+    {#if proximas.length === 0}
       <div class="card text-center py-12">
         <div class="mx-auto w-10 h-10 text-text-mute mb-3">
           <Icono nombre="agenda" />
@@ -300,14 +333,14 @@
       </div>
     {:else}
       <div class="border-t border-line">
-        {#each data.proximas as c (c.id)}
+        {#each proximas as c (c.id)}
           {@render fila(c)}
         {/each}
       </div>
     {/if}
   </section>
 
-  {#if data.pasadas.length > 0}
+  {#if pasadas.length > 0}
     <section class="space-y-3">
       <!-- Cerrado por defecto: lo pasado no se consulta a diario y con tres
            meses de clases sepulta a las próximas. -->
@@ -316,12 +349,12 @@
         aria-expanded={verPasadas}
         class="text-sm uppercase tracking-wider text-text-mute hover:text-text transition-colors"
       >
-        Pasadas ({data.pasadas.length})
+        Pasadas ({pasadas.length})
         <span aria-hidden="true">{verPasadas ? '−' : '+'}</span>
       </button>
       {#if verPasadas}
         <div class="border-t border-line">
-          {#each data.pasadas as c (c.id)}
+          {#each pasadas as c (c.id)}
             {@render fila(c)}
           {/each}
         </div>

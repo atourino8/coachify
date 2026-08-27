@@ -1,5 +1,7 @@
 <script lang="ts">
   import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_BIBLIOTECA } from '$lib/navegacion';
   import { normalizar } from '$lib/texto';
   import { enhance } from '$app/forms';
   import { page } from '$app/state';
@@ -58,18 +60,11 @@
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
-  <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Ejercicios y entrenamientos">
-    <a
-      href="/exercises"
-      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-transparent text-text-mute hover:text-text"
-      >Ejercicios</a
-    >
-    <a
-      href="/templates"
-      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-accent text-accent -mb-px"
-      >Entrenamientos</a
-    >
-  </FilaDesplazable>
+  <PestanasRuta
+    etiqueta="Ejercicios y entrenamientos"
+    pestanas={PESTANAS_BIBLIOTECA}
+    activa="/templates"
+  />
 
   <!-- El botón cae a su propia línea en móvil: junto al título no cabía y se
        salía de la pantalla. -->

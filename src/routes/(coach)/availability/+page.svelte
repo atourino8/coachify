@@ -1,5 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_AGENDA } from '$lib/navegacion';
   import Icono from '$lib/components/Icono.svelte';
 
   let { data, form } = $props();
@@ -70,11 +72,17 @@
 </svelte:head>
 
 <div class="space-y-8 max-w-2xl">
+  <!-- La fila de pestañas sustituye al «← Agenda». No es lo mismo: la flecha
+       decía que esto era una pantalla colgada de Citas, y son hermanas. -->
+  <PestanasRuta
+    etiqueta="Secciones de la agenda"
+    pestanas={PESTANAS_AGENDA}
+    activa="/availability"
+  />
+
   <div>
-    <a href="/agenda" class="text-sm text-text-mute hover:text-text">← Agenda</a>
-    <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-3">
-      Mis huecos disponibles
-    </h1>
+    <span class="eyebrow">Agenda</span>
+    <h1 class="text-3xl sm:text-4xl font-display font-semibold tracking-tight mt-2">Mis huecos</h1>
     <p class="text-text-mute mt-2 text-sm">
       Define tus huecos semanales. Tus clientes verán estas franjas al pedir cita.
     </p>

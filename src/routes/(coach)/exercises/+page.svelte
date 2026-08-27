@@ -1,5 +1,7 @@
 <script lang="ts">
   import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_BIBLIOTECA } from '$lib/navegacion';
   import { enhance } from '$app/forms';
   import { SvelteSet } from 'svelte/reactivity';
   import Icono from '$lib/components/Icono.svelte';
@@ -191,18 +193,11 @@
 
 <div class="space-y-8">
   <!-- Pestañas Biblioteca -->
-  <FilaDesplazable class="flex gap-1 border-b border-line" etiqueta="Ejercicios y entrenamientos">
-    <a
-      href="/exercises"
-      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-accent text-accent -mb-px"
-      >Ejercicios</a
-    >
-    <a
-      href="/templates"
-      class="px-4 py-2 text-sm font-medium border-b-2 whitespace-nowrap flex-shrink-0 border-transparent text-text-mute hover:text-text"
-      >Entrenamientos</a
-    >
-  </FilaDesplazable>
+  <PestanasRuta
+    etiqueta="Ejercicios y entrenamientos"
+    pestanas={PESTANAS_BIBLIOTECA}
+    activa="/exercises"
+  />
 
   <!-- Título en su propia línea y los mandos debajo, como en el wireframe.
        Antes iba todo en una fila con justify-between y en un móvil los cuatro
