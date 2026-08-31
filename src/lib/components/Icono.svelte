@@ -52,7 +52,11 @@
     // dos vecinos: un «+» escrito con la tipografía se ve más fino al lado de
     // un icono y la fila queda desigual.
     mas: 'M12 5v14M5 12h14',
-    copiar: 'M9 9h11v11H9zM5 15H4V4h11v1'
+    copiar: 'M9 9h11v11H9zM5 15H4V4h11v1',
+    // La × de cerrar, dibujada con trazo como el resto. Se usaba el carácter
+    // «×» a pelo, que cambia de grosor con la tipografía y no casa con los
+    // demás iconos de la misma fila.
+    cerrar: 'M6 6l12 12M18 6L6 18'
   } as const;
 </script>
 

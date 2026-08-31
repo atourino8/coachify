@@ -2,6 +2,7 @@
 // un entreno a cada cita (o crear uno nuevo desde el constructor).
 
 import { fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import { isoDateInTZ } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import type { PageServerLoad, Actions } from './$types';
@@ -167,52 +168,44 @@ async function setStatus(
 }
 
 export const actions: Actions = {
-  confirm: async ({ request, locals: { supabase, user } }) => {
+  confirm: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'confirmed');
     if (error) return fail(500, { error: error.message });
-    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
-    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
-    // exactamente el fallo que había aquí.
-    return { success: true, hecho: 'confirmada' };
+    avisar(cookies, 'Cita confirmada.');
+    return { success: true };
   },
-  reject: async ({ request, locals: { supabase, user } }) => {
+  reject: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'rejected');
     if (error) return fail(500, { error: error.message });
-    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
-    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
-    // exactamente el fallo que había aquí.
-    return { success: true, hecho: 'rechazada' };
+    avisar(cookies, 'Cita rechazada.');
+    return { success: true };
   },
-  cancel: async ({ request, locals: { supabase, user } }) => {
+  cancel: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'cancelled');
     if (error) return fail(500, { error: error.message });
-    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
-    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
-    // exactamente el fallo que había aquí.
-    return { success: true, hecho: 'cancelada' };
+    avisar(cookies, 'Cita cancelada.');
+    return { success: true };
   },
-  complete: async ({ request, locals: { supabase, user } }) => {
+  complete: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'completed');
     if (error) return fail(500, { error: error.message });
-    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
-    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
-    // exactamente el fallo que había aquí.
-    return { success: true, hecho: 'completada' };
+    avisar(cookies, 'Cita marcada como completada.');
+    return { success: true };
   },
   // Asigna un entreno existente a la cita.
-  assignWorkout: async ({ request, locals: { supabase, user } }) => {
+  assignWorkout: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const id = fd.get('session_id') as string;
@@ -227,7 +220,7 @@ export const actions: Actions = {
     return { success: true };
   },
   // Quita el entreno ligado a la cita.
-  unassignWorkout: async ({ request, locals: { supabase, user } }) => {
+  unassignWorkout: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
@@ -241,7 +234,7 @@ export const actions: Actions = {
   },
 
   // Materializa una PLANTILLA como entreno en la fecha de la cita y lo liga.
-  assignTemplate: async ({ request, locals: { supabase, user } }) => {
+  assignTemplate: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const sessionId = fd.get('session_id') as string;
@@ -276,12 +269,13 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
     if (linkErr) return fail(500, { error: linkErr.message });
 
-    return { success: true, fromTemplate: true };
+    avisar(cookies, 'Entreno creado y asignado a la cita.');
+    return { success: true };
   },
 
   // Reprograma una cita (nueva fecha/hora). starts_at/ends_at llegan ya en ISO
   // calculados en el navegador (zona local del coach).
-  reschedule: async ({ request, locals: { supabase, user } }) => {
+  reschedule: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const id = fd.get('session_id') as string;
@@ -295,12 +289,13 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: error.message });
-    return { success: true, rescheduled: true };
+    avisar(cookies, 'Cita reprogramada.');
+    return { success: true };
   },
 
   // El coach PROPONE una cita a un cliente. Queda 'requested' (requested_by =
   // coach) para que el cliente la confirme. Opcionalmente asigna una plantilla.
-  createSession: async ({ request, locals: { supabase, user } }) => {
+  createSession: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const clientId = fd.get('client_id') as string;
@@ -354,6 +349,7 @@ export const actions: Actions = {
       }
     }
 
-    return { success: true, proposed: true };
+    avisar(cookies, 'Cita propuesta. El cliente la verá y podrá confirmarla.');
+    return { success: true };
   }
 };

@@ -631,4 +631,32 @@ ven abriendo la pantalla.
 
 ---
 
+## Un mensaje que no se ve es un mensaje que no existe
+
+**Síntoma:** «propongo cita, le doy al botón y no dice nada». Yo había mirado
+el código y el mensaje **estaba**: un aviso verde de «Cita propuesta».
+
+**Causa:** el aviso se pintaba **en el flujo del documento, arriba de la
+página**, y el formulario de proponer cita es largo. En un móvil, cuando
+terminas de rellenarlo estás doscientos píxeles más abajo; al enviar, el panel
+se cierra, la página se encoge y el mensaje aparece en un sitio que no estás
+mirando. Nunca lo ves.
+
+**Regla:** una confirmación va **anclada al viewport**, no al documento. Si el
+usuario puede estar en cualquier punto del scroll cuando actúa —y casi siempre
+puede—, el mensaje tiene que ir donde mire.
+
+**Y la trampa de diagnóstico:** mi primer detector buscaba «¿hay mensaje?» y
+dijo que faltaban veinticinco. Al afinarlo dijo que no faltaba ninguno. Las dos
+respuestas eran inútiles porque **la pregunta estaba mal**: no era si el
+mensaje existe, era si se ve. Un grep no puede contestar eso; hay que abrir la
+pantalla, o razonar sobre dónde queda el scroll.
+
+**Extra que salió de aquí:** un mensaje que tiene que sobrevivir a una
+redirección no puede vivir en `form`. Va en una cookie de un solo uso que lee
+el layout raíz, y así vale igual para las acciones que se quedan y para las que
+te devuelven a donde empezaste.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

@@ -27,5 +27,9 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
     data: { session }
   } = await supabase.auth.getSession();
 
-  return { supabase, session };
+  // `aviso` viene del layout de servidor y hay que volver a pasarlo: lo que
+  // devuelve este load REEMPLAZA a lo de arriba, no se fusiona. Sin esta línea
+  // el mensaje se carga correctamente en el servidor y se pierde aquí, que es
+  // el tipo de fallo que no da error: simplemente no sale nada.
+  return { supabase, session, aviso: data.aviso };
 };

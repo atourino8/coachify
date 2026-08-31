@@ -394,3 +394,30 @@ coherencia, implementar rápido y detectar cuándo algo se parece a todo lo
 demás. Lo que no tengo es criterio propio fiable: si me dejan elegir, tiendo a
 la media. Este documento existe justamente para tapar ese agujero mientras no
 haya alguien con criterio.
+
+---
+
+## Avisos de «hecho»: uno solo, y anclado a la pantalla
+
+Cuando una acción termina bien, el aviso lo pone la propia acción con
+`avisar(cookies, 'Cita confirmada.')` y lo pinta `AvisoFlash`, **flotando
+arriba del viewport**, en el layout raíz.
+
+**Nunca en el flujo del documento.** Un aviso dentro de la página aparece donde
+le toque estar, que puede ser muy lejos de donde estaba mirando quien pulsó:
+eso es exactamente lo que hacía que «Proponer cita» pareciera no hacer nada.
+
+**El texto va en pasado y nombra la cosa**: «Cita propuesta», no «Guardado».
+Cuando se hacen tres cosas seguidas, un «Guardado» genérico no dice cuál salió
+bien.
+
+**Los errores siguen en su sitio**, junto al formulario que los provocó: un
+error hay que poder leerlo con el campo delante, y no se va solo a los cinco
+segundos.
+
+### Migración en curso
+
+`(coach)/agenda` ya usa solo el aviso flotante. **Quedan dieciocho pantallas**
+con el aviso antiguo en el flujo; funcionan, pero tienen el mismo defecto de
+visibilidad. Se van pasando: la lista está en el commit que introdujo
+`aviso.server.ts`.

@@ -322,23 +322,6 @@
       {form.error}
     </p>
   {/if}
-  <!-- El aviso sale para CUALQUIER acción, no solo al proponer.
-       Antes «Confirmar» devolvía un `success: true` pelado y aquí solo se
-       miraba `form.proposed`, así que confirmar una cita no decía nada: ni
-       mensaje, ni cambio en el botón. Se pulsaba y la pantalla se quedaba
-       igual. -->
-  {#if form?.success && (form?.proposed || form?.hecho)}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {#if form?.proposed}
-        Cita propuesta. El cliente la verá y podrá confirmarla.
-      {:else}
-        Cita {form.hecho}.
-      {/if}
-    </p>
-  {/if}
 
   {#if showPropose}
     <form

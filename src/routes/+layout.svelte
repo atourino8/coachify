@@ -1,5 +1,6 @@
 <script lang="ts">
   import '../app.css';
+  import AvisoFlash from '$lib/components/AvisoFlash.svelte';
   import { invalidate } from '$app/navigation';
   import { navigating, page } from '$app/state';
   import { onMount } from 'svelte';
@@ -69,6 +70,11 @@
     <div class="h-full w-1/3 bg-accent loading-bar"></div>
   </div>
 {/if}
+
+<!-- Un solo sitio para el aviso de «hecho», en el layout RAÍZ y no en el del
+     entrenador: el cliente también confirma y cancela citas, y si viviera en
+     el layout de coach habría que escribirlo dos veces. -->
+<AvisoFlash aviso={data.aviso} />
 
 {@render children()}
 
