@@ -335,108 +335,139 @@
           {/if}
         </div>
 
-        <div
-          class="space-y-3 min-h-[300px] rounded-md transition-colors {dayItems.length === 0
-            ? 'border-2 border-dashed border-text-mute/20 p-6 grid place-items-center'
-            : ''}"
-          use:dndzone={{
-            items: dayItems,
-            type: 'exercise',
-            flipDurationMs: 200,
-            dropFromOthersDisabled: true,
-            dropTargetStyle: {}
-          }}
-          onconsider={handleDayConsider}
-          onfinalize={handleDayFinalize}
-        >
-          {#each dayItems as item, i (item.id)}
-            <!-- Igual que en las otras dos pantallas: una instantánea al
-                 entrar en un campo y se descarta al salir si nada cambió. -->
+        <!--
+          EL MENSAJE DE «VACÍO» VA FUERA DE LA ZONA DE ARRASTRE.
+
+          Estaba dentro, en el `{:else}` del `{#each}`, y eso es justo lo que
+          svelte-dnd-action no admite: la zona tiene que contener UN HIJO POR
+          ITEM y nada más. Con la lista vacía había cero items y un hijo, así
+          que la librería trataba ese párrafo como si fuera un ejercicio
+          arrastrable: lo clonaba y dejaba la copia colgada del <body> con
+          posición fija. De ahí el texto duplicado, uno quieto al hacer scroll
+          y otro no.
+
+          La solución no es esconder la copia con CSS: es que ese nodo no sea
+          hijo de la zona. Va superpuesto, con `pointer-events-none` para que
+          no estorbe al soltar encima.
+        -->
+        <div class="relative">
+          {#if dayItems.length === 0}
             <div
-              animate:flip={{ duration: 200 }}
-              onfocusin={antesDeCambiar}
-              onfocusout={alSalirDelCampo}
-              class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
+              class="absolute inset-0 grid place-items-center p-6 text-center text-text-mute text-sm pointer-events-none"
             >
-              <div class="flex items-start gap-3">
-                <div class="text-primary font-bold mt-0.5 w-6">#{i + 1}</div>
-                <div class="flex-1">
-                  <div class="font-semibold">{item.exercise.name}</div>
-                  {#if item.exercise.muscle_group}
-                    <div class="text-xs text-text-mute">
-                      {muscleLabels[item.exercise.muscle_group]}
-                    </div>
-                  {/if}
-                </div>
-                <button
-                  type="button"
-                  onclick={() => removeItem(item.id)}
-                  class="text-text-mute hover:text-danger flex-shrink-0"
-                  aria-label="Quitar {item.exercise.name}"
-                >
-                  <Icono nombre="papelera" class="w-4 h-4" />
-                </button>
+              <div>
+                <p class="mb-1">
+                  Añade ejercicios desde la biblioteca con el botón <span class="text-accent"
+                    >+</span
+                  >
+                </p>
+                <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
               </div>
+            </div>
+          {/if}
 
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div>
-                  <label
-                    for="sets-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Series</label
+          <div
+            class="space-y-3 min-h-[300px] rounded-md transition-colors {dayItems.length === 0
+              ? 'border-2 border-dashed border-text-mute/20'
+              : ''}"
+            use:dndzone={{
+              items: dayItems,
+              type: 'exercise',
+              flipDurationMs: 200,
+              dropFromOthersDisabled: true,
+              dropTargetStyle: {}
+            }}
+            onconsider={handleDayConsider}
+            onfinalize={handleDayFinalize}
+          >
+            {#each dayItems as item, i (item.id)}
+              <!-- Igual que en las otras dos pantallas: una instantánea al
+                 entrar en un campo y se descarta al salir si nada cambió. -->
+              <div
+                animate:flip={{ duration: 200 }}
+                onfocusin={antesDeCambiar}
+                onfocusout={alSalirDelCampo}
+                class="bg-bg border border-text-mute/20 rounded-md p-4 space-y-3"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="text-primary font-bold mt-0.5 w-6">#{i + 1}</div>
+                  <div class="flex-1">
+                    <div class="font-semibold">{item.exercise.name}</div>
+                    {#if item.exercise.muscle_group}
+                      <div class="text-xs text-text-mute">
+                        {muscleLabels[item.exercise.muscle_group]}
+                      </div>
+                    {/if}
+                  </div>
+                  <button
+                    type="button"
+                    onclick={() => removeItem(item.id)}
+                    class="text-text-mute hover:text-danger flex-shrink-0"
+                    aria-label="Quitar {item.exercise.name}"
                   >
-                  <input
-                    id="sets-{item.id}"
-                    type="number"
-                    min="1"
-                    max="20"
-                    bind:value={item.sets}
-                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                  />
+                    <Icono nombre="papelera" class="w-4 h-4" />
+                  </button>
                 </div>
-                <div>
-                  <label
-                    for="reps-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Repeticiones</label
-                  >
-                  <input
-                    id="reps-{item.id}"
-                    type="text"
-                    bind:value={item.reps_prescribed}
-                    placeholder="8-10"
-                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="weight-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Peso</label
-                  >
-                  <input
-                    id="weight-{item.id}"
-                    type="text"
-                    bind:value={item.weight_prescribed}
-                    placeholder="80kg"
-                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                  />
-                </div>
-                <div>
-                  <label
-                    for="rest-{item.id}"
-                    class="text-3xs uppercase tracking-wider text-text-mute">Descanso</label
-                  >
-                  <input
-                    id="rest-{item.id}"
-                    type="number"
-                    min="0"
-                    step="15"
-                    bind:value={item.rest_seconds}
-                    placeholder="90"
-                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
-                  />
-                </div>
-              </div>
 
-              <!--
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div>
+                    <label
+                      for="sets-{item.id}"
+                      class="text-3xs uppercase tracking-wider text-text-mute">Series</label
+                    >
+                    <input
+                      id="sets-{item.id}"
+                      type="number"
+                      min="1"
+                      max="20"
+                      bind:value={item.sets}
+                      class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="reps-{item.id}"
+                      class="text-3xs uppercase tracking-wider text-text-mute">Repeticiones</label
+                    >
+                    <input
+                      id="reps-{item.id}"
+                      type="text"
+                      bind:value={item.reps_prescribed}
+                      placeholder="8-10"
+                      class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="weight-{item.id}"
+                      class="text-3xs uppercase tracking-wider text-text-mute">Peso</label
+                    >
+                    <input
+                      id="weight-{item.id}"
+                      type="text"
+                      bind:value={item.weight_prescribed}
+                      placeholder="80kg"
+                      class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="rest-{item.id}"
+                      class="text-3xs uppercase tracking-wider text-text-mute">Descanso</label
+                    >
+                    <input
+                      id="rest-{item.id}"
+                      type="number"
+                      min="0"
+                      step="15"
+                      bind:value={item.rest_seconds}
+                      placeholder="90"
+                      class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-sm"
+                    />
+                  </div>
+                </div>
+
+                <!--
                 Esta nota LA LEE EL CLIENTE, en su pantalla de hoy, debajo del
                 ejercicio. Antes era una caja sin etiqueta que solo ponía «Nota
                 técnica (opcional)» y no había forma de saberlo: se podía
@@ -445,27 +476,23 @@
                 arriba, y eso solo se puede saber si cada caja dice para quién
                 escribe.
               -->
-              <div>
-                <label for="nota-{item.id}" class="text-3xs uppercase tracking-wider text-text-mute"
-                  >Nota para el cliente</label
-                >
-                <input
-                  id="nota-{item.id}"
-                  type="text"
-                  bind:value={item.notes}
-                  placeholder="«Baja despacio, 3 segundos»"
-                  class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
-                />
+                <div>
+                  <label
+                    for="nota-{item.id}"
+                    class="text-3xs uppercase tracking-wider text-text-mute"
+                    >Nota para el cliente</label
+                  >
+                  <input
+                    id="nota-{item.id}"
+                    type="text"
+                    bind:value={item.notes}
+                    placeholder="«Baja despacio, 3 segundos»"
+                    class="w-full px-2 py-1 bg-surface border border-text-mute/20 rounded text-xs text-text-mute placeholder:text-text-mute/40"
+                  />
+                </div>
               </div>
-            </div>
-          {:else}
-            <div class="text-center text-text-mute text-sm">
-              <p class="mb-1">
-                Añade ejercicios desde la biblioteca con el botón <span class="text-accent">+</span>
-              </p>
-              <p class="text-xs">luego arrástralos aquí para reordenarlos</p>
-            </div>
-          {/each}
+            {/each}
+          </div>
         </div>
       </section>
     </div>

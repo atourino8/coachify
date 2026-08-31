@@ -604,4 +604,31 @@ también los comentarios que hablan de ella.
 
 ---
 
+## Una zona de arrastre no admite hijos que no sean items
+
+**Síntoma:** en el constructor del día vacío, el texto «Añade ejercicios desde
+la biblioteca…» salía **dos veces**: una copia quieta al hacer scroll y otra
+que se movía con la página, y de colores distintos.
+
+**Causa:** el mensaje estaba dentro del contenedor con `use:dndzone`, en el
+`{:else}` del `{#each}`. `svelte-dnd-action` exige que ese contenedor tenga
+**exactamente un hijo por item** y nada más. Con la lista vacía había cero
+items y un hijo, así que la librería trató ese párrafo como un elemento
+arrastrable: lo clonó y dejó la copia colgando del `<body>` con posición fija.
+
+**Regla:** dentro de una zona de arrastre solo va el `{#each}`. Los estados
+vacíos, los títulos y las ayudas van **fuera**, y si tienen que verse encima se
+superponen con `absolute` + `pointer-events-none`.
+
+**Lo que no vale como arreglo:** esconder la copia con CSS. El nodo sobrante
+sigue ahí, la librería sigue contándolo, y el fallo reaparece en cuanto se
+arrastra algo.
+
+**Por qué no lo cazó nada:** ni `svelte-check` ni el guardián de diseño miran
+esto —el HTML es válido y las clases también—, y en el fuente el texto aparece
+UNA vez. El duplicado solo existe en tiempo de ejecución. Es de las que solo se
+ven abriendo la pantalla.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*
