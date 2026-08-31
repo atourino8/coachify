@@ -81,9 +81,21 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     return ocupados.some((o) => o.id !== s.id && o.ini < s.ends_at && s.starts_at < o.fin);
   }
 
+  // Una petición SIN CONTESTAR que ya pasó no es una cita próxima.
+  //
+  // Estaba metida en el mismo montón que las de mañana, así que aparecía bajo
+  // «Próximas citas» — y al confirmarla desaparecía de golpe, porque
+  // `confirmed` sí filtra por fecha. Se pulsaba un botón y se esfumaba la
+  // fila, sin que nada explicara a dónde había ido.
+  //
+  // Ahora van aparte. Siguen a la vista porque son trabajo pendiente de
+  // verdad: alguien pidió una cita y nadie le contestó.
   const pending = all
-    .filter((s) => s.status === 'requested')
+    .filter((s) => s.status === 'requested' && new Date(s.starts_at).getTime() >= now)
     .map((s) => ({ ...s, choca: chocaCon(s) }));
+  const caducadas = all
+    .filter((s) => s.status === 'requested' && new Date(s.starts_at).getTime() < now)
+    .map((s) => ({ ...s, choca: false }));
   const confirmed = all
     .filter((s) => s.status === 'confirmed' && new Date(s.starts_at).getTime() >= now)
     .map((s) => ({ ...s, choca: chocaCon(s) }));
@@ -138,7 +150,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
     .order('full_name');
   const clients = (clientsRaw ?? []) as { id: string; full_name: string | null }[];
 
-  return { pending, confirmed, history, workoutsByClient, templates, clients };
+  return { pending, caducadas, confirmed, history, workoutsByClient, templates, clients };
 };
 
 async function setStatus(
@@ -161,7 +173,10 @@ export const actions: Actions = {
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'confirmed');
     if (error) return fail(500, { error: error.message });
-    return { success: true };
+    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
+    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
+    // exactamente el fallo que había aquí.
+    return { success: true, hecho: 'confirmada' };
   },
   reject: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
@@ -169,7 +184,10 @@ export const actions: Actions = {
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'rejected');
     if (error) return fail(500, { error: error.message });
-    return { success: true };
+    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
+    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
+    // exactamente el fallo que había aquí.
+    return { success: true, hecho: 'rechazada' };
   },
   cancel: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
@@ -177,7 +195,10 @@ export const actions: Actions = {
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'cancelled');
     if (error) return fail(500, { error: error.message });
-    return { success: true };
+    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
+    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
+    // exactamente el fallo que había aquí.
+    return { success: true, hecho: 'cancelada' };
   },
   complete: async ({ request, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
@@ -185,7 +206,10 @@ export const actions: Actions = {
     if (!id) return fail(400, { error: 'Falta el id.' });
     const { error } = await setStatus(supabase, user.id, id, 'completed');
     if (error) return fail(500, { error: error.message });
-    return { success: true };
+    // `hecho` es lo que permite decir en pantalla QUÉ ha pasado. Devolver un
+    // `success: true` pelado deja a quien pulsa sin ninguna señal, que es
+    // exactamente el fallo que había aquí.
+    return { success: true, hecho: 'completada' };
   },
   // Asigna un entreno existente a la cita.
   assignWorkout: async ({ request, locals: { supabase, user } }) => {

@@ -258,3 +258,21 @@ los ha abierto.
 Apúntalo tal cual —qué hiciste, qué esperabas, qué pasó— sin intentar
 diagnosticarlo. El diagnóstico es más rápido con el síntoma exacto que con una
 teoría intermedia.
+---
+
+## Confirmar una cita (móvil)
+
+Salió probando: se pulsaba «Confirmar» y **no pasaba nada visible** hasta
+recargar, y entonces la fila había desaparecido.
+
+1. En **Agenda → Citas**, una cita **futura** pendiente. Pulsa «Confirmar».
+   - El botón tiene que decir **«Confirmando…»** y quedarse apagado.
+   - Al volver: aviso verde **«Cita confirmada.»** arriba, y la pastilla de la
+     fila pasa a **«Confirmada»**. La fila **no desaparece**.
+2. Una petición **cuya hora ya pasó**. Tiene que estar en su propia sección,
+   **«Sin contestar, y ya pasaron»**, y NO entre las próximas.
+   - Ahí no hay «Confirmar» —no tiene sentido confirmar una hora que pasó— pero
+     sí «Rechazar», para quitarla de en medio.
+3. Con la red a 3G lenta (herramientas del navegador), repite el paso 1 y
+   comprueba que **no se puede pulsar dos veces** mientras va.
+

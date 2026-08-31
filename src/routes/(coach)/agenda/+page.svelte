@@ -19,6 +19,16 @@
   // porque la fecha ya la ordena la lista: lo que no se puede hacer sin esto es
   // «¿qué tengo con Nadia?» sin recorrer las cuarenta citas del mes.
   let busqueda = $state('');
+
+  /**
+   * Qué cita se está confirmando ahora mismo.
+   *
+   * Sin esto, pulsar «Confirmar» en un móvil no hacía NADA visible: ni el
+   * botón cambiaba, ni salía mensaje, ni se movía la fila hasta que llegaba la
+   * respuesta. En una conexión lenta eso se lee como «no ha funcionado», y lo
+   * normal es volver a pulsar.
+   */
+  let confirmando = $state<string | null>(null);
   const upcoming = $derived(todas.filter((s) => contiene(s.client?.full_name ?? '', busqueda)));
 
   // Etiqueta de estado para cada fila del timeline.
@@ -312,12 +322,21 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.proposed}
+  <!-- El aviso sale para CUALQUIER acción, no solo al proponer.
+       Antes «Confirmar» devolvía un `success: true` pelado y aquí solo se
+       miraba `form.proposed`, así que confirmar una cita no decía nada: ni
+       mensaje, ni cambio en el botón. Se pulsaba y la pantalla se quedaba
+       igual. -->
+  {#if form?.success && (form?.proposed || form?.hecho)}
     <p
       aria-live="polite"
       class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
     >
-      Cita propuesta. El cliente la verá y podrá confirmarla.
+      {#if form?.proposed}
+        Cita propuesta. El cliente la verá y podrá confirmarla.
+      {:else}
+        Cita {form.hecho}.
+      {/if}
     </p>
   {/if}
 
@@ -531,9 +550,25 @@
                 </span>
               {/if}
               {#if s.status === 'requested' && !s.proposedByCoach}
-                <form method="POST" action="?/confirm" use:enhance>
+                <form
+                  method="POST"
+                  action="?/confirm"
+                  use:enhance={() => {
+                    confirmando = s.id;
+                    return async ({ update }) => {
+                      await update();
+                      confirmando = null;
+                    };
+                  }}
+                >
                   <input type="hidden" name="session_id" value={s.id} />
-                  <button type="submit" class="action-primary">Confirmar</button>
+                  <button
+                    type="submit"
+                    disabled={confirmando === s.id}
+                    class="action-primary disabled:opacity-60"
+                  >
+                    {confirmando === s.id ? 'Confirmando…' : 'Confirmar'}
+                  </button>
                 </form>
               {/if}
 
@@ -698,6 +733,45 @@
       {/each}
     {/if}
   </section>
+
+  <!-- Peticiones que se quedaron sin contestar y a las que ya se les pasó la
+       fecha. Antes salían mezcladas arriba, bajo «Próximas citas», y al
+       confirmarlas se esfumaban: `confirmed` sí filtra por fecha, así que la
+       fila desaparecía sin que nada dijera a dónde había ido.
+
+       Se siguen enseñando porque son trabajo pendiente de verdad: alguien pidió
+       una cita y nadie le contestó. Sin «Confirmar», que no tiene sentido para
+       una hora que ya pasó; el menú de la fila sigue teniendo reprogramar y
+       rechazar. -->
+  {#if data.caducadas.length > 0}
+    <section class="space-y-3">
+      <h2 class="text-lg font-semibold flex items-center gap-2">
+        Sin contestar, y ya pasaron
+        <span class="text-xs px-2 py-0.5 rounded-full bg-warning/15 text-warning"
+          >{data.caducadas.length}</span
+        >
+      </h2>
+      <p class="text-sm text-text-mute">
+        Te las pidieron y no llegaste a contestar. Reprográmalas o recházalas para quitarlas de en
+        medio.
+      </p>
+      {#each data.caducadas as s (s.id)}
+        <div class="card p-3 opacity-75">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="font-medium text-sm truncate">{clientName(s)}</div>
+              <div class="text-xs text-text-mute capitalize truncate">{fmt(s.starts_at)}</div>
+            </div>
+            <form method="POST" action="?/reject" use:enhance class="flex-shrink-0">
+              <input type="hidden" name="session_id" value={s.id} />
+              <button type="submit" class="btn-ghost text-sm text-danger">Rechazar</button>
+            </form>
+          </div>
+          {#if s.notes}<div class="text-sm bg-bg rounded-md p-2 italic mt-2">{s.notes}</div>{/if}
+        </div>
+      {/each}
+    </section>
+  {/if}
 </div>
 
 <ConfirmModal
