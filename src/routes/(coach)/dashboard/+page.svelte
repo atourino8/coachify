@@ -19,16 +19,23 @@
 
   <!-- Deshacer el rechazo. Aparece justo después y solo entonces: rechazar es
        lo único de esta pantalla que le llega al cliente, y el ✓ y la ✕ están a
-       un pulgar de distancia en un móvil. -->
+       un pulgar de distancia en un móvil.
+
+       ESTO NO ES UN AVISO, ES UNA ACCIÓN, y por eso se queda en la página en
+       lugar de irse al aviso flotante como todo lo demás. El aviso flotante se
+       cierra solo a los cinco segundos; darse cuenta de que has rechazado la
+       cita equivocada tarda más. El «ya está hecho» sí va arriba flotando: aquí
+       solo queda la salida. -->
   {#if form?.success && form?.rechazada}
     <div
-      aria-live="polite"
       class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm bg-surface-2 border border-line rounded-md p-3"
     >
-      <span class="flex-1 min-w-0">Cita rechazada. Tu cliente ya lo ve.</span>
+      <span class="flex-1 min-w-0 text-text-mute">¿Le has dado sin querer?</span>
       <form method="POST" action="?/deshacerRechazo" use:enhance>
         <input type="hidden" name="session_id" value={form.sessionId} />
-        <button type="submit" class="text-accent hover:underline font-medium">Deshacer</button>
+        <button type="submit" class="text-accent hover:underline font-medium"
+          >Deshacer el rechazo</button
+        >
       </form>
     </div>
   {/if}

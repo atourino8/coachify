@@ -5,6 +5,7 @@ import { SEED_EXERCISES } from '$lib/seed-exercises';
 import { BUCKET } from '$lib/technique';
 import { BUCKET_COACH } from '$lib/coach-media';
 import { COOKIE_VISTA_EJERCICIOS, leerPreferencia } from '$lib/preferencias';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 /** Campos que tiene sentido cambiar a varios ejercicios de golpe. */
@@ -54,8 +55,31 @@ export const load: PageServerLoad = async ({ cookies, locals: { supabase, user }
   };
 };
 
+/**
+ * El resultado de borrar en lote, en una frase.
+ *
+ * Se escribe una sola vez porque tiene DOS salidas y las dos ocurren a la vez:
+ * unos se borran y otros no se pueden borrar porque están dentro de entrenos ya
+ * hechos —dentro hay series con pesos reales de clientes— y esos se archivan.
+ * Decir solo «borrados» sería mentira, y decir solo «archivados» también.
+ */
+function mensajeDeBorrado(borrados: number, archivadosPorUso: number): string {
+  const partes: string[] = [];
+  if (borrados > 0) {
+    partes.push(`${borrados} ${borrados === 1 ? 'ejercicio borrado' : 'ejercicios borrados'}`);
+  }
+  if (archivadosPorUso > 0) {
+    partes.push(
+      archivadosPorUso === 1
+        ? '1 no se pudo borrar porque está dentro de entrenos ya hechos: se ha archivado'
+        : `${archivadosPorUso} no se pudieron borrar porque están dentro de entrenos ya hechos: se han archivado`
+    );
+  }
+  return partes.length === 0 ? 'No había nada que borrar.' : partes.join(' · ') + '.';
+}
+
 export const actions: Actions = {
-  archive: async ({ request, locals: { supabase, user } }) => {
+  archive: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const formData = await request.formData();
     const id = formData.get('id') as string;
@@ -68,12 +92,13 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
 
     if (error) return { success: false, error: error.message };
+    avisar(cookies, 'Ejercicio archivado.');
     return { success: true };
   },
 
   // ---- Acciones en lote -----------------------------------------------------
 
-  archivarVarios: async ({ request, locals: { supabase, user } }) => {
+  archivarVarios: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const ids = idsDelFormulario(await request.formData());
     if (ids.length === 0) return fail(400, { error: 'No has marcado ningún ejercicio.' });
@@ -89,10 +114,14 @@ export const actions: Actions = {
     // Se devuelven los ids para que el aviso pueda ofrecer "deshacer". Sin
     // esto, archivar cuarenta y ocho de golpe no tendría vuelta atrás desde
     // ninguna pantalla: nada desarchiva en toda la aplicación.
-    return { success: true, archivados: ids.length, idsParaDeshacer: ids };
+    avisar(
+      cookies,
+      ids.length === 1 ? 'Ejercicio archivado.' : `${ids.length} ejercicios archivados.`
+    );
+    return { success: true, idsParaDeshacer: ids };
   },
 
-  desarchivarVarios: async ({ request, locals: { supabase, user } }) => {
+  desarchivarVarios: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const ids = idsDelFormulario(await request.formData());
     if (ids.length === 0) return fail(400, { error: 'Nada que restaurar.' });
@@ -104,7 +133,11 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, restaurados: ids.length };
+    avisar(
+      cookies,
+      ids.length === 1 ? 'Ejercicio restaurado.' : `${ids.length} ejercicios restaurados.`
+    );
+    return { success: true };
   },
 
   /**
@@ -127,7 +160,7 @@ export const actions: Actions = {
    *    pero NO los archivos del bucket, que quedarían ocupando espacio para
    *    siempre sin que nadie sepa de quién son. Se borran a mano antes.
    */
-  borrarVarios: async ({ request, locals: { supabase, user } }) => {
+  borrarVarios: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const ids = idsDelFormulario(await request.formData());
     if (ids.length === 0) return fail(400, { error: 'No has marcado ningún ejercicio.' });
@@ -194,12 +227,8 @@ export const actions: Actions = {
             .in('id', ids)
             .eq('coach_id', user.id);
 
-          return {
-            success: true,
-            borrados: 0,
-            archivadosPorUso: ids.length,
-            idsParaDeshacer: ids
-          };
+          avisar(cookies, mensajeDeBorrado(0, ids.length), 'aviso');
+          return { success: true, idsParaDeshacer: ids };
         }
         return fail(500, { error: error.message });
       }
@@ -214,13 +243,14 @@ export const actions: Actions = {
         .eq('coach_id', user.id);
     }
 
-    return {
-      success: true,
-      borrados,
-      archivadosPorUso: archivables.length,
-      // Solo se puede deshacer lo archivado. Lo borrado, no: se dice claro.
-      idsParaDeshacer: archivables
-    };
+    avisar(
+      cookies,
+      mensajeDeBorrado(borrados, archivables.length),
+      archivables.length > 0 ? 'aviso' : 'ok'
+    );
+    // Solo se puede deshacer lo ARCHIVADO. Lo borrado no vuelve, y por eso el
+    // botón de deshacer solo aparece si esta lista trae algo.
+    return { success: true, idsParaDeshacer: archivables };
   },
 
   /**
@@ -233,7 +263,7 @@ export const actions: Actions = {
    * añadirles Hombro les quitaría Pecho sin avisar. El caso real del
    * entrenador es "a estos también les toca hombro", que es añadir.
    */
-  etiquetarVarios: async ({ request, locals: { supabase, user } }) => {
+  etiquetarVarios: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const ids = idsDelFormulario(fd);
@@ -297,12 +327,18 @@ export const actions: Actions = {
       if (error) return fail(500, { error: error.message });
     }
 
-    return { success: true, cambiados: actuales.length, quitados: quitar };
+    avisar(
+      cookies,
+      `${actuales.length} ${actuales.length === 1 ? 'ejercicio actualizado' : 'ejercicios actualizados'}` +
+        (quitar ? ' (etiqueta quitada)' : '') +
+        '.'
+    );
+    return { success: true };
   },
 
   // Carga la biblioteca base en la cuenta del coach. Se puede ejecutar más de
   // una vez sin duplicar: solo inserta los que no tenga ya (por nombre).
-  seedLibrary: async ({ locals: { supabase, user } }) => {
+  seedLibrary: async ({ cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const { data: existingRaw } = await supabase
@@ -328,12 +364,17 @@ export const actions: Actions = {
     }));
 
     if (rows.length === 0) {
-      return { success: true, seeded: 0, alreadyHad: true };
+      avisar(cookies, 'Ya tenías todos los ejercicios de la biblioteca base.', 'aviso');
+      return { success: true };
     }
 
     const { error } = await supabase.from('exercises').insert(rows as never);
     if (error) return fail(500, { error: error.message });
 
-    return { success: true, seeded: rows.length };
+    avisar(
+      cookies,
+      `${rows.length} ejercicios añadidos a tu biblioteca. Edítalos o añade los tuyos cuando quieras.`
+    );
+    return { success: true };
   }
 };

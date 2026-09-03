@@ -3,6 +3,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { BUCKET } from '$lib/technique';
 import { BUCKET_COACH } from '$lib/coach-media';
+import { avisar } from '$lib/aviso.server';
 import { accesoDeCliente } from '$lib/access.server';
 import type {
   WorkoutItemWithWorkout,
@@ -155,13 +156,17 @@ export const actions: Actions = {
       if (insertError) return fail(500, { error: insertError.message });
     }
 
+    // Esta acción NO manda aviso flotante, y es la única excepción a
+    // propósito: se registra serie a serie, doce veces seguidas. Un aviso por
+    // serie sería ruido tapando la pantalla justo donde se está trabajando.
+    // La confirmación es la propia serie marcándose, delante de los ojos.
     return { success: true, set_number };
   },
 
   // Borra un vídeo de técnica del cliente (fila + archivo del bucket).
   // Importante: borrar la fila NO borra el archivo de Storage, hay que hacerlo
   // explícitamente para no dejar huérfanos ocupando espacio.
-  deleteVideo: async ({ request, locals: { supabase, user } }) => {
+  deleteVideo: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     // Borrar es destructivo e irreversible: se lleva el archivo del bucket.
@@ -187,6 +192,7 @@ export const actions: Actions = {
     const { error: delErr } = await supabase.from('technique_videos').delete().eq('id', videoId);
     if (delErr) return fail(500, { error: delErr.message });
 
-    return { success: true, videoDeleted: true };
+    avisar(cookies, 'Vídeo eliminado.');
+    return { success: true };
   }
 };

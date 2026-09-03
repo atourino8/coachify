@@ -5,6 +5,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { datesInRangeOnWeekdays } from '$lib/week';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import { urlsDeAvatar } from '$lib/avatares.server';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -79,7 +80,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 
 export const actions: Actions = {
   // Añade clientes existentes al grupo.
-  addMembers: async ({ request, params, locals: { supabase, user } }) => {
+  addMembers: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const ids = fd.getAll('client_ids') as string[];
@@ -91,10 +92,14 @@ export const actions: Actions = {
       .upsert(rows as never, { onConflict: 'group_id,client_id' });
     if (insErr) return fail(500, { error: insErr.message });
 
-    return { success: true, added: ids.length };
+    avisar(
+      cookies,
+      ids.length === 1 ? 'Persona añadida al grupo.' : `${ids.length} personas añadidas al grupo.`
+    );
+    return { success: true };
   },
 
-  removeMember: async ({ request, params, locals: { supabase, user } }) => {
+  removeMember: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const clientId = (await request.formData()).get('client_id') as string;
     if (!clientId) return fail(400, { error: 'Falta el cliente.' });
@@ -106,12 +111,13 @@ export const actions: Actions = {
       .eq('client_id', clientId);
     if (delErr) return fail(500, { error: delErr.message });
 
-    return { success: true, removed: true };
+    avisar(cookies, 'Fuera del grupo. Sigue en tu cartera de clientes.');
+    return { success: true };
   },
 
   // Programa el mismo entrenamiento a TODOS los miembros del grupo, en el
   // rango de fechas y los días de la semana marcados.
-  programGroup: async ({ request, params, locals: { supabase, user } }) => {
+  programGroup: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const templateId = fd.get('template_id') as string;
@@ -159,13 +165,18 @@ export const actions: Actions = {
       }
     }
 
-    return {
-      success: true,
-      programmedGroup: true,
-      created,
-      skipped,
-      clients: clientIds.length,
-      failedCount: failed.length
-    };
+    // `failed` es la razón por la que esto puede acabar «bien» y mal a la vez:
+    // se programa a diez personas y falla una. El aviso lo dice, y cambia de
+    // tono, porque un «hecho» verde sobre un fallo es peor que no decir nada.
+    avisar(
+      cookies,
+      `Programado para ${clientIds.length} ${clientIds.length === 1 ? 'persona' : 'personas'}: ` +
+        `${created} ${created === 1 ? 'entreno creado' : 'entrenos creados'}` +
+        (skipped > 0 ? ` · ${skipped} omitidos porque ya tenían entreno` : '') +
+        (failed.length > 0 ? ` · ${failed.length} con error` : '') +
+        '.',
+      failed.length > 0 ? 'error' : skipped > 0 ? 'aviso' : 'ok'
+    );
+    return { success: true };
   }
 };

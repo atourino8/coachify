@@ -56,28 +56,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.added}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {form.added}
-      {form.added === 1 ? 'persona añadida' : 'personas añadidas'} al grupo.
-    </p>
-  {/if}
-  {#if form?.success && form?.programmedGroup}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Programado para {form.clients}
-      {form.clients === 1 ? 'persona' : 'personas'}:
-      {form.created}
-      {form.created === 1 ? 'entreno creado' : 'entrenos creados'}{form.skipped > 0
-        ? ` · ${form.skipped} omitidos porque ya tenían entreno`
-        : ''}{form.failedCount > 0 ? ` · ${form.failedCount} con error` : ''}.
-    </p>
-  {/if}
 
   <!-- ===== PROGRAMAR A TODO EL GRUPO ===== -->
   {#if data.templates.length > 0 && data.members.length > 0}

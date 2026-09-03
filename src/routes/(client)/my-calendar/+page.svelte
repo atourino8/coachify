@@ -76,45 +76,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.apuntado}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Tienes plaza. Si no puedes ir, avisa con {DIAS_DE_AVISO} días para que la coja otro.
-    </p>
-  {/if}
-  {#if form?.success && form?.enEspera}
-    <p
-      aria-live="polite"
-      class="text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-3"
-    >
-      La clase está completa: estás en la lista de espera. Si alguien suelta su plaza y eres el
-      primero, entras automáticamente.
-    </p>
-  {/if}
-  {#if form?.success && form?.salido}
-    <p
-      aria-live="polite"
-      class="text-sm {form.tarde
-        ? 'text-warning bg-warning/10 border-warning/20'
-        : 'text-success bg-success/10 border-success/20'} border rounded-md p-3"
-    >
-      {#if form.tarde}
-        Fuera de la clase. Como quedaban menos de {DIAS_DE_AVISO} días, le consta a tu entrenador.
-      {:else}
-        Fuera de la clase. Gracias por avisar con tiempo.
-      {/if}
-    </p>
-  {/if}
-  {#if form?.success && form?.requested}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Cita solicitada. Tu entrenador la confirmará pronto.
-    </p>
-  {/if}
 
   {#if !data.hasCoach}
     <div class="card text-center py-16">

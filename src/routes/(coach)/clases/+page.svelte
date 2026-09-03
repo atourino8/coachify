@@ -99,14 +99,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.created}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {form.created === 1 ? 'Clase creada.' : `${form.created} clases creadas.`}
-    </p>
-  {/if}
 
   {#if showForm}
     <form

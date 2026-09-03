@@ -3,6 +3,7 @@
 
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -158,7 +159,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 };
 
 export const actions: Actions = {
-  save: async ({ request, params, url, locals: { supabase, user } }) => {
+  save: async ({ request, params, url, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const formData = await request.formData();
@@ -239,14 +240,17 @@ export const actions: Actions = {
         // No es fatal: el workout se guardó. Avisamos pero no bloqueamos.
         console.error('[save] No se pudo ligar el workout a la cita:', linkError);
       }
-      // Volver a la agenda tras preparar el entreno de la cita.
+      // Volver a la agenda tras preparar el entreno de la cita. El aviso va
+      // en cookie porque sobrevive al salto; el `form` no.
+      avisar(cookies, 'Entreno guardado y ligado a la cita.');
       redirect(303, '/agenda');
     }
 
+    avisar(cookies, 'Entreno guardado.');
     return { success: true };
   },
 
-  delete: async ({ params, locals: { supabase, user } }) => {
+  delete: async ({ params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const { data: existing } = await supabase
       .from('workouts')
@@ -257,6 +261,7 @@ export const actions: Actions = {
     if (existing) {
       await supabase.from('workouts').delete().eq('id', existing.id);
     }
+    avisar(cookies, 'Entreno borrado.');
     redirect(303, `/clients/${params.id}`);
   }
 };

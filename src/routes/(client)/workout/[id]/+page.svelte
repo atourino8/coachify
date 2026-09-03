@@ -388,14 +388,6 @@
         {videoError}
       </p>
     {/if}
-    {#if form?.success && form?.videoDeleted}
-      <p
-        aria-live="polite"
-        class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-      >
-        Vídeo eliminado.
-      </p>
-    {/if}
 
     <!-- Vídeos existentes: antes / actual -->
     {#if data.techniqueFirst || data.techniqueLatest}

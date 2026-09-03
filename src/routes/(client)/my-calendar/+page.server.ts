@@ -3,9 +3,10 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { accesoDeCliente } from '$lib/access.server';
-import { mensajeDeError } from '$lib/clases';
+import { mensajeDeError, DIAS_DE_AVISO } from '$lib/clases';
 import { faltasPorCliente } from '$lib/faltas.server';
 import type { GroupClass } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type AvailabilitySlot = {
@@ -210,7 +211,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user }, parent 
 };
 
 export const actions: Actions = {
-  request: async ({ request, locals: { supabase, user } }) => {
+  request: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     // Pedir hueco es lo ÚNICO que se cierra aquí. Ver sus citas y cancelarlas
@@ -265,10 +266,11 @@ export const actions: Actions = {
     } as never);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, requested: true };
+    avisar(cookies, 'Cita solicitada. Tu entrenador la confirmará pronto.');
+    return { success: true };
   },
 
-  cancel: async ({ request, locals: { supabase, user } }) => {
+  cancel: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const id = fd.get('session_id') as string;
@@ -282,11 +284,12 @@ export const actions: Actions = {
       .eq('client_id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, cancelled: true };
+    avisar(cookies, 'Cita cancelada. Tu entrenador ya lo sabe.');
+    return { success: true };
   },
 
   // El cliente confirma una cita que le propuso el coach.
-  confirm: async ({ request, locals: { supabase, user } }) => {
+  confirm: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
@@ -296,11 +299,12 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('client_id', user.id);
     if (error) return fail(500, { error: error.message });
-    return { success: true, confirmedByClient: true };
+    avisar(cookies, 'Cita confirmada.');
+    return { success: true };
   },
 
   // El cliente rechaza una cita que le propuso el coach.
-  reject: async ({ request, locals: { supabase, user } }) => {
+  reject: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('session_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
@@ -310,11 +314,12 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('client_id', user.id);
     if (error) return fail(500, { error: error.message });
-    return { success: true, rejectedByClient: true };
+    avisar(cookies, 'Cita rechazada. Tu entrenador ya lo sabe.', 'aviso');
+    return { success: true };
   },
   // Apuntarse. Todo el trabajo lo hace book_class: comprueba el aforo con la
   // fila de la clase bloqueada y decide si es plaza o lista de espera.
-  apuntarse: async ({ request, locals: { supabase, user } }) => {
+  apuntarse: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     // Mismo criterio que pedir cita: ocupar una plaza es exactamente lo que
@@ -331,10 +336,22 @@ export const actions: Actions = {
 
     const { data, error: err } = await supabase.rpc('book_class', { p_class_id: classId });
     if (err) return fail(400, { error: mensajeDeError(err.message) });
-    return { success: true, apuntado: data === 'seat', enEspera: data === 'waitlist' };
+    if (data === 'seat') {
+      avisar(
+        cookies,
+        `Tienes plaza. Si no puedes ir, avisa con ${DIAS_DE_AVISO} días para que la coja otro.`
+      );
+    } else {
+      avisar(
+        cookies,
+        'La clase está completa: estás en la lista de espera. Si alguien suelta su plaza y eres el primero, entras automáticamente.',
+        'aviso'
+      );
+    }
+    return { success: true };
   },
 
-  salirse: async ({ request, locals: { supabase, user } }) => {
+  salirse: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const classId = String(fd.get('class_id') ?? '');
@@ -344,6 +361,15 @@ export const actions: Actions = {
       p_class_id: classId
     });
     if (err) return fail(400, { error: mensajeDeError(err.message) });
-    return { success: true, salido: true, tarde: data === 'cancelled_late' };
+    if (data === 'cancelled_late') {
+      avisar(
+        cookies,
+        `Fuera de la clase. Como quedaban menos de ${DIAS_DE_AVISO} días, le consta a tu entrenador.`,
+        'aviso'
+      );
+    } else {
+      avisar(cookies, 'Fuera de la clase. Gracias por avisar con tiempo.');
+    }
+    return { success: true };
   }
 };

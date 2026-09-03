@@ -2,6 +2,7 @@
 // (caso típico: las empleadas de una empresa que contrata al entrenador).
 
 import { fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
@@ -35,7 +36,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  create: async ({ request, locals: { supabase, user } }) => {
+  create: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const name = ((fd.get('name') as string) ?? '').trim();
@@ -47,10 +48,11 @@ export const actions: Actions = {
       .insert({ coach_id: user.id, name, company } as never);
     if (error) return fail(500, { error: error.message });
 
-    return { success: true, created: true };
+    avisar(cookies, `Grupo «${name}» creado.`);
+    return { success: true };
   },
 
-  delete: async ({ request, locals: { supabase, user } }) => {
+  delete: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const groupId = (await request.formData()).get('group_id') as string;
     if (!groupId) return fail(400, { error: 'Falta el grupo.' });
@@ -74,6 +76,7 @@ export const actions: Actions = {
     }
     if (error) return fail(500, { error: error.message });
 
-    return { success: true, deleted: true };
+    avisar(cookies, 'Grupo eliminado. Los clientes siguen en tu cartera.');
+    return { success: true };
   }
 };

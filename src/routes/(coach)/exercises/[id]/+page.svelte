@@ -138,14 +138,6 @@
         {form.error}
       </p>
     {/if}
-    {#if form?.success}
-      <p
-        aria-live="polite"
-        class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-      >
-        ✓ Cambios guardados.
-      </p>
-    {/if}
 
     <div class="flex gap-3">
       <button type="submit" disabled={saving} class="btn-primary flex-1">

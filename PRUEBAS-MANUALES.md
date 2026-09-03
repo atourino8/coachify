@@ -291,3 +291,42 @@ recargar, y entonces la fila había desaparecido.
    verdad no se guardaron.
 5. Lo mismo en la **ficha del cliente → Calendario**, abriendo un día y
    guardándolo desde ahí.
+
+---
+
+## Los avisos, ahora que son uno solo
+
+La idea a comprobar es sencilla: **ninguna acción se queda muda, y el aviso se
+ve sin tener que subir**.
+
+1. **En móvil (o con la ventana estrecha), Agenda → Proponer cita.** Rellena el
+   formulario entero, que es largo, y envíalo **desde abajo del todo**. El aviso
+   tiene que verse **sin desplazarte**: flota sobre la pantalla, no está en la
+   cabecera. Este era el fallo original.
+2. **Se va solo.** Espera cinco segundos: desaparece sin tocar nada.
+3. **Sobrevive al salto.** Biblioteca → abre un ejercicio → menú → **Archivar**.
+   Aterrizas en la biblioteca, con el ejercicio ya fuera de la lista, y el aviso
+   **«Ejercicio archivado»** tiene que estar ahí. Si no, el mensaje se perdió en
+   la redirección y estamos donde empezamos.
+4. **No se repite.** Recarga esa misma página: el aviso **no** vuelve a salir.
+5. **Los errores NO flotan.** Ajustes → crea una etiqueta con el nombre vacío.
+   El error sale **junto al campo** y **no se va solo**.
+
+### Las cuatro excepciones
+
+6. **Inicio → rechazar una cita.** Arriba flota «Cita rechazada»; en la página
+   se queda **«¿Le has dado sin querer? · Deshacer el rechazo»**. Espera diez
+   segundos: el aviso se fue, **el botón sigue**. Púlsalo y comprueba que la
+   cita vuelve a pendiente.
+7. **Biblioteca → marca dos ejercicios → Archivar.** Igual: aviso flotante
+   arriba, **«Deshacer el archivado»** abajo, y sigue ahí pasado el aviso.
+8. **Clientes → invitar en lote** con dos correos válidos y uno inventado con
+   dominio real. Tiene que quedarse en la página **la lista de los que
+   fallaron**, con el motivo de cada uno.
+   - Con todos válidos: **no** aparece ninguna lista, solo el aviso flotante.
+9. **Clientes → Invitar cliente** (uno solo). La confirmación es la **pantalla
+   del modal** con «Añadir otro» y «Volver al listado». **No** debe salir además
+   un aviso flotante diciendo lo mismo.
+10. **Entrenando (cliente) → registra doce series seguidas.** No sale ningún
+    aviso flotante: cada serie se marca y ya está. Doce avisos tapando la
+    pantalla sería peor que ninguno.

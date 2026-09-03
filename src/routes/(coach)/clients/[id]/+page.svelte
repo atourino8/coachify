@@ -192,52 +192,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.duplicated}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Entreno duplicado a {formatHumanDate(form.targetDate)}.
-    </p>
-  {/if}
-  {#if form?.success && form?.programmed}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Programado: {form.created} entreno{form.created === 1 ? '' : 's'} creado{form.created === 1
-        ? ''
-        : 's'}{form.skipped > 0
-        ? ` · ${form.skipped} día(s) omitido(s) porque ya tenían entreno`
-        : ''}.
-    </p>
-  {/if}
-  {#if form?.success && form?.infoSaved}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Ficha guardada.
-    </p>
-  {/if}
-  {#if form?.success && form?.paidUntil}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Pago registrado. Ahora está al día hasta el {new Date(
-        form.paidUntil + 'T00:00:00'
-      ).toLocaleDateString('es-ES')}.
-    </p>
-  {/if}
-  {#if form?.success && form?.commented}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Corrección guardada. Tu cliente la verá junto a su vídeo.
-    </p>
-  {/if}
 
   {#if tab === 'entrenos'}
     <PanelEntrenos {data} {form} />

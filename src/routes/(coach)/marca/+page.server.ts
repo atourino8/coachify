@@ -6,6 +6,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { esHexValido, derivarMarca } from '$lib/brand';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
@@ -25,7 +26,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  guardar: async ({ request, locals: { supabase, user } }) => {
+  guardar: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
 
@@ -50,18 +51,22 @@ export const actions: Actions = {
 
     if (error) return fail(500, { error: error.message });
 
-    // Se devuelve si hubo que aclarar el color para poder decírselo en la
-    // pantalla. Callárselo sería peor: vería un color distinto al que eligió
-    // y no sabría por qué.
+    // Si hubo que aclarar el color, se DICE. Callárselo sería peor: vería un
+    // color distinto al que eligió y no sabría por qué.
     const marca = derivarMarca(accent, usarSegundo ? accent2 : null);
-    return {
-      success: true,
-      corregido: marca?.corregido ?? false,
-      contrasteElegido: marca?.contrasteElegido ?? null
-    };
+    if (marca?.corregido) {
+      avisar(
+        cookies,
+        'Marca guardada, con el color aclarado para que se lea sobre el fondo.',
+        'aviso'
+      );
+    } else {
+      avisar(cookies, 'Marca guardada. Tus clientes la verán al abrir la aplicación.');
+    }
+    return { success: true };
   },
 
-  restablecer: async ({ locals: { supabase, user } }) => {
+  restablecer: async ({ cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     // A NULL, no al naranja de Treno. Son cosas distintas: NULL significa
@@ -74,6 +79,7 @@ export const actions: Actions = {
       .eq('id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, restablecido: true };
+    avisar(cookies, 'Marca restablecida. Tus clientes vuelven a ver los colores de Treno.');
+    return { success: true };
   }
 };

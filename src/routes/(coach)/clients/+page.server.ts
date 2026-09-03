@@ -10,6 +10,7 @@ import { motivoNoInvitable } from '$lib/correo';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { urlsDeAvatar } from '$lib/avatares.server';
 import { COOKIE_VISTA_CLIENTES, leerPreferencia } from '$lib/preferencias';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type ClientRow = {
@@ -252,11 +253,15 @@ export const actions: Actions = {
         });
     }
 
+    // Esta acción NO manda aviso flotante, y es una excepción con motivo: la
+    // confirmación aquí es una PANTALLA entera dentro del modal, con «Añadir
+    // otro» y «Volver al listado». Mandar además un aviso arriba diría lo mismo
+    // dos veces a la vez.
     return { success: true, invited_email: email, invited_name: full_name };
   },
 
   // Reenvía la invitación a un cliente pendiente.
-  resendInvite: async ({ request, locals: { user }, url }) => {
+  resendInvite: async ({ request, cookies, locals: { user }, url }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const email = (fd.get('email') as string)?.trim().toLowerCase();
@@ -266,13 +271,14 @@ export const actions: Actions = {
     const res = await sendInvite(url.origin, user.id, email, full_name);
     if ('error' in res) return fail(500, { error: res.error });
 
-    return { success: true, resent_email: email };
+    avisar(cookies, `Invitación reenviada a ${email}.`);
+    return { success: true };
   },
 
   // Invitación MASIVA: una lista de emails de golpe, opcionalmente a un grupo.
   // Informa de cuáles se enviaron y cuáles fallaron: con el envío por defecto
   // de Supabase hay límites de tasa bajos y algunos pueden rebotar.
-  inviteBulk: async ({ request, locals: { user }, url }) => {
+  inviteBulk: async ({ request, cookies, locals: { user }, url }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const raw = ((fd.get('emails') as string) ?? '').trim();
@@ -320,6 +326,17 @@ export const actions: Actions = {
       }
     }
 
+    // Si TODO salió bien, basta con un aviso flotante: no hay nada que leer.
+    // Si algo falló, el detalle se queda en la página, porque es una lista de
+    // correos que hay que mirar uno a uno y corregir — y un aviso que se cierra
+    // solo a los cinco segundos no sirve para eso.
+    if (errors.length === 0) {
+      avisar(
+        cookies,
+        ok.length === 1 ? 'Invitación enviada.' : `${ok.length} invitaciones enviadas.`
+      );
+      return { success: true };
+    }
     return {
       success: true,
       bulk: true,
@@ -330,7 +347,7 @@ export const actions: Actions = {
   },
 
   // Cancela una invitación pendiente: borra el usuario auth (y su profile).
-  cancelInvite: async ({ request, locals: { user } }) => {
+  cancelInvite: async ({ request, cookies, locals: { user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const clientId = fd.get('client_id') as string;
@@ -351,6 +368,7 @@ export const actions: Actions = {
     // Por si el borrado de auth no cascada al profile, lo quitamos también.
     await supabaseAdmin.from('profiles').delete().eq('id', clientId);
 
-    return { success: true, cancelled: true };
+    avisar(cookies, 'Invitación cancelada.');
+    return { success: true };
   }
 };

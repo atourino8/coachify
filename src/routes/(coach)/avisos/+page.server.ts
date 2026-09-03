@@ -2,6 +2,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { avisosDelCoach, ETIQUETAS_AVISO, type TipoAviso } from '$lib/avisos.server';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 const TIPOS = Object.keys(ETIQUETAS_AVISO) as TipoAviso[];
@@ -28,7 +29,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  marcar: async ({ request, locals: { supabase, user } }) => {
+  marcar: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const kind = String(fd.get('kind') ?? '');
@@ -50,10 +51,14 @@ export const actions: Actions = {
       });
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, marcados: ids.length };
+    avisar(
+      cookies,
+      ids.length === 1 ? 'Aviso marcado como visto.' : `${ids.length} avisos marcados como vistos.`
+    );
+    return { success: true };
   },
 
-  desmarcar: async ({ request, locals: { supabase, user } }) => {
+  desmarcar: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const kind = String(fd.get('kind') ?? '');
@@ -66,6 +71,7 @@ export const actions: Actions = {
       .eq('kind', kind);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, desmarcados: true };
+    avisar(cookies, 'Avisos devueltos a pendientes.');
+    return { success: true };
   }
 };

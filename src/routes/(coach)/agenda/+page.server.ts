@@ -217,6 +217,7 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: error.message });
+    avisar(cookies, workoutId ? 'Entreno asignado a la cita.' : 'Entreno quitado de la cita.');
     return { success: true };
   },
   // Quita el entreno ligado a la cita.
@@ -230,6 +231,7 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: error.message });
+    avisar(cookies, 'Entreno quitado de la cita.');
     return { success: true };
   },
 

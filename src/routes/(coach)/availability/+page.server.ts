@@ -2,6 +2,7 @@
 // clientes verán al pedir cita.
 
 import { fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type Slot = {
@@ -30,7 +31,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  add: async ({ request, locals: { supabase, user } }) => {
+  add: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
 
@@ -64,10 +65,11 @@ export const actions: Actions = {
     } as never);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, added: true };
+    avisar(cookies, 'Hueco añadido.');
+    return { success: true };
   },
 
-  remove: async ({ request, locals: { supabase, user } }) => {
+  remove: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const id = fd.get('slot_id') as string;
@@ -80,6 +82,7 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, removed: true };
+    avisar(cookies, 'Hueco quitado.');
+    return { success: true };
   }
 };

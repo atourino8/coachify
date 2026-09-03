@@ -7,8 +7,10 @@ import {
   formatDateISO,
   todayISOLocal,
   currentMonthISO,
-  datesInRangeOnWeekdays
+  datesInRangeOnWeekdays,
+  formatHumanDate
 } from '$lib/week';
+import { avisar } from '$lib/aviso.server';
 import { materializeTemplateWorkout } from '$lib/workouts';
 import { faltasPorCliente } from '$lib/faltas.server';
 import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
@@ -468,7 +470,7 @@ export const actions: Actions = {
    * el día a medias sin que nadie lo supiera. Es lo mismo que hace el
    * constructor del día desde su propia pantalla.
    */
-  guardarDia: async ({ request, params, locals: { supabase, user } }) => {
+  guardarDia: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const workoutId = String(fd.get('workout_id') ?? '');
@@ -527,7 +529,13 @@ export const actions: Actions = {
       if (errIns) return fail(500, { error: errIns.message });
     }
 
-    return { success: true, diaGuardado: true, ejercicios: filas.length };
+    avisar(
+      cookies,
+      filas.length === 0
+        ? 'Día guardado como descanso.'
+        : `Entreno guardado con ${filas.length} ejercicio${filas.length === 1 ? '' : 's'}.`
+    );
+    return { success: true };
   },
 
   // La foto del cliente, puesta por su entrenador.
@@ -535,7 +543,7 @@ export const actions: Actions = {
   // El .eq('coach_id') no es decorativo: sin él, cualquiera podría cambiarle
   // la cara a un cliente ajeno mandando otro id en la URL. La RLS del cubo lo
   // impediría igualmente, pero la comprobación se hace donde se decide.
-  foto: async ({ request, params, locals: { supabase, user } }) => {
+  foto: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const { data: perfil } = await supabase
@@ -551,16 +559,18 @@ export const actions: Actions = {
     if (fd.get('quitar')) {
       const { error: err } = await quitarAvatar(supabase, params.id, anterior);
       if (err) return fail(500, { error: err });
-      return { success: true, fotoQuitada: true };
+      avisar(cookies, 'Foto quitada.');
+      return { success: true };
     }
 
     const res = await guardarAvatar(supabase, params.id, fd.get('foto') as File | null, anterior);
     if ('error' in res) return fail(400, { error: res.error });
-    return { success: true, fotoGuardada: true };
+    avisar(cookies, 'Foto actualizada.');
+    return { success: true };
   },
 
   // Guarda (upsert) la ficha del cliente.
-  saveInfo: async ({ request, params, locals: { supabase, user } }) => {
+  saveInfo: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     // Verificar que el cliente es de este coach.
@@ -615,7 +625,8 @@ export const actions: Actions = {
       .upsert(row as never, { onConflict: 'client_id' });
     if (upErr) return fail(500, { error: upErr.message });
 
-    return { success: true, infoSaved: true };
+    avisar(cookies, 'Ficha guardada.');
+    return { success: true };
   },
 
   // Registra un mes de pago: empuja paid_until un mes hacia delante desde hoy
@@ -627,7 +638,7 @@ export const actions: Actions = {
   // una fila en client_payments, que es de donde salen el export y el
   // histórico. El importe y la fecha se pueden ajustar porque en la vida real
   // se paga tarde y a veces no se paga la cuota exacta.
-  markPaid: async ({ request, params, locals: { supabase, user } }) => {
+  markPaid: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const fd = await request.formData();
@@ -686,11 +697,15 @@ export const actions: Actions = {
     );
     if (upErr) return fail(500, { error: upErr.message });
 
-    return { success: true, paidUntil: hastaISO, amount };
+    avisar(
+      cookies,
+      `Pago registrado. Está al día hasta el ${new Date(hastaISO + 'T00:00:00').toLocaleDateString('es-ES')}.`
+    );
+    return { success: true };
   },
 
   // Guarda la corrección del coach sobre un vídeo de técnica.
-  commentVideo: async ({ request, locals: { supabase, user } }) => {
+  commentVideo: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const videoId = fd.get('video_id') as string;
@@ -707,11 +722,12 @@ export const actions: Actions = {
       .eq('coach_id', user.id);
     if (upErr) return fail(500, { error: upErr.message });
 
-    return { success: true, commented: true };
+    avisar(cookies, 'Corrección guardada. Tu cliente la verá junto a su vídeo.');
+    return { success: true };
   },
 
   // Duplica un entreno (workout + sus workout_items) a otra fecha.
-  duplicate: async ({ request, params, locals: { supabase, user } }) => {
+  duplicate: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const fd = await request.formData();
@@ -791,11 +807,12 @@ export const actions: Actions = {
       if (itemsErr) return fail(500, { error: itemsErr.message });
     }
 
-    return { success: true, duplicated: true, targetDate };
+    avisar(cookies, `Entreno duplicado al ${formatHumanDate(targetDate)}.`);
+    return { success: true };
   },
 
   // Programa una plantilla en varios días: rango de fechas + días de la semana.
-  programTemplate: async ({ request, params, locals: { supabase, user } }) => {
+  programTemplate: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const templateId = fd.get('template_id') as string;
@@ -824,6 +841,13 @@ export const actions: Actions = {
       else return fail(500, { error: res.error });
     }
 
-    return { success: true, programmed: true, created, skipped };
+    avisar(
+      cookies,
+      `Programado: ${created} entreno${created === 1 ? '' : 's'} creado${created === 1 ? '' : 's'}` +
+        (skipped > 0 ? ` · ${skipped} día(s) omitido(s) porque ya tenían entreno` : '') +
+        '.',
+      skipped > 0 ? 'aviso' : 'ok'
+    );
+    return { success: true };
   }
 };

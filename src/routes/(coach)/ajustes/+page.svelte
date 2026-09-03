@@ -73,24 +73,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {#if form.guardado === 'nombre'}
-        Guardado. Tus clientes verán el nombre nuevo la próxima vez que abran la aplicación.
-      {:else if form.creada}
-        Etiqueta «{form.creada}» añadida.
-      {:else if form.renombrada}
-        Renombrada a «{form.renombrada}».
-      {:else if form.borrada}
-        Etiqueta borrada{form.quitadaDe ? ` y quitada de ${form.quitadaDe} ejercicios` : ''}.
-      {:else}
-        Guardado.
-      {/if}
-    </p>
-  {/if}
 
   <!-- ================= Perfil ================= -->
   <section class="space-y-3">

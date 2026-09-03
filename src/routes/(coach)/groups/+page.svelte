@@ -42,22 +42,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.created}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Grupo creado. Ya puedes añadirle clientes.
-    </p>
-  {/if}
-  {#if form?.success && form?.deleted}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Grupo eliminado. Los clientes siguen en tu cartera.
-    </p>
-  {/if}
 
   {#if showForm}
     <!-- El botón se queda pulsable aunque falte el nombre: así podemos decir
@@ -73,11 +57,16 @@
       }}
       use:enhance={() => {
         creating = true;
-        return async ({ update }) => {
+        // `result`, y no `form?.success`: si el grupo no se pudo crear, el
+        // formulario tiene que quedarse abierto con lo escrito dentro. Cerrarlo
+        // pase lo que pase te haría teclearlo otra vez para descubrir por qué.
+        return async ({ update, result }) => {
           await update();
           creating = false;
-          newName = '';
-          if (form?.success) showForm = false;
+          if (result.type === 'success') {
+            newName = '';
+            showForm = false;
+          }
         };
       }}
       class="card space-y-3"

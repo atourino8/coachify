@@ -53,21 +53,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.restablecido}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Marca restablecida. Tus clientes vuelven a ver los colores de Treno.
-    </p>
-  {:else if form?.success}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Guardado. Tus clientes lo verán la próxima vez que abran la aplicación.
-    </p>
-  {/if}
 
   <div class="grid lg:grid-cols-[minmax(0,22rem)_1fr] gap-8 items-start">
     <!-- ================= Elección ================= -->

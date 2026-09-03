@@ -6,6 +6,7 @@ import { mensajeDeError } from '$lib/clases';
 import { faltasPorCliente } from '$lib/faltas.server';
 import { urlsDeAvatar } from '$lib/avatares.server';
 import type { GroupClass, ClassBooking } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -96,7 +97,7 @@ export const actions: Actions = {
   // Sacar a alguien. Pasa por la MISMA función que usa el cliente para
   // cancelar: es la que asciende al primero de la lista de espera. Un update
   // directo a 'cancelled' dejaría la plaza libre y la cola quieta.
-  quitar: async ({ params, request, locals: { supabase, user } }) => {
+  quitar: async ({ params, request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const clientId = String(fd.get('client_id') ?? '');
@@ -107,10 +108,11 @@ export const actions: Actions = {
       p_client_id: clientId
     });
     if (err) return fail(400, { error: mensajeDeError(err.message) });
-    return { success: true, quitado: true };
+    avisar(cookies, 'Fuera de la clase. Si había lista de espera, ha entrado el primero.');
+    return { success: true };
   },
 
-  aforo: async ({ params, request, locals: { supabase, user } }) => {
+  aforo: async ({ params, request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const capacity = Number(fd.get('capacity'));
@@ -127,10 +129,15 @@ export const actions: Actions = {
     // Subir el aforo NO asciende a nadie de la lista de espera. Se hace a
     // mano y a propósito: ascender en masa sin avisar mete en una clase a
     // gente que pidió sitio hace tres semanas y ya no cuenta con ello.
-    return { success: true, aforo: true };
+    avisar(
+      cookies,
+      'Aforo cambiado. Nadie de la lista de espera sube solo: métele tú si quieres.',
+      'aviso'
+    );
+    return { success: true };
   },
 
-  cancelar: async ({ params, locals: { supabase, user } }) => {
+  cancelar: async ({ params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const { error: err } = await supabase
       .from('group_classes')
@@ -138,10 +145,11 @@ export const actions: Actions = {
       .eq('id', params.id)
       .eq('coach_id', user.id);
     if (err) return fail(500, { error: err.message });
-    return { success: true, cancelada: true };
+    avisar(cookies, 'Clase cancelada. Los apuntados la verán marcada como cancelada.', 'aviso');
+    return { success: true };
   },
 
-  reabrir: async ({ params, locals: { supabase, user } }) => {
+  reabrir: async ({ params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const { error: err } = await supabase
       .from('group_classes')
@@ -149,10 +157,11 @@ export const actions: Actions = {
       .eq('id', params.id)
       .eq('coach_id', user.id);
     if (err) return fail(500, { error: err.message });
-    return { success: true, reabierta: true };
+    avisar(cookies, 'Clase reabierta.');
+    return { success: true };
   },
 
-  borrar: async ({ params, locals: { supabase, user } }) => {
+  borrar: async ({ params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const { error: err } = await supabase
       .from('group_classes')
@@ -160,6 +169,9 @@ export const actions: Actions = {
       .eq('id', params.id)
       .eq('coach_id', user.id);
     if (err) return fail(500, { error: err.message });
+    // El aviso ANTES del redirect: se aterriza en el listado sin la clase, y
+    // sin una palabra no se distingue de haberla borrado por error.
+    avisar(cookies, 'Clase borrada.');
     redirect(303, '/clases');
   }
 };

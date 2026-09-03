@@ -1,6 +1,7 @@
 // Plantillas de entreno del coach: lista + crear + borrar.
 
 import { fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type TemplateRow = {
@@ -31,7 +32,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  create: async ({ request, locals: { supabase, user } }) => {
+  create: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const name = ((await request.formData()).get('name') as string)?.trim();
     if (!name) return fail(400, { error: 'Ponle un nombre al entrenamiento.' });
@@ -44,10 +45,13 @@ export const actions: Actions = {
     if (error || !data) return fail(500, { error: error?.message ?? 'No se pudo crear.' });
 
     // Ir directo al editor de la plantilla recién creada.
+    // Se aterriza en el constructor recién creado y vacío. Sin una palabra,
+    // la pantalla en blanco no distingue «creado» de «no ha pasado nada».
+    avisar(cookies, 'Entrenamiento creado. Añádele ejercicios.');
     redirect(303, `/templates/${(data as { id: string }).id}`);
   },
 
-  delete: async ({ request, locals: { supabase, user } }) => {
+  delete: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = (await request.formData()).get('template_id') as string;
     if (!id) return fail(400, { error: 'Falta el id.' });
@@ -57,6 +61,7 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: error.message });
-    return { success: true, deleted: true };
+    avisar(cookies, 'Entrenamiento borrado.');
+    return { success: true };
   }
 };

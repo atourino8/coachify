@@ -752,4 +752,68 @@ usando la aplicación, no un comprobador.
 
 ---
 
+## Un mensaje flota; algo que hay que pulsar, no
+
+**Contexto:** al pasar las setenta y ocho acciones al aviso flotante, la
+tentación era mover TODOS los carteles de golpe. Cuatro no debían moverse, y
+verlo a tiempo fue la mitad del trabajo.
+
+**El corte:** el aviso flotante se cierra solo a los cinco segundos. Eso lo hace
+perfecto para «ya está hecho» y **una trampa** para cualquier cosa que haya que
+leer o decidir:
+
+- Un **«Deshacer»** dentro de un aviso de cinco segundos no lo alcanza quien lo
+  necesita, porque darse cuenta del error tarda más que el aviso.
+- Un **parte de errores** —diez correos que no salieron— hay que poder leerlo
+  con calma y corregirlo; no es un mensaje, es trabajo pendiente.
+
+**Regla:** *el mensaje flota; lo que hay que leer o pulsar se queda anclado.* Y
+cuando las dos cosas van juntas, se separan: el «cita rechazada» arriba
+flotando, y abajo solo «¿Le has dado sin querer? Deshacer el rechazo».
+
+**Lo que se ganó de paso:** al separarlos, el texto del botón mejora solo.
+«Deshacer» a secas no dice qué deshace; «Deshacer el archivado» sí — y deja
+claro que lo borrado no vuelve.
+
+---
+
+## Quitar un campo del servidor deja un hueco mudo en la plantilla
+
+**Contexto:** cada aviso migrado significaba borrar del servidor cosas como
+`borrados: n` o `targetDate` y borrar de la plantilla el `{form.borrados}` que
+las pintaba. Veintiún ficheros, en pares.
+
+**Por qué es peligroso:** si se olvida el lado de la plantilla, `form.borrados`
+vale `undefined`, Svelte pinta **cadena vacía** y no hay ningún error. El
+comprobador de tipos tampoco protesta, porque el tipo de `form` es la unión de
+lo que devuelven todas las acciones y el campo sigue existiendo en alguna.
+
+**Lo que se hizo:** una comprobación que cruza cada `+page.svelte` con su
+`+page.server.ts` y busca campos que la plantilla lee y el servidor ya no manda.
+Salió limpia, pero solo porque se escribió — leer los diffs no lo habría
+cazado, y ya me pasó antes con `c.name` contra `c.title`.
+
+**Regla:** cuando un cambio consiste en quitar lo mismo de dos sitios que no se
+comprueban entre sí, el guion que los cruza no es opcional.
+
+---
+
+## Un `if` con un nombre que es prefijo de otro toca los dos
+
+**Síntoma:** un reemplazo de `marcar: async ({ request, locals` también cambió
+`desmarcar: async ({ request, locals`, porque lo primero es subcadena de lo
+segundo. Pasó dos veces en la misma sesión: también con `archivarVarios` dentro
+de `desarchivarVarios`.
+
+**Por qué salió bien igualmente:** el script hace `assert` de que cada patrón
+existe ANTES de escribir, así que el segundo reemplazo falló ruidosamente en
+vez de escribir un fichero a medias. Sin ese `assert` habría quedado un fichero
+tocado y otro no.
+
+**Regla:** un reemplazo por subcadena tiene que anclarse (aquí, el `\n  ` de
+delante) o comprobarse por número de coincidencias. Y el `assert` va antes de
+escribir, nunca después.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

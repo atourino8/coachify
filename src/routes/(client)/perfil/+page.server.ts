@@ -5,6 +5,7 @@
 // invitación.
 
 import { fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
 import type { PageServerLoad, Actions } from './$types';
 
@@ -27,7 +28,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 };
 
 export const actions: Actions = {
-  foto: async ({ request, locals: { supabase, user } }) => {
+  foto: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const { data: actual } = await supabase
@@ -41,15 +42,17 @@ export const actions: Actions = {
     if (fd.get('quitar')) {
       const { error } = await quitarAvatar(supabase, user.id, anterior);
       if (error) return fail(500, { error });
-      return { success: true, fotoQuitada: true };
+      avisar(cookies, 'Foto quitada.');
+      return { success: true };
     }
 
     const res = await guardarAvatar(supabase, user.id, fd.get('foto') as File | null, anterior);
     if ('error' in res) return fail(400, { error: res.error });
-    return { success: true, fotoGuardada: true };
+    avisar(cookies, 'Foto actualizada.');
+    return { success: true };
   },
 
-  nombre: async ({ request, locals: { supabase, user } }) => {
+  nombre: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const nombre = ((await request.formData()).get('full_name') as string)?.trim() ?? '';
     if (!nombre) return fail(400, { error: 'Escribe tu nombre.' });
@@ -59,6 +62,7 @@ export const actions: Actions = {
       .update({ full_name: nombre.slice(0, 80) } as never)
       .eq('id', user.id);
     if (error) return fail(500, { error: error.message });
-    return { success: true, nombreGuardado: true };
+    avisar(cookies, 'Nombre actualizado.');
+    return { success: true };
   }
 };

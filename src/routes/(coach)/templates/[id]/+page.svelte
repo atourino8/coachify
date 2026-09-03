@@ -255,14 +255,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Entrenamiento guardado.
-    </p>
-  {/if}
 
   <!-- Cabecera editable -->
   <div class="card space-y-4">

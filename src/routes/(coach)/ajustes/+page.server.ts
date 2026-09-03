@@ -10,6 +10,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { aIdentificador, identificadorValido, type ClaseEtiqueta } from '$lib/tags';
 import { guardarAvatar, quitarAvatar, urlDeAvatar } from '$lib/avatares.server';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 const CLASES: ClaseEtiqueta[] = ['muscle', 'equipment', 'client'];
@@ -45,7 +46,7 @@ export const actions: Actions = {
   // La foto va en su propio formulario y no junto al nombre: son dos envíos
   // distintos —uno multipart y otro no— y juntarlos obligaría a subir la foto
   // otra vez cada vez que corriges una letra del nombre.
-  foto: async ({ request, locals: { supabase, user } }) => {
+  foto: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
 
@@ -59,15 +60,17 @@ export const actions: Actions = {
     if (fd.get('quitar')) {
       const { error } = await quitarAvatar(supabase, user.id, anterior);
       if (error) return fail(500, { error });
-      return { success: true, fotoQuitada: true };
+      avisar(cookies, 'Foto quitada.');
+      return { success: true };
     }
 
     const res = await guardarAvatar(supabase, user.id, fd.get('foto') as File | null, anterior);
     if ('error' in res) return fail(400, { error: res.error });
-    return { success: true, fotoGuardada: true };
+    avisar(cookies, 'Foto actualizada.');
+    return { success: true };
   },
 
-  nombre: async ({ request, locals: { supabase, user } }) => {
+  nombre: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const nombre = (fd.get('full_name') as string)?.trim() ?? '';
@@ -91,12 +94,13 @@ export const actions: Actions = {
       .eq('id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, guardado: 'nombre' };
+    avisar(cookies, 'Nombre guardado. Tus clientes lo verán al abrir la aplicación.');
+    return { success: true };
   },
 
   // ---- Vocabulario propio ---------------------------------------------------
 
-  crearEtiqueta: async ({ request, locals: { supabase, user } }) => {
+  crearEtiqueta: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const kind = String(fd.get('kind') ?? '') as ClaseEtiqueta;
@@ -121,10 +125,11 @@ export const actions: Actions = {
     // "ya la tienes" es mucho más útil que el mensaje de Postgres.
     if (error?.code === '23505') return fail(400, { error: `Ya tienes una etiqueta "${label}".` });
     if (error) return fail(500, { error: error.message });
-    return { success: true, creada: label };
+    avisar(cookies, `Etiqueta «${label}» añadida.`);
+    return { success: true };
   },
 
-  renombrarEtiqueta: async ({ request, locals: { supabase, user } }) => {
+  renombrarEtiqueta: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const kind = String(fd.get('kind') ?? '') as ClaseEtiqueta;
@@ -151,10 +156,11 @@ export const actions: Actions = {
       });
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, renombrada: label };
+    avisar(cookies, `Etiqueta renombrada a «${label}».`);
+    return { success: true };
   },
 
-  borrarEtiqueta: async ({ request, locals: { supabase, user } }) => {
+  borrarEtiqueta: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
     const kind = String(fd.get('kind') ?? '') as ClaseEtiqueta;
@@ -214,6 +220,12 @@ export const actions: Actions = {
       .eq('slug', slug);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, borrada: true, quitadaDe: afectados.length };
+    avisar(
+      cookies,
+      afectados.length > 0
+        ? `Etiqueta borrada y quitada de ${afectados.length} ejercicios.`
+        : 'Etiqueta borrada.'
+    );
+    return { success: true };
   }
 };

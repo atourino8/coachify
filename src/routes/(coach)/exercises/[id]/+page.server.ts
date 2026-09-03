@@ -3,6 +3,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { etiquetasParaGuardar } from '$lib/exercise-tags';
 import { BUCKET_COACH, validarOrigenes } from '$lib/coach-media';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { supabase, user } }) => {
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 };
 
 export const actions: Actions = {
-  update: async ({ request, params, locals: { supabase, user } }) => {
+  update: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const formData = await request.formData();
 
@@ -90,10 +91,11 @@ export const actions: Actions = {
 
     if (aBorrar.length > 0) await supabase.storage.from(BUCKET_COACH).remove(aBorrar);
 
+    avisar(cookies, 'Cambios guardados.');
     return { success: true };
   },
 
-  archive: async ({ params, locals: { supabase, user } }) => {
+  archive: async ({ params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     // Archivar NO borra el material: es reversible y el ejercicio puede seguir
     // dentro de entrenos ya programados. Los ficheros se limpian al borrar de
@@ -103,6 +105,10 @@ export const actions: Actions = {
       .update({ archived: true })
       .eq('id', params.id)
       .eq('coach_id', user.id);
+    // El aviso ANTES del redirect, y por eso va en cookie: al aterrizar en la
+    // biblioteca el ejercicio ya no está en la lista, y sin una palabra que lo
+    // diga parece que se ha borrado o que se ha perdido.
+    avisar(cookies, 'Ejercicio archivado. Puedes restaurarlo desde el filtro «Archivados».');
     redirect(303, '/exercises');
   }
 };

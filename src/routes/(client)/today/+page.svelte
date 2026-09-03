@@ -102,22 +102,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success && form?.confirmed}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Cita confirmada. Te la hemos guardado en tus citas.
-    </p>
-  {/if}
-  {#if form?.success && form?.rejected}
-    <p
-      aria-live="polite"
-      class="text-sm text-text-mute bg-surface-2 border border-line rounded-md p-3"
-    >
-      Le hemos avisado a tu coach de que no te viene bien.
-    </p>
-  {/if}
 
   <!-- Saludo -->
   <div>

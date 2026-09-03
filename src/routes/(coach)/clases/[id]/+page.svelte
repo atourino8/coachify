@@ -103,22 +103,6 @@
       {form.error}
     </p>
   {/if}
-  {#if form?.success}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {#if form.quitado}
-        Fuera de la clase. Si había lista de espera, ha entrado el primero.
-      {:else if form.aforo}
-        Aforo cambiado. Nadie de la lista de espera sube solo: métele tú si quieres.
-      {:else if form.cancelada}
-        Clase cancelada. Los apuntados la verán marcada como cancelada.
-      {:else if form.reabierta}
-        Clase reabierta.
-      {/if}
-    </p>
-  {/if}
 
   {#if estado.cancelada}
     <div class="card border-danger/30 flex flex-wrap items-center justify-between gap-3">

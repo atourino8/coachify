@@ -210,11 +210,6 @@
     {/if}
   </div>
 
-  {#if form?.success}
-    <div class="bg-success/10 border border-success/30 text-success text-sm p-3 rounded-md">
-      ✓ Entreno guardado.
-    </div>
-  {/if}
   {#if form?.error}
     <div class="bg-danger/10 border border-danger/30 text-danger text-sm p-3 rounded-md">
       {form.error}

@@ -149,47 +149,27 @@
     </div>
   </div>
 
-  {#if form?.success && form?.invited_email}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Invitación enviada a {form.invited_email}. Aparecerá en “Pendientes” hasta que la acepte.
-    </p>
-  {/if}
-  {#if form?.success && form?.resent_email}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Invitación reenviada a {form.resent_email}.
-    </p>
-  {/if}
+  <!--
+    El parte de la invitación masiva. Solo aparece cuando ALGUNA falló, y se
+    queda en la página en vez de irse al aviso flotante: es una lista de correos
+    que hay que leer y corregir uno a uno, no un «ya está». Cuando salen todas,
+    lo dice el aviso flotante y aquí no hay nada.
+  -->
   {#if form?.success && form?.bulk}
     <div
       aria-live="polite"
-      class="text-sm bg-success/10 border border-success/20 rounded-md p-3 space-y-1"
+      class="text-sm bg-surface-2 border border-line rounded-md p-3 space-y-1"
     >
-      <p class="text-success font-medium">
+      <p class="font-medium">
         {form.sent} de {form.total} invitaciones enviadas.
       </p>
-      {#if form.errors && form.errors.length > 0}
-        <p class="text-danger text-xs">No se pudieron enviar:</p>
-        <ul class="text-xs text-text-mute list-disc pl-5">
-          {#each form.errors as e}
-            <li>{e.email} — {e.reason}</li>
-          {/each}
-        </ul>
-      {/if}
+      <p class="text-danger text-xs">No se pudieron enviar:</p>
+      <ul class="text-xs text-text-mute list-disc pl-5">
+        {#each form.errors as e}
+          <li>{e.email} — {e.reason}</li>
+        {/each}
+      </ul>
     </div>
-  {/if}
-  {#if form?.success && form?.cancelled}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      Invitación cancelada.
-    </p>
   {/if}
 
   <!-- Pestañas -->

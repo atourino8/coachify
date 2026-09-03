@@ -379,99 +379,41 @@
     {/if}
   </div>
 
-  {#if form?.success && form?.seeded}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {form.seeded} ejercicios añadidos a tu biblioteca. Edítalos o añade los tuyos cuando quieras.
-    </p>
-  {/if}
-  {#if form?.success && form?.alreadyHad}
-    <p
-      aria-live="polite"
-      class="text-sm text-text-mute bg-surface-2 border border-text-mute/20 rounded-md p-3"
-    >
-      Ya tenías todos los ejercicios de la biblioteca base.
-    </p>
-  {/if}
-
   {#if form?.error}
     <p role="alert" class="text-sm text-danger bg-danger/10 border border-danger/20 rounded-md p-3">
       {form.error}
     </p>
   {/if}
 
-  {#if form?.success && form?.cambiados}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {form.cambiados}
-      {form.cambiados === 1 ? 'ejercicio actualizado' : 'ejercicios actualizados'}
-      {form.quitados ? '(etiqueta quitada)' : ''}.
-    </p>
-  {/if}
-
   <!--
-    Aviso con deshacer. Existe porque nada más en la aplicación desarchiva un
-    ejercicio: sin este botón, marcar cuarenta y ocho casillas y darle a
-    archivar sería un error sin retorno desde ninguna pantalla.
+    LA SALIDA, no el aviso. Qué ha pasado lo dice el aviso flotante de arriba;
+    esto es solo el botón para volver atrás.
 
-    El deshacer es un formulario normal con los mismos ids: si el aviso
-    desaparece al recargar, no se pierde nada raro, solo la oportunidad.
+    Existe porque nada más en la aplicación desarchiva un ejercicio: sin él,
+    marcar cuarenta y ocho casillas y darle a archivar sería un error sin
+    retorno desde ninguna pantalla. Y por eso mismo NO puede vivir dentro de un
+    aviso que se cierra solo a los cinco segundos.
+
+    Es un formulario normal con los mismos ids: si desaparece al recargar, no se
+    pierde nada raro, solo la oportunidad.
   -->
-  {#if form?.success && (form?.archivados || form?.borrados || form?.archivadosPorUso)}
+  {#if form?.success && form?.idsParaDeshacer && form.idsParaDeshacer.length > 0}
     <div
-      aria-live="polite"
       class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm
              bg-surface-2 border border-line rounded-md p-3"
     >
-      <span class="flex-1 min-w-0">
-        {#if form.archivados}
-          {form.archivados}
-          {form.archivados === 1 ? 'ejercicio archivado' : 'ejercicios archivados'}.
-        {:else}
-          {#if form.borrados}
-            {form.borrados} {form.borrados === 1 ? 'borrado' : 'borrados'}.
-          {/if}
-          {#if form.archivadosPorUso}
-            <span class="text-warning">
-              {form.archivadosPorUso}
-              {form.archivadosPorUso === 1 ? 'no se pudo borrar' : 'no se pudieron borrar'} porque
-              {form.archivadosPorUso === 1 ? 'está' : 'están'} dentro de entrenos ya hechos: dentro hay
-              series con pesos reales de tus clientes.
-              {form.archivadosPorUso === 1 ? 'Se ha archivado' : 'Se han archivado'}.
-            </span>
-          {/if}
-        {/if}
+      <span class="flex-1 min-w-0 text-text-mute">
+        Lo archivado se puede recuperar. Lo borrado, no.
       </span>
-
-      {#if form.idsParaDeshacer && form.idsParaDeshacer.length > 0}
-        <form method="POST" action="?/desarchivarVarios" use:enhance={trasLaAccion}>
-          {#each form.idsParaDeshacer as id (id)}
-            <input type="hidden" name="ids" value={id} />
-          {/each}
-          <button
-            type="submit"
-            class="text-accent hover:underline font-medium"
-            disabled={trabajando}
-          >
-            Deshacer
-          </button>
-        </form>
-      {/if}
+      <form method="POST" action="?/desarchivarVarios" use:enhance={trasLaAccion}>
+        {#each form.idsParaDeshacer as id (id)}
+          <input type="hidden" name="ids" value={id} />
+        {/each}
+        <button type="submit" class="text-accent hover:underline font-medium" disabled={trabajando}>
+          Deshacer el archivado
+        </button>
+      </form>
     </div>
-  {/if}
-
-  {#if form?.success && form?.restaurados}
-    <p
-      aria-live="polite"
-      class="text-sm text-success bg-success/10 border border-success/20 rounded-md p-3"
-    >
-      {form.restaurados}
-      {form.restaurados === 1 ? 'ejercicio restaurado' : 'ejercicios restaurados'}.
-    </p>
   {/if}
 
   {#if data.exercises.length === 0}

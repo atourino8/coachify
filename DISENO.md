@@ -415,9 +415,39 @@ bien.
 error hay que poder leerlo con el campo delante, y no se va solo a los cinco
 segundos.
 
-### Migración en curso
+### Estado: hecho
 
-`(coach)/agenda` ya usa solo el aviso flotante. **Quedan dieciocho pantallas**
-con el aviso antiguo en el flujo; funcionan, pero tienen el mismo defecto de
-visibilidad. Se van pasando: la lista está en el commit que introdujo
-`aviso.server.ts`.
+**Las setenta y ocho acciones de la aplicación acaban avisando**, y ninguna
+pinta ya su propio cartel verde dentro de la página. Hay un guion que lo
+comprueba (§ «Cómo se verifica», más abajo).
+
+### Las cuatro excepciones, y por qué lo son
+
+La regla no es «todo flota». Es **el mensaje flota; lo que hay que leer o pulsar
+se queda**. Un aviso flotante se cierra solo a los cinco segundos, así que meter
+dentro algo que requiere decidir es una trampa: quien lo necesita es justo quien
+todavía se está dando cuenta.
+
+| Dónde | Qué se queda en la página | Por qué |
+| --- | --- | --- |
+| Inicio · rechazar cita | El botón **«Deshacer el rechazo»** | El «cita rechazada» sí flota. Lo que se queda es la salida: darse cuenta de que has pulsado la ✕ en vez del ✓ tarda más de cinco segundos. |
+| Biblioteca · archivar o borrar en lote | El botón **«Deshacer el archivado»** | Nada más en la aplicación desarchiva. Sin ese botón, marcar cuarenta y ocho casillas sería un error sin retorno. |
+| Clientes · invitar en lote | **La lista de correos que fallaron** | Es un parte que hay que leer y corregir uno a uno. Cuando salen todas, no hay parte: lo dice el aviso flotante y ya está. |
+| Clientes · invitar a uno / alta guiada | **La pantalla de confirmación entera** | Ya es una pantalla con «Añadir otro» y «Volver al listado». Un aviso encima diría lo mismo dos veces a la vez. |
+
+Y una quinta, distinta de las demás: **registrar una serie no avisa**. Se hace
+doce veces seguidas; un aviso por serie sería ruido tapando la pantalla donde se
+está trabajando. La confirmación es la propia serie marcándose, delante de los
+ojos.
+
+### Cómo se verifica
+
+El guion de comprobación recorre las acciones de todos los `+page.server.ts` y
+avisa de: acciones que acaban bien sin llamar a `avisar()` ni estar en la lista
+de exentas; bloques `{#if form.success}` que hayan vuelto a aparecer; llamadas a
+`avisar()` en acciones que no reciben `cookies`; y campos de `form` que una
+plantilla lee y el servidor ya no devuelve.
+
+Esa última comprobación existe porque es el fallo natural de este cambio: se
+quita el `borrados: n` del servidor y se olvida el `{form.borrados}` de la
+plantilla, que entonces se queda en blanco sin dar ningún error.

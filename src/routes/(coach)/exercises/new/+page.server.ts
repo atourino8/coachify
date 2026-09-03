@@ -3,10 +3,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { etiquetasParaGuardar } from '$lib/exercise-tags';
 import { idDeYoutube } from '$lib/coach-media';
+import { avisar } from '$lib/aviso.server';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-  default: async ({ request, locals: { supabase, user } }) => {
+  default: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const formData = await request.formData();
 
@@ -42,6 +43,10 @@ export const actions: Actions = {
       return fail(500, { error: error.message });
     }
 
+    // Se aterriza en la ficha del ejercicio recién creado, que se parece
+    // bastante al formulario que se acaba de rellenar: sin una palabra, no se
+    // distingue de «no se ha guardado y me lo ha devuelto».
+    avisar(cookies, 'Ejercicio creado.');
     redirect(303, `/exercises/${data.id}`);
   }
 };

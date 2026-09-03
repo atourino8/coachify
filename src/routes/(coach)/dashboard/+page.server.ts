@@ -16,6 +16,7 @@
 
 import { fail, redirect } from '@sveltejs/kit';
 import { todayISOInTZ } from '$lib/week';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 const TZ = 'Europe/Madrid';
@@ -93,7 +94,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 // Confirmar o rechazar sin salir del inicio. Se filtra siempre por coach_id
 // para no depender solo de la RLS.
 export const actions: Actions = {
-  confirmar: async ({ request, locals: { supabase, user } }) => {
+  confirmar: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = String((await request.formData()).get('session_id') ?? '');
     if (!id) return fail(400, { error: 'Falta la cita.' });
@@ -104,10 +105,11 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: 'No se pudo confirmar la cita.' });
-    return { success: true, confirmada: true };
+    avisar(cookies, 'Cita confirmada.');
+    return { success: true };
   },
 
-  rechazar: async ({ request, locals: { supabase, user } }) => {
+  rechazar: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = String((await request.formData()).get('session_id') ?? '');
     if (!id) return fail(400, { error: 'Falta la cita.' });
@@ -118,13 +120,19 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('coach_id', user.id);
     if (error) return fail(500, { error: 'No se pudo rechazar la cita.' });
+    // El MENSAJE se va al aviso flotante; el BOTÓN de deshacer se queda en la
+    // página, y por eso `sessionId` sigue viajando. Un botón dentro de algo que
+    // se cierra solo a los cinco segundos es una trampa: quien lo necesita es
+    // justo quien acaba de darse cuenta del error, y eso tarda más de cinco
+    // segundos.
+    avisar(cookies, 'Cita rechazada. Tu cliente ya lo ve.', 'aviso');
     return { success: true, rechazada: true, sessionId: id };
   },
 
   // Deshacer un rechazo. Existe porque rechazar es lo único de esta pantalla
   // que le llega al cliente y no tiene vuelta: el ✓ y la ✕ están a un pulgar
   // de distancia, y en un móvil con prisa el fallo va a pasar.
-  deshacerRechazo: async ({ request, locals: { supabase, user } }) => {
+  deshacerRechazo: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = String((await request.formData()).get('session_id') ?? '');
     if (!id) return fail(400, { error: 'Falta la cita.' });
@@ -136,6 +144,7 @@ export const actions: Actions = {
       .eq('coach_id', user.id)
       .eq('status', 'rejected');
     if (error) return fail(500, { error: 'No se pudo deshacer.' });
-    return { success: true, deshecho: true };
+    avisar(cookies, 'Rechazo deshecho. La cita vuelve a estar pendiente.');
+    return { success: true };
   }
 };

@@ -2,6 +2,7 @@
 // pero para plantillas (sin cliente ni fecha).
 
 import { error, fail, redirect } from '@sveltejs/kit';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type TemplateWithItems = {
@@ -57,7 +58,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
 };
 
 export const actions: Actions = {
-  save: async ({ request, params, locals: { supabase, user } }) => {
+  save: async ({ request, params, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
 
     const fd = await request.formData();
@@ -108,6 +109,7 @@ export const actions: Actions = {
       if (insErr) return fail(500, { error: insErr.message });
     }
 
+    avisar(cookies, 'Entrenamiento guardado.');
     return { success: true };
   }
 };

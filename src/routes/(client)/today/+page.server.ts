@@ -9,6 +9,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { todayISOInTZ } from '$lib/week';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import type { WorkoutWithItems, WorkoutItemWithRelations } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 const DEFAULT_TZ = 'Europe/Madrid';
@@ -152,7 +153,7 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
 // El cliente resuelve la propuesta de cita desde su propio inicio, sin tener
 // que ir a /my-calendar. El .eq('client_id') evita tocar citas ajenas.
 export const actions: Actions = {
-  confirmSession: async ({ request, locals: { supabase, user } }) => {
+  confirmSession: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = String((await request.formData()).get('session_id') ?? '');
     if (!id) return fail(400, { error: 'Falta la cita.' });
@@ -166,10 +167,11 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('client_id', user.id);
     if (error) return fail(500, { error: 'No se pudo confirmar la cita.' });
-    return { success: true, confirmed: true };
+    avisar(cookies, 'Cita confirmada. La tienes en «Citas».');
+    return { success: true };
   },
 
-  rejectSession: async ({ request, locals: { supabase, user } }) => {
+  rejectSession: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const id = String((await request.formData()).get('session_id') ?? '');
     if (!id) return fail(400, { error: 'Falta la cita.' });
@@ -183,6 +185,7 @@ export const actions: Actions = {
       .eq('id', id)
       .eq('client_id', user.id);
     if (error) return fail(500, { error: 'No se pudo rechazar la cita.' });
-    return { success: true, rejected: true };
+    avisar(cookies, 'Cita rechazada. Tu entrenador ya lo sabe.', 'aviso');
+    return { success: true };
   }
 };

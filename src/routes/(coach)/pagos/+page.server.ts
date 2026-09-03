@@ -8,6 +8,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { todayISOLocal } from '$lib/week';
 import { accesoDelCliente, DIAS_DE_GRACIA } from '$lib/access';
 import type { PaymentMethod } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 type PagoRow = {
@@ -123,7 +124,7 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) 
 
 export const actions: Actions = {
   // Activar o desactivar la pausa por impago para todos sus clientes.
-  bloqueo: async ({ request, locals: { supabase, user } }) => {
+  bloqueo: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const activar = (await request.formData()).get('activar') === 'si';
 
@@ -133,6 +134,13 @@ export const actions: Actions = {
       .eq('id', user.id);
 
     if (error) return fail(500, { error: error.message });
-    return { success: true, bloqueo: activar };
+    avisar(
+      cookies,
+      activar
+        ? 'Pausa por impago activada. Los clientes con el pago vencido dejan de ver sus entrenos.'
+        : 'Pausa por impago desactivada. Todos tus clientes vuelven a ver sus entrenos.',
+      activar ? 'aviso' : 'ok'
+    );
+    return { success: true };
   }
 };

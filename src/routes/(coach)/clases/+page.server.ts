@@ -4,6 +4,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { datesInRangeOnWeekdays } from '$lib/week';
 import type { GroupClass } from '$lib/supabase/types';
+import { avisar } from '$lib/aviso.server';
 import type { PageServerLoad, Actions } from './$types';
 
 /** Tope de clases por alta en lote. Un trimestre de tres días semanales cabe. */
@@ -62,7 +63,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
 export const actions: Actions = {
   // Crea una clase, o todas las del rango si vienen días de la semana marcados.
-  create: async ({ request, locals: { supabase, user } }) => {
+  create: async ({ request, cookies, locals: { supabase, user } }) => {
     if (!user) redirect(303, '/login');
     const fd = await request.formData();
 
@@ -124,6 +125,7 @@ export const actions: Actions = {
     const { error } = await supabase.from('group_classes').insert(filas as never);
     if (error) return fail(500, { error: error.message });
 
-    return { success: true, created: filas.length };
+    avisar(cookies, filas.length === 1 ? 'Clase creada.' : `${filas.length} clases creadas.`);
+    return { success: true };
   }
 };
