@@ -689,4 +689,37 @@ cubo, llamadas a una API que se paga.
 
 ---
 
+## Un patrón de producción aplicado a un proyecto sin usuarios es complicación
+
+**Síntoma:** partí una migración en dos —copiar ahora, borrar después— y Toni
+preguntó si no sería mejor en un paso, que «parece complicación por motivos
+equivocados». Lo era.
+
+**Causa:** apliqué el patrón de «expandir y contraer», que es correcto **en su
+contexto**: despliegues sin cortes, varias instancias, código viejo y nuevo
+sirviendo peticiones a la vez, usuarios que no pueden ver un error. Nada de eso
+existía aquí. Cero usuarios, un despliegue, y la migración y el `pull` con un
+minuto de diferencia.
+
+Lo que estaba comprando: sesenta segundos sin aplicación rota que no ve nadie.
+Lo que estaba pagando: **duplicación de datos** —dos columnas y una tabla con lo
+mismo— que es justo el fallo que llevaba una semana quitando de todas partes.
+
+**Y lo que no había pesado:**
+
+- Una migración sola es **atómica**: el DDL de Postgres va en transacción, o
+  entra todo o no entra nada. Dos migraciones crean un estado a medias REAL, y
+  el segundo paso —el que borra— es exactamente el que se queda sin aplicar.
+- Obliga a recordar una regla de orden que no debería existir.
+
+**Regla:** antes de traer un patrón, comprobar que **el problema que resuelve
+existe aquí**. «Es lo que se hace en producción» no es una razón si esto no es
+producción. Los patrones tienen precondiciones, y sin ellas solo queda el coste.
+
+**Cómo se detecta:** si al explicar una solución hay que explicar también una
+regla de uso —«acuérdate de aplicar la segunda después»—, probablemente la
+solución esté por encima del problema.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

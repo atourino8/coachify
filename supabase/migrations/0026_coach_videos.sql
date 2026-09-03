@@ -126,23 +126,34 @@ begin
   end loop;
 end $$;
 
--- --- Las columnas viejas NO se borran aquí ---------------------------------
+-- --- Fuera las columnas viejas ----------------------------------------------
 --
--- Y esto sí merece explicación, porque va contra la regla de «una sola fuente
--- para cada dato» que seguimos en todo lo demás.
+-- En LA MISMA migración, y eso es deliberado.
 --
--- Si esta migración borrara `video_url` y `video_path`, entre aplicarla y
--- traerse el código nuevo la aplicación estaría ROTA: el código de hoy lee esas
--- columnas y ya no existirían. Y las migraciones se aplican a mano, antes del
--- pull, así que esa ventana es real.
+-- La primera versión de esto lo partía en dos —una que copiaba y otra que
+-- borraba— para que la aplicación no se rompiera entre aplicar la migración y
+-- traerse el código. Ese es el patrón de «expandir y contraer», y existe para
+-- despliegues sin cortes con código viejo y nuevo corriendo A LA VEZ: varias
+-- instancias, usuarios dentro, ni un segundo con el esquema a medias.
 --
--- Así que se hace en dos tiempos, que es el patrón de siempre para esto:
+-- Aquí no hay nada de eso. Cero usuarios, un despliegue, y la migración y el
+-- pull pasan con un minuto de diferencia. Se estaba metiendo duplicación de
+-- datos —dos fuentes para lo mismo, que es el fallo que más veces nos ha
+-- mordido— para evitar sesenta segundos de aplicación rota que no ve nadie.
 --
---   0026 (esta) · crea y COPIA. Nada se rompe: el código viejo sigue leyendo
---                 las columnas viejas, que siguen ahí con su contenido.
---   0027        · BORRA las columnas viejas. Va junto al código que ya lee de
---                 `coach_videos`, y se aplica después de traérselo.
+-- Y partirlo tenía dos costes que no compensan:
 --
--- La duplicación es temporal y tiene fecha de caducidad escrita: mientras
--- exista, manda `coach_videos`. Las columnas viejas están congeladas —nadie
--- escribe en ellas— y solo esperan a que la 0027 las quite.
+--   · Una migración sola es ATÓMICA. El DDL de Postgres va en transacción: o
+--     entra todo o no entra nada. Dos migraciones crean un estado a medias de
+--     verdad, y el paso de borrar es justo el que se olvida.
+--   · Obliga a recordar un orden («no apliques la segunda hasta haber hecho
+--     pull») que no debería existir.
+--
+-- Aplícala con el código delante y ya está. El dato no se pierde: acaba de
+-- copiarse a coach_videos unas líneas más arriba, dentro de esta misma
+-- transacción.
+alter table public.exercises
+  drop constraint if exists exercises_video_uno_u_otro,
+  drop column if exists video_url,
+  drop column if exists video_path,
+  drop column if exists video_poster;

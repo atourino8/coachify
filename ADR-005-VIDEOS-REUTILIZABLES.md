@@ -84,22 +84,29 @@ nada, porque el modelo ya tiene dónde ponerla. No se hace ahora.
    `video_path`, crea su fila en `coach_videos` y lo apunta. Uno por ejercicio,
    así que el comportamiento no cambia — pero desde ese momento se pueden
    compartir.
-3. **No borra nada todavía.** Eso es la `0027`.
+3. **Borra `video_url`, `video_path` y `video_poster`** en la misma migración.
 
-**En dos tiempos, y a propósito.** La primera versión de esto borraba las
-columnas viejas en la misma migración, y eso deja la aplicación ROTA entre
-aplicarla y traerse el código —que es exactamente el orden en que se trabaja
-aquí: migración a mano, luego pull—.
+**En un solo paso, y esto se corrigió sobre la marcha.** La primera versión lo
+partía en dos —copiar ahora, borrar después— para que la aplicación no se
+rompiera entre aplicar la migración y hacer `pull`.
 
-| | Qué hace | Cuándo |
-| --- | --- | --- |
-| `0026` | Crea `coach_videos` y **copia** lo que hay | Ya. No rompe nada: el código viejo sigue leyendo las columnas viejas. |
-| `0027` | **Borra** `video_url`, `video_path` y `video_poster` | Después de traerse el código que lee de `coach_videos`. |
+Estaba mal. El patrón de «expandir y contraer» existe para **despliegues sin
+cortes con código viejo y nuevo corriendo a la vez**: varias instancias,
+usuarios dentro, ni un segundo con el esquema a medias. Aquí hay cero usuarios,
+un despliegue, y las dos cosas pasan con un minuto de diferencia. Se estaba
+metiendo **duplicación de datos** —dos fuentes para lo mismo— para evitar un
+minuto de aplicación rota que no ve nadie.
 
-La duplicación es temporal y con fecha de caducidad escrita. Mientras exista,
-manda `coach_videos`; las columnas viejas quedan congeladas y nadie escribe en
-ellas. Y la `0027` **falla ruidosamente** si encuentra algún ejercicio con vídeo
-viejo y sin `video_id`: si la copia no se hizo entera, borrar perdería datos.
+Y partirlo costaba más de lo que ahorraba:
+
+- **Una migración sola es atómica.** El DDL de Postgres va en transacción: o
+  entra todo o no entra nada. Dos migraciones crean un estado a medias real, y
+  el paso de borrar es exactamente el que se queda sin aplicar.
+- Obliga a recordar un orden que no debería existir.
+
+**Cómo se aplica:** `git pull` y luego la migración, o al revés. Da igual: entre
+una cosa y otra la aplicación no funciona, y eso es aceptable porque no hay
+nadie usándola.
 
 ## Lo que hay que vigilar
 
