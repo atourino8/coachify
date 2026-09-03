@@ -659,4 +659,34 @@ te devuelven a donde empezaste.
 
 ---
 
+## Los datos de prueba salen del sandbox y tocan el mundo real
+
+**Síntoma:** correo de Supabase avisando de una tasa alta de rebotes y
+amenazando con cortarnos el envío.
+
+**Causa:** el guion de sembrado construía los correos de los clientes de prueba
+con **el dominio real de quien sembraba**: entrabas con `algo@gmail.com` y
+creaba `demo.lucia@gmail.com`. Buzones que no existen, en un dominio que sí. En
+cuanto alguien pulsaba «Reenviar invitación», salía un correo de verdad hacia un
+buzón inexistente y volvía rebotado.
+
+**Y el agravante:** mi propio guion de pruebas manuales mandaba invitar a dos
+clientes seguidos, y remataba con un «alguno rebotará y no será culpa del
+código». Había visto el síntoma, lo había escrito, y lo archivé como ruido
+esperable en vez de investigarlo. Normalizar un síntoma es peor que no verlo:
+deja constancia de que estaba ahí y de que se decidió no mirar.
+
+**Regla:** los datos de prueba **nunca** usan dominios reales. Existen dominios
+reservados por la IANA (RFC 2606) —`example.com`, `.test`, `.invalid`— que no
+son de nadie y nunca lo serán. Y cuando hay que probar un envío de verdad, se
+usa una dirección propia con el truco del `+`: `tuyo+prueba1@gmail.com`.
+
+**Lo general, que es lo que importa:** un guion de sembrado parece inofensivo
+porque «son datos falsos», pero escribe en un servicio de verdad, con una cuota
+de verdad y una reputación compartida con terceros. Antes de generar datos,
+preguntarse **qué de esto sale del sandbox**: correos, webhooks, ficheros en un
+cubo, llamadas a una API que se paga.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

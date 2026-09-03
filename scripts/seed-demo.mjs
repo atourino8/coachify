@@ -247,11 +247,30 @@ const DEMO_CLIENTS = [
   }
 ];
 
-/** Email determinista por cliente: permite reejecutar sin duplicar. */
-const emailFor = (key, coachEmail) => {
-  const [, domain] = coachEmail.split('@');
-  return `demo.${key}@${domain ?? 'example.com'}`;
-};
+/**
+ * Correo determinista por cliente: permite reejecutar sin duplicar.
+ *
+ * POR QUÉ `example.com` Y NO EL DOMINIO DEL ENTRENADOR
+ *
+ * Antes esto cogía el dominio del correo con el que sembrabas: si entrabas con
+ * `algo@gmail.com`, creaba `demo.lucia@gmail.com`. Esa dirección **no existe**,
+ * y Gmail rechaza los buzones desconocidos de forma tajante. En cuanto alguien
+ * pulsaba «Reenviar invitación» sobre un cliente de demo, salía un correo que
+ * rebotaba.
+ *
+ * Y los rebotes no son gratis: el envío por defecto de Supabase es un servidor
+ * COMPARTIDO entre todos sus proyectos, así que una tasa alta de devoluciones
+ * gasta reputación de todos. Nos avisaron por esto.
+ *
+ * `example.com` está reservado por la IANA (RFC 2606) justo para ejemplos y
+ * pruebas: no es de nadie, nunca lo será, y no hay ningún buzón real detrás al
+ * que molestar.
+ *
+ * El parámetro `coachEmail` se conserva para no romper las llamadas, pero ya no
+ * decide el dominio a propósito.
+ */
+const DOMINIO_DEMO = 'example.com';
+const emailFor = (key) => `demo.${key}@${DOMINIO_DEMO}`;
 
 // --- Programa principal ------------------------------------------------------
 
@@ -303,10 +322,34 @@ async function main() {
   ok(`Coach: ${coachProfile.full_name ?? coachEmail}`);
 
   const coachId = coachUser.id;
-  const demoEmails = DEMO_CLIENTS.map((c) => emailFor(c.key, coachEmail).toLowerCase());
-  const existing = usersPage.users.filter((u) =>
-    demoEmails.includes((u.email ?? '').toLowerCase())
-  );
+  const demoEmails = DEMO_CLIENTS.map((c) => emailFor(c.key).toLowerCase());
+
+  /**
+   * Se busca por la MARCA del metadata, no solo por el correo.
+   *
+   * Antes se buscaba solo por correo, y los correos los construía el propio
+   * guion con el dominio del entrenador. Al cambiarlos a `example.com`, los
+   * usuarios de demo creados con el esquema viejo —`demo.lucia@gmail.com` y
+   * compañía— dejarían de encontrarse: ni se reutilizan ni los borra
+   * `--limpiar`. Se quedarían ahí para siempre, y son EXACTAMENTE los que
+   * rebotan si alguien les da a «Reenviar invitación».
+   *
+   * La marca `coachify_demo` la pone este guion al crear, así que identifica a
+   * los suyos sin depender de cómo se llamara el correo aquel día.
+   */
+  const esDemo = (u) =>
+    u.user_metadata?.[DEMO_FLAG] === true || demoEmails.includes((u.email ?? '').toLowerCase());
+  const existing = usersPage.users.filter(esDemo);
+
+  const viejos = existing.filter((u) => !demoEmails.includes((u.email ?? '').toLowerCase()));
+  if (viejos.length > 0) {
+    log(
+      `\n⚠ ${viejos.length} usuario(s) de demo con correos del esquema antiguo ` +
+        `(${viejos.map((u) => u.email).join(', ')}).`
+    );
+    log('   Son direcciones que no existen: si les reenvías la invitación, rebotan.');
+    log('   Ejecuta con --limpiar para borrarlos y vuelve a sembrar.');
+  }
 
   // ---- Modo limpieza ----
   if (clean) {
@@ -508,7 +551,7 @@ async function main() {
   log('\nCreando clientes…');
   const ids = {};
   for (const c of DEMO_CLIENTS) {
-    const email = emailFor(c.key, coachEmail);
+    const email = emailFor(c.key);
     const { data, error } = await db.auth.admin.createUser({
       email,
       password: DEMO_PASSWORD,
@@ -1152,12 +1195,12 @@ async function main() {
   log('   · Luego entra como cliente: verás tu nombre arriba, no "Treno"');
   log('');
   log('  COMO CLIENTE (contraseña: ' + DEMO_PASSWORD + ')');
-  log(`   · ${emailFor('lucia', coachEmail)}`);
+  log(`   · ${emailFor('lucia')}`);
   log('       entreno de hoy a medias → prueba el botón "Continuar"');
   log('       y "Pedir cita", que ahora sí tiene huecos donde elegir');
-  log(`   · ${emailFor('sofia', coachEmail)}`);
+  log(`   · ${emailFor('sofia')}`);
   log('       entreno de hoy completado al 100% → píldora "Completado"');
-  log(`   · ${emailFor('carla', coachEmail)}`);
+  log(`   · ${emailFor('carla')}`);
   log('       Progreso con una curva real de 8 semanas');
   log('');
   log(`Para borrarlo todo:  node scripts/seed-demo.mjs ${coachEmail} --limpiar`);

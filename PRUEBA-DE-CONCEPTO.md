@@ -36,6 +36,17 @@ que de una teoría intermedia.
 4. **Clientes → + Añadir.** Nombre, Apellidos, correo, y en Grupo escribe uno
    nuevo: el desplegable de al lado debe **apagarse** y salir el aviso de que
    se creará.
+
+   > **Usa direcciones tuyas de verdad**, con el truco del `+`: si tu correo es
+   > `tuyo@gmail.com`, escribe `tuyo+prueba1@gmail.com`. Te llega a tu buzón y
+   > **no rebota**.
+   >
+   > No inventes direcciones. Un correo a un buzón que no existe se devuelve, y
+   > esas devoluciones cuentan contra la reputación del servidor de Supabase,
+   > que está **compartido con todos sus proyectos**. Nos avisaron por esto y
+   > amenazaron con cortarnos el envío. La aplicación ahora rechaza los dominios
+   > reservados (`example.com`, `.test`, `.invalid`…), pero un dominio real
+   > inventado —`asdf@gmail.com`— sí sale y sí rebota.
 5. Envía. Sale la **confirmación a pantalla completa**. Pulsa **«Añadir
    otro»**: el formulario vuelve vacío. Invita a un segundo y ahora sí,
    «Volver al listado».
@@ -162,9 +173,15 @@ que de una teoría intermedia.
 
 ## Lo que esta prueba no cubre
 
-- **El correo de invitación** sale por el envío por defecto de Supabase, que
-  tiene un límite de tasa bajo. Si invitas a diez seguidos, alguno rebotará y
-  no será culpa del código.
+- **El correo de invitación** sale por el envío por defecto de Supabase
+  mientras no montemos el SMTP propio (ver `CORREO.md`). Ese envío es
+  compartido y va limitado a unos pocos por hora: si invitas a diez seguidos,
+  alguno se quedará sin salir.
+
+  *Esta nota antes decía que «alguno rebotará y no será culpa del código», y
+  estaba mal en las dos mitades: un rebote no es lo mismo que un envío
+  rechazado por límite de tasa, y los rebotes sí eran culpa nuestra —de las
+  direcciones inventadas que este mismo guion mandaba usar.*
 - **Los avisos no se envían**, se derivan al cargar la pantalla. Que la lista
   de espera ascienda a alguien no le manda ningún correo.
 - **El rendimiento con datos de verdad**: el sembrado hace once clientes. Con

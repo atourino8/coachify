@@ -6,6 +6,7 @@
 // no hace falta ninguna columna nueva ni migración.
 
 import { fail, redirect } from '@sveltejs/kit';
+import { motivoNoInvitable } from '$lib/correo';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import { urlsDeAvatar } from '$lib/avatares.server';
 import { COOKIE_VISTA_CLIENTES, leerPreferencia } from '$lib/preferencias';
@@ -219,9 +220,11 @@ export const actions: Actions = {
     if (!email || !nombre || !apellidos) {
       return fail(400, { error: 'El nombre, los apellidos y el correo son obligatorios.' });
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-      return fail(400, { error: 'Ese correo no tiene buena pinta. Revísalo.' });
-    }
+    // El formato Y el dominio. Lo segundo no es quisquillosidad: escribir a un
+    // dominio reservado rebota siempre, y los rebotes se pagan con la
+    // reputación del servidor de correo, que es compartido. Ver lib/correo.ts.
+    const noInvitable = motivoNoInvitable(email);
+    if (noInvitable) return fail(400, { error: noInvitable });
 
     // Grupo: uno existente, o uno nuevo creado aquí mismo.
     let groupId = ((formData.get('group_id') as string) ?? '').trim() || null;
@@ -282,7 +285,6 @@ export const actions: Actions = {
       .map((line) => line.trim())
       .filter(Boolean);
 
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const ok: string[] = [];
     const errors: { email: string; reason: string }[] = [];
 
@@ -292,8 +294,11 @@ export const actions: Actions = {
       const email = (m ? m[2] : entry).trim().toLowerCase();
       const nameGuess = (m && m[1] ? m[1] : '').replace(/["']/g, '').trim();
 
-      if (!re.test(email)) {
-        errors.push({ email: entry, reason: 'Email no válido' });
+      const motivo = motivoNoInvitable(email);
+      if (motivo) {
+        // En lote el motivo va en la fila del error, no en un aviso general:
+        // pegas treinta correos y necesitas saber cuál de los treinta falla.
+        errors.push({ email: entry, reason: motivo });
         continue;
       }
 
