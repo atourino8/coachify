@@ -423,12 +423,18 @@
           method="POST"
           action="?/guardarDia"
           use:enhance={() => {
+            // Lo que va de camino al servidor, tomado antes de enviarlo.
+            const enviado = itemsDiaJSON;
             guardandoDia = true;
-            return async ({ update }) => {
+            return async ({ update, result }) => {
               await update();
               guardandoDia = false;
-              historialDia.limpiar();
-              originalDia = JSON.stringify(itemsDia);
+              // SOLO si ha ido bien: si el guardado falló, los cambios siguen
+              // pendientes y borrar la referencia los daría por guardados.
+              if (result.type === 'success') {
+                historialDia.limpiar();
+                originalDia = JSON.stringify(itemsDia);
+              }
             };
           }}
         >

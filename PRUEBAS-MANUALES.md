@@ -276,3 +276,18 @@ recargar, y entonces la fila había desaparecido.
 3. Con la red a 3G lenta (herramientas del navegador), repite el paso 1 y
    comprueba que **no se puede pulsar dos veces** mientras va.
 
+---
+
+## «Sin guardar» después de guardar
+
+1. **Rutinas → Entrenamientos → abre uno.** Cambia un peso y comprueba que sale
+   **«Sin guardar»** arriba.
+2. Pulsa **Guardar**. Tiene que salir el aviso de guardado **y desaparecer el
+   «Sin guardar»**. Antes se quedaban los dos a la vez, que es lo contrario de
+   lo que hace falta saber.
+3. Cambia otra cosa: vuelve a salir «Sin guardar». Guarda otra vez: se va.
+4. **Que falle a propósito**: con las herramientas del navegador, corta la red y
+   pulsa Guardar. El «Sin guardar» **tiene que seguir ahí** — los cambios de
+   verdad no se guardaron.
+5. Lo mismo en la **ficha del cliente → Calendario**, abriendo un día y
+   guardándolo desde ahí.

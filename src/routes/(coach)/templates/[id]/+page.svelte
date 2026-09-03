@@ -102,26 +102,60 @@
   }
 
   // ---- Cambios sin guardar ----
-  // untrack() dice lo que se quiere decir: el valor de AHORA, el de cuando se
-  // cargó la página. Es justo lo contrario de un derivado.
-  const estadoInicial = untrack(() =>
-    JSON.stringify({
-      name: data.template.name,
-      clientNotes: data.template.client_notes ?? '',
-      coachNotes: data.template.coach_notes ?? '',
-      category: data.template.category ?? '',
-      items: (data.template.workout_template_items ?? []).map((it) => ({
-        exercise_id: it.exercise_id,
-        sets: it.sets,
-        reps: it.reps_prescribed ?? '',
-        peso: it.weight_prescribed ?? '',
-        descanso: it.rest_seconds,
-        notas: it.notes ?? ''
-      }))
-    })
+  //
+  // UNA SOLA FUNCIÓN para las dos instantáneas, la de referencia y la de ahora.
+  //
+  // Antes eran dos objetos escritos a mano por separado —uno desde `data`, otro
+  // desde el estado— con los mismos seis campos repetidos. Mientras coincidan
+  // funciona; el día que alguien añada un campo a uno y no al otro, «Sin
+  // guardar» se queda encendido para siempre y nadie sabe por qué.
+  function instantanea(v: {
+    name: string;
+    clientNotes: string;
+    coachNotes: string;
+    category: string;
+    items: {
+      exercise_id: string;
+      sets: number;
+      reps: string;
+      peso: string;
+      descanso: number | null;
+      notas: string;
+    }[];
+  }) {
+    return JSON.stringify(v);
+  }
+
+  /**
+   * Cómo estaba al cargar… y cómo quedó al guardar.
+   *
+   * ES ESTADO, no una constante. Era `const` calculada una vez con `untrack`, y
+   * por eso al guardar salía «Entrenamiento guardado» y justo encima «Sin
+   * guardar»: la referencia seguía siendo la de la carga, así que todo lo que
+   * habías escrito seguía contando como pendiente aunque acabara de escribirse
+   * en la base.
+   */
+  let referencia = $state(
+    untrack(() =>
+      instantanea({
+        name: data.template.name,
+        clientNotes: data.template.client_notes ?? '',
+        coachNotes: data.template.coach_notes ?? '',
+        category: data.template.category ?? '',
+        items: (data.template.workout_template_items ?? []).map((it) => ({
+          exercise_id: it.exercise_id,
+          sets: it.sets,
+          reps: it.reps_prescribed ?? '',
+          peso: it.weight_prescribed ?? '',
+          descanso: it.rest_seconds,
+          notas: it.notes ?? ''
+        }))
+      })
+    )
   );
-  const hayCambios = $derived(
-    JSON.stringify({
+
+  const ahora = $derived(
+    instantanea({
       name,
       clientNotes,
       coachNotes,
@@ -134,8 +168,10 @@
         descanso: it.rest_seconds,
         notas: it.notes
       }))
-    }) !== estadoInicial
+    })
   );
+
+  const hayCambios = $derived(ahora !== referencia);
 
   let confirmarSalir = $state(false);
   function cancelar() {
@@ -518,14 +554,23 @@
       method="POST"
       action="?/save"
       use:enhance={() => {
+        // La instantánea se toma ANTES de enviar: es lo que va de camino al
+        // servidor. Si se leyera al volver, un tecleo mientras guarda se daría
+        // por guardado sin estarlo.
+        const enviado = ahora;
         saving = true;
-        return async ({ update }) => {
+        return async ({ update, result }) => {
           await update();
           saving = false;
-          // Lo guardado ya no se deshace desde aquí: la pila se vacía para que
-          // el botón no ofrezca volver a un estado anterior al guardado, que
-          // desharía en pantalla algo que en la base ya está escrito.
-          historial.limpiar();
+          // SOLO si ha ido bien. Si el guardado falló, los cambios siguen sin
+          // guardar de verdad y el aviso tiene que seguir ahí.
+          if (result.type === 'success') {
+            referencia = enviado;
+            // Lo guardado ya no se deshace desde aquí: la pila se vacía para
+            // que el botón no ofrezca volver a un estado anterior al guardado,
+            // que desharía en pantalla algo que en la base ya está escrito.
+            historial.limpiar();
+          }
         };
       }}
     >

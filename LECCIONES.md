@@ -722,4 +722,34 @@ solución esté por encima del problema.
 
 ---
 
+## Una referencia que no se actualiza convierte un indicador en un adorno
+
+**Síntoma:** al guardar un entrenamiento salía «Entrenamiento guardado» y justo
+encima «Sin guardar».
+
+**Causa:** el indicador compara el estado actual con una instantánea de cómo
+estaba al cargar, y esa instantánea era una **constante** calculada una vez con
+`untrack`. Al guardar nunca se actualizaba, así que todo lo escrito seguía
+contando como pendiente aunque acabara de escribirse en la base.
+
+**Regla:** un indicador de «hay cambios» tiene dos mitades —lo de ahora y la
+referencia— y **las dos son estado**. Si la referencia es constante, el
+indicador solo sabe decir «has tocado algo desde que abriste», que no es la
+pregunta.
+
+**Y dos detalles que se olvidan al arreglarlo:**
+
+- La referencia se actualiza **solo si el guardado fue bien**. Si falló, los
+  cambios siguen pendientes de verdad y apagar el aviso miente.
+- La instantánea se toma **antes de enviar**, no al recibir la respuesta: es lo
+  que va de camino al servidor. Tomándola al volver, cualquier tecleo hecho
+  mientras guardaba se daría por guardado sin estarlo.
+
+**Cómo apareció:** tres pantallas hacen este mismo trabajo y cada una lo hacía
+distinto — una actualizaba la referencia, otra no, y la tercera ni siquiera
+tiene el indicador. El mismo patrón de siempre, y otra vez lo encontró alguien
+usando la aplicación, no un comprobador.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*
