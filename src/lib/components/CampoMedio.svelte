@@ -1,6 +1,12 @@
 <script lang="ts">
   /**
-   * Vídeo o imagen de un ejercicio, subido o enlazado.
+   * La IMAGEN de un ejercicio, subida o enlazada.
+   *
+   * Servía también para el vídeo hasta la migración 0026. Ya no: el vídeo es
+   * del entrenador y lo comparten varios ejercicios (ADR-005), así que tiene su
+   * propio componente —SelectorVideo— que además elige entre los que ya tiene.
+   * La imagen SÍ sigue siendo de este ejercicio y de nadie más, y por eso esta
+   * ruta puede llevar el id del ejercicio dentro.
    *
    * POR QUÉ SE SUBE ANTES DE ENVIAR EL FORMULARIO
    * Si el fichero viajara dentro del <form>, el navegador no da progreso y la
@@ -15,16 +21,9 @@
    */
   import { uploadWithProgress } from '$lib/technique';
   import Icono from '$lib/components/Icono.svelte';
-  import {
-    BUCKET_COACH,
-    rutaMedio,
-    validarMedio,
-    idDeYoutube,
-    type MedioTipo
-  } from '$lib/coach-media';
+  import { BUCKET_COACH, rutaImagen, validarMedio, idDeYoutube } from '$lib/coach-media';
 
   interface Props {
-    tipo: MedioTipo;
     titulo: string;
     exerciseId: string;
     coachId: string;
@@ -40,7 +39,6 @@
   }
 
   let {
-    tipo,
     titulo,
     exerciseId,
     coachId,
@@ -58,18 +56,12 @@
   let cancelar: (() => void) | null = null;
   let previaLocal = $state<string | null>(null);
 
-  // Derivados y no constantes: `tipo` es una propiedad, y aunque en la
-  // práctica no cambie, leerla fuera de un derivado captura solo el valor
-  // inicial y el compilador avisa con razón.
-  const nombreCampo = $derived(tipo === 'video' ? 'video' : 'image');
-  const acepta = $derived(tipo === 'video' ? 'video/mp4,video/webm,video/quicktime' : 'image/*');
-
   async function elegido(e: Event) {
     const input = e.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    problema = validarMedio(file, tipo);
+    problema = validarMedio(file, 'imagen');
     if (problema) {
       input.value = '';
       return;
@@ -82,7 +74,7 @@
       return;
     }
 
-    const destino = rutaMedio(coachId, exerciseId, tipo, file.type);
+    const destino = rutaImagen(coachId, exerciseId, file.type);
     subiendo = true;
     progreso = 0;
 
@@ -103,7 +95,7 @@
       // rechazaría, así que se limpia aquí y no se le enseña un error por algo
       // que podemos resolver solos.
       url = null;
-      if (tipo === 'imagen') previaLocal = URL.createObjectURL(file);
+      previaLocal = URL.createObjectURL(file);
     } catch (err) {
       if ((err as DOMException)?.name !== 'AbortError') {
         problema = (err as Error).message;
@@ -134,7 +126,7 @@
 
   {#if hayAlgo}
     <div class="flex flex-wrap items-center gap-3 rounded-md border border-line p-3">
-      {#if tipo === 'imagen' && previaImagen}
+      {#if previaImagen}
         <img src={previaImagen} alt="" class="w-20 h-20 object-cover rounded-md flex-shrink-0" />
       {/if}
       <span class="flex-1 min-w-0 text-sm">
@@ -173,22 +165,20 @@
         class="border border-line rounded-md p-4 text-center cursor-pointer
                hover:border-line-strong transition-colors"
       >
-        <input type="file" accept={acepta} onchange={elegido} class="sr-only" />
+        <input type="file" accept="image/*" onchange={elegido} class="sr-only" />
         <Icono nombre="subir" class="w-6 h-6 mx-auto mb-2 text-text-mute" />
-        <span class="block text-sm font-medium">Subir {tipo}</span>
+        <span class="block text-sm font-medium">Subir imagen</span>
         <span class="block text-2xs text-text-mute mt-1">Desde el móvil o el ordenador</span>
       </label>
 
       <div class="border border-line rounded-md p-4">
         <Icono nombre="enlace" class="w-6 h-6 mx-auto mb-2 text-text-mute" />
-        <label for="{nombreCampo}-enlace" class="block text-sm font-medium text-center">
-          Enlazar
-        </label>
+        <label for="image-enlace" class="block text-sm font-medium text-center"> Enlazar </label>
         <input
-          id="{nombreCampo}-enlace"
+          id="image-enlace"
           type="url"
           bind:value={url}
-          placeholder={tipo === 'video' ? 'youtube.com/watch?v=…' : 'https://…'}
+          placeholder="https://…"
           class="mt-2 w-full bg-surface-2 border border-line rounded-md px-2 py-1.5 text-2xs
                  focus:outline-none focus:border-accent"
         />
@@ -202,8 +192,8 @@
        subida es un <input type="file">, que mandaría el fichero entero otra
        vez dentro del formulario. Aquí solo viaja la ruta.
        Si hay fichero subido, la URL se manda vacía: son excluyentes. -->
-  <input type="hidden" name="{nombreCampo}_path" value={path ?? ''} />
-  <input type="hidden" name="{nombreCampo}_url" value={path ? '' : (url ?? '')} />
+  <input type="hidden" name="image_path" value={path ?? ''} />
+  <input type="hidden" name="image_url" value={path ? '' : (url ?? '')} />
 
   {#if problema}
     <p role="alert" class="text-sm text-danger">{problema}</p>

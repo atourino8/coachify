@@ -66,7 +66,7 @@
   const conFiltro = $derived(
     data.exercises.filter((e) => {
       if (!contiene(e.name, busqueda)) return false;
-      if (soloSinVideo && (e.video_url || e.video_path)) return false;
+      if (soloSinVideo && e.video_id) return false;
       if (filtroMaterial.length > 0) {
         const suyos = e.equipment_types ?? [];
         // "Cualquiera de los marcados" y no "todos": marcar barra y mancuerna
@@ -713,11 +713,12 @@
             wireframe: es una propiedad del ejercicio y se lee en la misma
             pasada que las demás, no en una segunda línea debajo del nombre.
 
-            Y mira las DOS columnas de vídeo. Antes solo miraba video_url, así
-            que un ejercicio con vídeo SUBIDO (migración 0017) salía marcado
-            como «sin vídeo» y con el icono de que tenía vídeo, a la vez.
+            Una sola comprobación desde la 0026: da igual si el vídeo está
+            subido o enlazado, porque eso ahora vive en la fila del vídeo. Antes
+            eran dos columnas y mirar solo una hacía que un ejercicio saliera
+            marcado «sin vídeo» y con el icono de tener vídeo a la vez.
           -->
-          {#if !ex.video_url && !ex.video_path}
+          {#if !ex.video_id}
             <span
               class="text-2xs px-2 py-0.5 rounded-full bg-warning/15 text-warning flex-shrink-0
                      whitespace-nowrap"

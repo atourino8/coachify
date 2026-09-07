@@ -212,20 +212,52 @@ export interface Profile {
   updated_at: string;
 }
 
+/**
+ * Un vídeo de la biblioteca del ENTRENADOR (migración 0026, ADR-005).
+ *
+ * Antes el vídeo vivía dentro de la fila del ejercicio, y eso obligaba a subir
+ * el mismo movimiento dos veces cuando había dos variantes —el curl analítico y
+ * el isométrico son el mismo gesto grabado—. Ahora el vídeo es suyo y varios
+ * ejercicios apuntan al mismo.
+ *
+ * Lo que NO está aquí, y es deliberado: la nota y el tramo. Van en el ejercicio,
+ * porque son justo lo que distingue a una variante de otra sobre el mismo vídeo.
+ * Si colgaran de aquí, las dos variantes verían lo mismo.
+ */
+export interface CoachVideo {
+  id: string;
+  coach_id: string;
+  /** Cómo lo llama él. Es lo que ve al reutilizarlo en otra variante. */
+  nombre: string;
+  /** Vídeo ENLAZADO (YouTube). Excluyente con `path`. */
+  url: string | null;
+  /** Vídeo SUBIDO: ruta en el cubo coach-media. Excluyente con `url`. */
+  path: string | null;
+  poster: string | null;
+  duracion_s: number | null;
+  created_at: string;
+}
+
 export interface Exercise {
   id: string;
   coach_id: string;
   name: string;
   description: string | null;
-  /** Vídeo ENLAZADO (YouTube). Excluyente con video_path. */
-  video_url: string | null;
-  /** Vídeo SUBIDO: ruta en el cubo coach-media. Excluyente con video_url. */
-  video_path: string | null;
+  /**
+   * El vídeo que enseña este movimiento, de su biblioteca. Puede ser el mismo
+   * que el de otro ejercicio: eso es justamente el punto (ADR-005).
+   */
+  video_id: string | null;
+  /** Qué mirar en el vídeo PARA ESTA VARIANTE. Lo lee el cliente. */
+  video_nota: string | null;
+  /** Segundo en el que empieza el tramo que interesa. NULL = desde el principio. */
+  video_desde: number | null;
+  /** Segundo en el que acaba. NULL = hasta el final. */
+  video_hasta: number | null;
   /** Imagen ENLAZADA. Excluyente con image_path. */
   image_url: string | null;
   /** Imagen SUBIDA: ruta en el cubo coach-media. Excluyente con image_url. */
   image_path: string | null;
-  video_poster: string | null;
   duration_seconds: number | null;
   /** Grupos que trabaja. El primero es el principal. */
   muscle_groups: MuscleGroup[];
@@ -350,9 +382,20 @@ export type WorkoutWithItems = Workout & {
   workout_items: WorkoutItemWithRelations[];
 };
 
+/**
+ * El ejercicio CON su vídeo ya traído del join.
+ *
+ * Existe porque desde la 0026 el vídeo está en otra tabla: la pantalla que lo
+ * reproduce necesita `path` para firmar la URL y `url` para el embebido, y
+ * pedirlos en una segunda consulta sería un viaje de más por cada ejercicio.
+ */
+export type ExerciseConVideo = Exercise & {
+  video: Pick<CoachVideo, 'id' | 'nombre' | 'url' | 'path'> | null;
+};
+
 // Para el detalle de item con su workout (join hacia workouts)
 export type WorkoutItemWithWorkout = WorkoutItem & {
-  exercise: Exercise;
+  exercise: ExerciseConVideo;
   workout: Pick<Workout, 'id' | 'date' | 'client_id'>;
   set_logs: SetLog[];
 };

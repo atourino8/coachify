@@ -330,3 +330,43 @@ ve sin tener que subir**.
 10. **Entrenando (cliente) → registra doce series seguidas.** No sale ningún
     aviso flotante: cada serie se marca y ya está. Doce avisos tapando la
     pantalla sería peor que ninguno.
+
+---
+
+## El vídeo compartido, el tramo y la nota
+
+Lo que hay que ver demostrado es **un movimiento grabado una vez y dos
+ejercicios distintos apoyados en él**. Todo lo demás es accesorio.
+
+1. **Biblioteca → Ejercicios → uno cualquiera → Vídeo → Subir.** Sube un MP4 y
+   mira la barra de progreso. Al acabar sale el nombre del fichero como nombre
+   propuesto; cámbialo por algo que reconozcas.
+2. Pon **Desde 5** y **Hasta 20**. Debajo tiene que decir «tu cliente verá el
+   tramo 0:05 – 0:20». Escribe la nota: «sube explosivo, baja lento». **Guarda.**
+3. **Crea otro ejercicio** —la variante— y en su Vídeo pulsa **Reutilizar**: el
+   que acabas de subir tiene que estar en la lista. Elígelo, **deja el tramo
+   vacío** y pon otra nota distinta.
+4. Vuelve al primero: el selector dice ahora **«Lo usan 2 ejercicios»**. Ese
+   aviso es el que evita que cambie el vídeo sin saber a quién afecta.
+5. **Entra como cliente** con los dos ejercicios programados. En el primero el
+   vídeo tiene que **empezar en el segundo 5 y pararse en el 20**, con el texto
+   «Fíjate en el tramo 0:05 – 0:20» debajo y **su** nota. En el segundo, el
+   mismo vídeo **entero** y **la otra** nota. Si las dos notas fueran iguales, el
+   modelo estaría mal.
+6. **Que el tramo no sea una cárcel**: tras pararse en el segundo 20, dale otra
+   vez al play. Tiene que seguir. Un tramo es una indicación, no un recorte.
+
+### Lo que no puede pasar
+
+7. **Borrar un ejercicio no puede llevarse el vídeo del otro.** Con los dos
+   ejercicios compartiendo vídeo, borra uno desde la biblioteca (marcar →
+   Borrar). Entra en el que queda: **el vídeo sigue ahí y se reproduce**.
+8. **Borrar el vídeo sí avisa a cuántos afecta.** En el editor, abajo del todo,
+   «Borrar … de mi biblioteca». El modal tiene que decir **«Lo usan 2
+   ejercicios»** antes de que confirmes. Después, los dos se quedan sin vídeo
+   pero **ninguno da error**.
+9. **Tramo imposible**: pon Desde 40 y Hasta 12 y guarda. Tiene que salir un
+   error **junto al formulario** —no un aviso flotante— diciendo que acaba antes
+   de empezar.
+10. **Quitar el vídeo no borra el fichero.** Pulsa «Quitar» arriba y guarda.
+    Vuelve a entrar, pulsa **Reutilizar**: el vídeo tiene que seguir en la lista.

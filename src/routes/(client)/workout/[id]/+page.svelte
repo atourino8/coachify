@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fechaCorta } from '$lib/formato';
-  import { idDeYoutube, urlDeEmbebido, miniaturaDeYoutube } from '$lib/coach-media';
+  import { idDeYoutube, miniaturaDeYoutube } from '$lib/coach-media';
+  import Reproductor from '$lib/components/Reproductor.svelte';
   import { enhance } from '$app/forms';
   import { invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
@@ -127,7 +128,8 @@
     return data.item.set_logs?.find((l: SetLog) => l.set_number === n);
   }
 
-  const ytId = $derived(idDeYoutube(data.item.exercise.video_url));
+  const video = $derived(data.item.exercise.video);
+  const ytId = $derived(idDeYoutube(video?.url));
 
   // La imagen se enseña SIEMPRE que exista, junto al vídeo y no dentro de él.
   //
@@ -169,27 +171,30 @@
        Orden a propósito: primero el vídeo si lo hay, y la imagen SIEMPRE
        visible debajo cuando existe. No es la miniatura del vídeo: es la
        chuleta de la posición para quien ya se lo ha visto. -->
-  {#if data.videoCoach}
-    <!-- Vídeo subido por el entrenador. Se sirve con URL firmada porque el
-         cubo es privado: su material es parte de lo que vende. -->
-    <video
-      src={data.videoCoach}
-      controls
-      playsinline
-      preload="metadata"
-      poster={data.imagenCoach ?? undefined}
-      class="w-full aspect-video rounded-md bg-black"
-    >
-      <track kind="captions" />
-    </video>
-  {:else if ytId}
-    <div class="aspect-video rounded-md overflow-hidden bg-black">
-      <iframe
-        src={urlDeEmbebido(ytId)}
-        title={data.item.exercise.name}
-        class="w-full h-full"
-        allowfullscreen
-      ></iframe>
+  {#if data.videoCoach || ytId}
+    <div>
+      <Reproductor
+        fuente={data.videoCoach}
+        enlace={video?.url}
+        poster={data.imagenCoach}
+        titulo={data.item.exercise.name}
+        desde={data.item.exercise.video_desde}
+        hasta={data.item.exercise.video_hasta}
+      />
+
+      <!-- La nota de la variante. Va PEGADA al vídeo y no con el resto de la
+           descripción a propósito: dice qué mirar en esa grabación, y leerla
+           tres pantallazos más abajo es leerla cuando ya no sirve.
+
+           Es lo que distingue el curl analítico del isométrico cuando los dos
+           usan el mismo vídeo (ADR-005). -->
+      {#if data.item.exercise.video_nota}
+        <p
+          class="mt-2 text-sm bg-surface-2 border-l-2 border-accent rounded-r-md px-3 py-2 whitespace-pre-line"
+        >
+          {data.item.exercise.video_nota}
+        </p>
+      {/if}
     </div>
   {/if}
 

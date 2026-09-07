@@ -254,7 +254,7 @@
                 {#if item.rest_seconds}· {item.rest_seconds}s desc.{/if}
               </div>
             </div>
-            {#if item.exercise.video_url || item.exercise.video_path}
+            {#if item.exercise.video_id}
               <span class="text-text-mute flex-shrink-0">
                 <Icono nombre="video" class="w-5 h-5" />
                 <span class="sr-only">Tiene vídeo</span>

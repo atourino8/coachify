@@ -40,14 +40,19 @@ function extPara(mime: string): string {
  * comprueban exactamente eso para decidir quién puede escribir y qué clientes
  * pueden leer. Si esta función cambiara de forma, las políticas dejarían de
  * proteger nada sin dar ningún error.
+ *
+ * LA IMAGEN CUELGA DEL EJERCICIO Y EL VÍDEO NO, y esa asimetría no es un
+ * descuido: desde la 0026 un vídeo lo comparten varios ejercicios (ADR-005).
+ * Guardarlo en `coach/ejercicio/video.mp4` diría que es de ese ejercicio, y
+ * bastaría con borrar ese ejercicio para dejar sin vídeo a los otros dos que lo
+ * usan. Cuelga de su propio id, que es de quien es.
  */
-export function rutaMedio(
-  coachId: string,
-  exerciseId: string,
-  tipo: MedioTipo,
-  mime: string
-): string {
-  return `${coachId}/${exerciseId}/${tipo}.${extPara(mime)}`;
+export function rutaImagen(coachId: string, exerciseId: string, mime: string): string {
+  return `${coachId}/${exerciseId}/imagen.${extPara(mime)}`;
+}
+
+export function rutaVideo(coachId: string, videoId: string, mime: string): string {
+  return `${coachId}/videos/${videoId}.${extPara(mime)}`;
 }
 
 /** Valida antes de gastar ancho de banda en algo que vamos a rechazar. */
@@ -109,19 +114,71 @@ export function miniaturaDeYoutube(id: string): string {
  * permite decir por qué en castellano.
  */
 export function validarOrigenes(campos: {
-  video_url: string | null;
-  video_path: string | null;
-  image_url: string | null;
-  image_path: string | null;
+  url: string | null;
+  path: string | null;
 }): string | null {
-  if (campos.video_url && campos.video_path) {
+  if (campos.url && campos.path) {
     return 'Elige una cosa: o subes el vídeo o lo enlazas.';
   }
-  if (campos.image_url && campos.image_path) {
-    return 'Elige una cosa: o subes la imagen o la enlazas.';
+  if (!campos.url && !campos.path) {
+    return 'Un vídeo tiene que ser o un fichero subido o un enlace de YouTube.';
   }
-  if (campos.video_url && !idDeYoutube(campos.video_url)) {
+  if (campos.url && !idDeYoutube(campos.url)) {
     return 'Ese enlace no parece un vídeo de YouTube. Pega la dirección completa.';
   }
   return null;
+}
+
+/** La misma regla para la imagen del ejercicio, que sí sigue colgando de él. */
+export function validarImagen(campos: {
+  image_url: string | null;
+  image_path: string | null;
+}): string | null {
+  if (campos.image_url && campos.image_path) {
+    return 'Elige una cosa: o subes la imagen o la enlazas.';
+  }
+  return null;
+}
+
+/**
+ * El tramo del vídeo que interesa para ESTA variante, en segundos.
+ *
+ * Devuelve el error o los dos números ya limpios. Se valida aquí y además con
+ * una restricción en la tabla (`exercises_tramo_valido`): la restricción impide
+ * que la base quede incoherente, y esto permite decir por qué en castellano.
+ *
+ * Vacío es válido y significa «el vídeo entero», que es el caso normal: la
+ * mayoría de los ejercicios enseñan el gesto completo.
+ */
+export function validarTramo(
+  desdeCrudo: string | null,
+  hastaCrudo: string | null
+): { error: string } | { desde: number | null; hasta: number | null } {
+  const num = (v: string | null) => {
+    const t = (v ?? '').trim();
+    if (t === '') return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? Math.floor(n) : NaN;
+  };
+
+  const desde = num(desdeCrudo);
+  const hasta = num(hastaCrudo);
+
+  if (Number.isNaN(desde) || Number.isNaN(hasta)) {
+    return { error: 'El tramo se pone en segundos, con números.' };
+  }
+  if (desde !== null && desde < 0) return { error: 'El segundo de inicio no puede ser negativo.' };
+  if (hasta !== null && hasta <= 0)
+    return { error: 'El segundo de fin tiene que ser mayor que 0.' };
+  if (desde !== null && hasta !== null && hasta <= desde) {
+    return { error: 'El tramo acaba antes de empezar: revisa los segundos.' };
+  }
+  return { desde, hasta };
+}
+
+/** `95` → `1:35`. Para enseñar el tramo sin hacer contar al entrenador. */
+export function comoReloj(segundos: number): string {
+  const m = Math.floor(segundos / 60);
+  const s = segundos % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }

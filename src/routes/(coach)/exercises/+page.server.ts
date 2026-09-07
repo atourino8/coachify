@@ -189,17 +189,26 @@ export const actions: Actions = {
         // Vídeos de técnica de los clientes: la fila cae en cascada, el
         // fichero no.
         supabase.from('technique_videos').select('storage_path').in('exercise_id', borrables),
-        // Material propio del entrenador: vídeo e imagen subidos.
-        supabase.from('exercises').select('video_path, image_path').in('id', borrables)
+        // Solo la IMAGEN, que sí es de este ejercicio y de nadie más.
+        //
+        // EL VÍDEO NO SE TOCA, y esto es lo que cambió en la 0026: un vídeo lo
+        // comparten varios ejercicios (ADR-005). Borrando aquí el fichero,
+        // borrar un ejercicio dejaría sin vídeo a los otros dos que lo usan, y
+        // sus filas apuntando a un sitio vacío. La relación es
+        // `on delete set null`, así que la base ya los desengancha sola.
+        //
+        // Contrapartida aceptada: un vídeo que se queda sin ningún ejercicio
+        // sigue ocupando espacio. No es basura invisible —está en su
+        // biblioteca, con su nombre, y lo puede borrar— y eso es mucho mejor
+        // que perder el vídeo bueno de otro ejercicio.
+        supabase.from('exercises').select('image_path').in('id', borrables)
       ]);
 
       const rutas = ((vids ?? []) as { storage_path: string }[]).map((v) => v.storage_path);
       if (rutas.length > 0) await supabase.storage.from(BUCKET).remove(rutas);
 
-      const rutasMedios = (
-        (medios ?? []) as { video_path: string | null; image_path: string | null }[]
-      )
-        .flatMap((m) => [m.video_path, m.image_path])
+      const rutasMedios = ((medios ?? []) as { image_path: string | null }[])
+        .map((m) => m.image_path)
         .filter((r): r is string => Boolean(r));
       if (rutasMedios.length > 0) {
         await supabase.storage.from(BUCKET_COACH).remove(rutasMedios);

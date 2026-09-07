@@ -816,4 +816,64 @@ escribir, nunca después.
 
 ---
 
+## Mover un dato de sitio mueve también su basura
+
+**Contexto:** el vídeo dejó de ser una columna del ejercicio y pasó a ser una
+fila propia compartida por varios (ADR-005). Lo que no estaba en el ADR y salió
+al escribirlo:
+
+- **La ruta en el cubo llevaba el id del ejercicio** (`coach/ejercicio/video.mp4`).
+  Con el vídeo compartido, esa ruta miente: dice que el fichero es de un
+  ejercicio que a lo mejor se borra mañana. Ahora cuelga del id del vídeo.
+- **Borrar un ejercicio borraba su fichero de vídeo.** Con la columna era
+  correcto; con el vídeo compartido, borrar un ejercicio dejaría sin vídeo a los
+  otros dos que lo usan. Ahora el borrado solo se lleva la imagen, que sí es
+  suya.
+
+**Regla:** cuando un dato cambia de dueño, hay que repasar **las tres cosas que
+cuelgan de él**: dónde se guarda el fichero, quién lo borra, y quién lo da por
+suyo al enseñarlo. El esquema es la parte fácil.
+
+**Lo que lo cazó:** una comprobación escrita para esto —«¿queda alguien leyendo
+las columnas viejas?» y «¿el borrado de ejercicios sigue tocando vídeos?»— no
+el compilador. El compilador solo vio el fichero de sembrado, que además fue el
+único que encontró él.
+
+---
+
+## Una comprobación anclada en un nombre encuentra el comentario, no el código
+
+**Síntoma:** mi propio guion dijo que `borrarVideo` borraba el fichero antes que
+la fila. Era mentira. Había troceado el fichero buscando la cadena
+`'borrarVideo'`, y la primera aparición estaba **dentro de un comentario de otra
+acción** («para eso está la acción `borrarVideo`»), así que el trozo analizado
+era el final de `update`.
+
+**Regla:** trocear código por el nombre de algo hay que anclarlo a su
+DEFINICIÓN (`\n  nombre: async (`), no a su mención. Es la tercera vez que una
+comprobación mía miente, y las tres veces por lo mismo: mirar texto donde había
+que mirar estructura. La regla que ya estaba escrita —«el guion también hay que
+probarlo rompiendo algo a propósito»— sigue siendo la que salva.
+
+---
+
+## Compartir componente cuando el oficio es el mismo, no cuando el marcado se parece
+
+**Contexto:** el ADR-005 prometía sacar «el reproductor, que está escrito a mano
+en dos sitios» a un componente. Al ir a hacerlo, uno de los dos no encajaba.
+
+El de la pantalla del cliente reproduce material del entrenador: 16:9, puede ser
+YouTube, tiene tramo. El de `PanelTecnica` reproduce un vídeo que graba el
+cliente con el móvil: vertical, acotado por altura, nunca YouTube, nunca tramo.
+
+Unirlos habría necesitado un modo que cambia la proporción y ramas que allí no
+se ejecutan jamás — **dos componentes disfrazados de uno**, que es peor que dos
+componentes.
+
+**Regla:** el criterio para compartir es que sea el mismo TRABAJO, no que el
+HTML se parezca. Y cuando un ADR promete algo que al implementarlo resulta
+equivocado, se corrige el ADR — no se ejecuta la promesa por haberla escrito.
+
+---
+
 *Fin del documento. Este archivo se actualiza con cada proyecto.*

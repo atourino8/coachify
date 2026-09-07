@@ -84,6 +84,12 @@ que de una teoría intermedia.
 13. En la lista, mira las pastillas: los que no tienen vídeo llevan **«Sin
     vídeo»**; los que sí, el icono de vídeo. **Ninguno puede llevar las dos.**
 14. Abre el **menú de tres puntos** de una fila: Editar y Archivar.
+14b. **El vídeo compartido, que es la función nueva.** El sembrado deja dos
+    ejercicios de demo, «Sentadilla con barra» y «Sentadilla isométrica», con
+    **el mismo vídeo**. Abre el segundo: el selector dice «Lo usan 2
+    ejercicios», el tramo está en **5–20 s** y la nota habla de aguantar abajo.
+    Abre el primero: **mismo vídeo, sin tramo y con otra nota**. Eso es lo que
+    tenía que quedar demostrado — un movimiento grabado una vez, dos ejercicios.
 15. **Entrenamientos**: busca uno por nombre con el buscador nuevo.
 16. Abre uno. Escribe algo distinto en **«Notas para el cliente»** y en
     **«Notas para ti»**.

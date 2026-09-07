@@ -4,7 +4,7 @@
   import ConfirmModal from '$lib/components/ConfirmModal.svelte';
   import SelectorEtiquetas from '$lib/components/SelectorEtiquetas.svelte';
   import CampoMedio from '$lib/components/CampoMedio.svelte';
-  import { idDeYoutube, urlDeEmbebido } from '$lib/coach-media';
+  import SelectorVideo from '$lib/components/SelectorVideo.svelte';
   import { page } from '$app/state';
   import { env } from '$env/dynamic/public';
   let { data, form } = $props();
@@ -17,15 +17,18 @@
   let grupos = $state<string[]>(untrack(() => data.exercise.muscle_groups) ?? []);
   let materiales = $state<string[]>(untrack(() => data.exercise.equipment_types) ?? []);
 
-  let videoUrl = $state<string | null>(untrack(() => data.exercise.video_url));
-  let videoPath = $state<string | null>(untrack(() => data.exercise.video_path));
+  let videoId = $state<string | null>(untrack(() => data.exercise.video_id));
+  let videoDesde = $state<number | null>(untrack(() => data.exercise.video_desde));
+  let videoHasta = $state<number | null>(untrack(() => data.exercise.video_hasta));
+  let videoNota = $state<string | null>(untrack(() => data.exercise.video_nota));
   let imagenUrl = $state<string | null>(untrack(() => data.exercise.image_url));
   let imagenPath = $state<string | null>(untrack(() => data.exercise.image_path));
 
-  // La vista previa sale de lo que haya: un vídeo subido se reproduce directo
-  // con la URL firmada; uno enlazado va por el embebido de YouTube, que se
-  // reconstruye a partir del identificador y nunca con la URL tal cual.
-  const ytId = $derived(idDeYoutube(videoUrl));
+  // Qué se está a punto de borrar, para poder decir a cuántos ejercicios
+  // afecta antes de hacerlo.
+  let confirmBorrarVideo = $state(false);
+  const videoActual = $derived(data.videos.find((v) => v.id === videoId) ?? null);
+  const usosDelActual = $derived(videoId ? (data.usosDeVideo[videoId] ?? 0) : 0);
 </script>
 
 <svelte:head>
@@ -39,13 +42,6 @@
       Editar ejercicio
     </h1>
   </div>
-
-  {#if ytId}
-    <div class="aspect-video rounded-md overflow-hidden bg-black">
-      <iframe src={urlDeEmbebido(ytId)} title="Vista previa" class="w-full h-full" allowfullscreen
-      ></iframe>
-    </div>
-  {/if}
 
   <form
     method="POST"
@@ -74,21 +70,19 @@
       />
     </div>
 
-    <CampoMedio
-      tipo="video"
-      titulo="Vídeo"
-      exerciseId={data.exercise.id}
+    <SelectorVideo
       coachId={data.exercise.coach_id}
       supabase={page.data.supabase}
       supabaseUrl={env.PUBLIC_SUPABASE_URL}
-      bind:url={videoUrl}
-      bind:path={videoPath}
-      firmada={data.videoFirmado}
-      ayuda="Súbelo si puedes: se ve dentro de la aplicación y no depende de YouTube. Enlazarlo también vale."
+      disponibles={data.videos}
+      usos={data.usosDeVideo}
+      bind:videoId
+      bind:desde={videoDesde}
+      bind:hasta={videoHasta}
+      bind:nota={videoNota}
     />
 
     <CampoMedio
-      tipo="imagen"
       titulo="Imagen"
       exerciseId={data.exercise.id}
       coachId={data.exercise.coach_id}
@@ -146,7 +140,21 @@
     </div>
   </form>
 
-  <div class="text-center">
+  <!-- Borrar el vídeo de la biblioteca es OTRA cosa que quitarlo de aquí, y
+       por eso vive fuera del formulario y abajo, con lo destructivo.
+
+       Quitarlo arriba solo desengancha este ejercicio. Esto lo borra para
+       todos, y por eso hay que decir a cuántos afecta ANTES de preguntar. -->
+  <div class="flex flex-col items-center gap-3 text-center">
+    {#if videoActual}
+      <button
+        type="button"
+        onclick={() => (confirmBorrarVideo = true)}
+        class="text-sm text-danger hover:text-danger/80 transition-colors"
+      >
+        Borrar «{videoActual.nombre}» de mi biblioteca
+      </button>
+    {/if}
     <button
       type="button"
       onclick={() => (confirmArchive = true)}
@@ -156,6 +164,17 @@
     </button>
   </div>
 </div>
+
+<ConfirmModal
+  bind:open={confirmBorrarVideo}
+  action="?/borrarVideo"
+  fields={{ video_id: videoId ?? '' }}
+  title="Borrar el vídeo"
+  message={usosDelActual > 1
+    ? `Lo usan ${usosDelActual} ejercicios y todos se quedarán sin vídeo. El fichero se borra y no se puede recuperar.`
+    : 'Se borra el fichero y no se puede recuperar. Este ejercicio se quedará sin vídeo.'}
+  confirmLabel="Borrar el vídeo"
+/>
 
 <ConfirmModal
   bind:open={confirmArchive}

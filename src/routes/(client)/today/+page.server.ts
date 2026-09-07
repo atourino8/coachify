@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ url, locals: { supabase, user }, pa
       `id, date, title, notes, published,
        workout_items(
          id, sets, reps_prescribed, weight_prescribed, rest_seconds, notes, order_index,
-         exercise:exercises(id, name, description, video_url, muscle_group),
+         exercise:exercises(id, name, description, video_id, muscle_group),
          set_logs(id, set_number, reps_done, weight_done, completed_at, feedback)
        )`
     )

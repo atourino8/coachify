@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
       `id, name, client_notes,
        workout_template_items(
          exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
-         exercise:exercises(id, name, muscle_group, description, video_url)
+         exercise:exercises(id, name, muscle_group, description, video_id)
        )`
     )
     .eq('coach_id', user.id)
@@ -104,7 +104,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user } 
       `id, date, title,
        workout_items(
          exercise_id, order_index, sets, reps_prescribed, weight_prescribed, rest_seconds, notes,
-         exercise:exercises(id, name, muscle_group, description, video_url)
+         exercise:exercises(id, name, muscle_group, description, video_id)
        )`
     )
     .eq('client_id', params.id)

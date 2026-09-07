@@ -50,6 +50,12 @@ const DEMO_FLAG = 'coachify_demo';
 /** Nombres exactos de lo que creamos aparte de usuarios, para poder borrarlo. */
 const DEMO_GROUP = 'Empleadas · Talleres López';
 const DEMO_EXERCISE = 'Sentadilla con barra (demo)';
+// La VARIANTE. Existe para sembrar el caso que justifica el ADR-005: dos
+// ejercicios distintos que comparten un mismo vídeo y se distinguen por el
+// tramo y la nota. Sin esto, la función se prueba con un solo ejercicio y
+// nunca se ve lo único que de verdad importa de ella.
+const DEMO_EXERCISE_VARIANTE = 'Sentadilla isométrica (demo)';
+const DEMO_VIDEO = 'Sentadilla con barra (demo)';
 /**
  * Títulos de las clases demo. Llevan "(demo)" por el mismo motivo que el
  * ejercicio: --limpiar borra por nombre exacto, y sin la marca borraría
@@ -372,7 +378,15 @@ async function main() {
       .eq('name', DEMO_GROUP);
     if (errGrupo) die('No se pudo borrar el grupo demo: ' + errGrupo.message);
 
-    await db.from('exercises').delete().eq('coach_id', coachId).eq('name', DEMO_EXERCISE);
+    await db
+      .from('exercises')
+      .delete()
+      .eq('coach_id', coachId)
+      .in('name', [DEMO_EXERCISE, DEMO_EXERCISE_VARIANTE]);
+    // El vídeo DESPUÉS de los ejercicios: la relación es `on delete set null`,
+    // así que el orden no rompe nada, pero borrar primero el vídeo dejaría un
+    // instante con ejercicios demo apuntando a nada.
+    await db.from('coach_videos').delete().eq('coach_id', coachId).eq('nombre', DEMO_VIDEO);
     await db
       .from('coach_tags')
       .delete()
@@ -493,14 +507,29 @@ async function main() {
   }
   ok(`${exercises.length} ejercicios disponibles`);
 
-  // ---- Ejercicio con vídeo (para probar el embebido de YouTube) ----
-  await db
-    .from('exercises')
+  // ---- Un vídeo, DOS ejercicios (el caso del ADR-005) ----
+  //
+  // Desde la 0026 el vídeo es del entrenador y los ejercicios apuntan a él. Se
+  // siembran dos variantes del mismo movimiento compartiendo la misma
+  // grabación, porque es lo único que demuestra que la función sirve para algo:
+  // con un solo ejercicio, esto no se distingue de tener el vídeo dentro.
+  const { data: videoDemo } = await db
+    .from('coach_videos')
     .insert({
+      coach_id: coachId,
+      nombre: DEMO_VIDEO,
+      url: 'https://www.youtube.com/watch?v=aclHkVaku9U'
+    })
+    .select('id')
+    .single();
+
+  await db.from('exercises').insert([
+    {
       coach_id: coachId,
       name: DEMO_EXERCISE,
       description: 'Ejercicio de prueba con vídeo, para ver cómo queda el reproductor embebido.',
-      video_url: 'https://www.youtube.com/watch?v=aclHkVaku9U',
+      video_id: videoDemo?.id ?? null,
+      video_nota: 'Baja controlado hasta romper el paralelo y sube sin pausa.',
       // Con varias etiquetas a propósito: es el caso que hay que ver
       // funcionando tras la migración 0016. Una sentadilla trabaja pierna,
       // core y espalda baja, y así se comprueba que el filtro la encuentra
@@ -508,10 +537,22 @@ async function main() {
       // entreno del cliente.
       muscle_groups: ['legs', 'core', 'back'],
       equipment_types: ['barbell']
-    })
-    .select('id')
-    .single();
-  ok('Ejercicio con vídeo de YouTube creado');
+    },
+    {
+      coach_id: coachId,
+      name: DEMO_EXERCISE_VARIANTE,
+      description: 'La misma sentadilla, aguantando abajo. Mismo vídeo, otro tramo.',
+      // EL MISMO VÍDEO, otro tramo y otra nota. Es exactamente lo que el ADR
+      // dice que tiene que poder hacerse sin subir la grabación dos veces.
+      video_id: videoDemo?.id ?? null,
+      video_desde: 5,
+      video_hasta: 20,
+      video_nota: 'Fíjate solo en la parte de abajo: aguanta tres segundos ahí sin rebotar.',
+      muscle_groups: ['legs', 'core'],
+      equipment_types: ['barbell']
+    }
+  ]);
+  ok('Un vídeo compartido por dos ejercicios (analítico e isométrico)');
 
   // ---- Disponibilidad (desbloquea el flujo de "Pedir cita") ----
   const { count: slotCount } = await db

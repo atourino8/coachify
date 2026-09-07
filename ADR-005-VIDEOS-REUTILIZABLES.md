@@ -115,6 +115,16 @@ nadie usándola.
   desenganchar de uno en uno antes de borrar, que es peor.
 - **Huérfanos en el cubo.** Al borrar la fila hay que borrar el fichero, como ya
   se hace con los avatares.
-- **El reproductor está escrito a mano en dos sitios** (la pantalla del cliente
-  y `PanelTecnica`). Al meter el fragmento se saca a un componente: si no,
-  tendríamos dos reproductores y solo uno entendería los tramos.
+- **El reproductor se sacó a componente, pero a UN sitio y no a dos.**
+  `Reproductor.svelte` lo usan la pantalla del cliente y la vista previa del
+  selector, que es donde de verdad había duplicación: los dos reproducen
+  material del entrenador, los dos admiten fichero o YouTube y los dos tienen
+  que entender el tramo.
+
+  **`PanelTecnica` se queda con su `<video>` a mano, y es deliberado.** Al
+  mirarlo de cerca no es el mismo oficio: reproduce un vídeo que graba el
+  CLIENTE con el móvil —vertical, acotado por altura y no en 16:9—, nunca es un
+  enlace de YouTube y nunca tiene tramo. Unificarlos obligaría a meterle al
+  componente un modo que cambia la proporción y ramas que allí no se usan
+  jamás: dos componentes disfrazados de uno. Compartir es bueno cuando el
+  oficio es el mismo, no cuando el marcado se parece.

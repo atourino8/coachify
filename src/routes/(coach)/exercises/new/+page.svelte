@@ -52,25 +52,30 @@
       />
     </div>
 
-    <!-- Aquí solo se puede ENLAZAR, no subir, y no es una limitación
-         arbitraria: la ruta del fichero en el cubo lleva el id del ejercicio,
-         y ese id no existe hasta que se guarda. Subir antes obligaría a
-         inventar un id provisional y a moverlo después, con la basura que eso
-         deja si el formulario se abandona a medias.
-         Al guardar se va directo a la ficha, que es donde está la subida. -->
+    <!-- Aquí solo se puede ENLAZAR, no subir ni reutilizar. Es una decisión de
+         alcance, no una limitación técnica: desde la 0026 el vídeo ya no
+         cuelga del ejercicio, así que subir antes de guardar sería posible.
+         Pero esta pantalla es «dale un nombre y sigue», y meterle aquí el
+         selector entero —reutilizar, tramo, nota— la convierte en el editor.
+         Al guardar se va directo a la ficha, que es donde está todo eso. -->
     <div>
-      <label for="video_url" class="block text-xs uppercase tracking-wider text-text-mute mb-2">
+      <label
+        for="video_nuevo_url"
+        class="block text-xs uppercase tracking-wider text-text-mute mb-2"
+      >
         Enlace del vídeo (opcional)
       </label>
       <input
-        id="video_url"
-        name="video_url"
+        id="video_nuevo_url"
+        name="video_nuevo_url"
         type="url"
         placeholder="https://youtu.be/..."
         class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
       />
       <p class="text-2xs text-text-mute mt-2">
-        En cuanto lo crees podrás subir el vídeo y una imagen desde su ficha.
+        Se guarda en tu biblioteca de vídeos con el nombre del ejercicio, así que podrás
+        reutilizarlo en otra variante. En cuanto lo crees podrás subir un vídeo, recortar el tramo y
+        poner la imagen desde su ficha.
       </p>
     </div>
 

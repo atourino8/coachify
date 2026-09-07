@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user },
     .from('workout_items')
     .select(
       `*,
-       exercise:exercises(*),
+       exercise:exercises(*, video:coach_videos(id, nombre, url, path)),
        workout:workouts(id, date, client_id),
        set_logs(*)`
     )
@@ -79,7 +79,7 @@ export const load: PageServerLoad = async ({ params, locals: { supabase, user },
     return data?.signedUrl ?? null;
   };
   const [videoCoach, imagenCoach] = await Promise.all([
-    firmarMaterial(item.exercise.video_path),
+    firmarMaterial(item.exercise.video?.path),
     firmarMaterial(item.exercise.image_path)
   ]);
 
