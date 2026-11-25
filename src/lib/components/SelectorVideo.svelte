@@ -30,6 +30,7 @@
   import Icono from '$lib/components/Icono.svelte';
   import Reproductor from '$lib/components/Reproductor.svelte';
   import { BUCKET_COACH, rutaVideo, validarMedio, comoReloj } from '$lib/coach-media';
+  import { comprimirVideo, resumenCompresion } from '$lib/compresion-video';
 
   interface VideoDisponible {
     id: string;
@@ -74,7 +75,11 @@
   let previaLocal = $state<string | null>(null);
 
   let subiendo = $state(false);
+  /** Primero se comprime en el móvil y luego se sube: dos barras, una detrás de otra. */
+  let fase = $state<'comprimiendo' | 'subiendo'>('subiendo');
   let progreso = $state(0);
+  /** «85 MB → 12 MB (−86 %) en 23 s». Se enseña para las pruebas de compresión. */
+  let resumen = $state<string | null>(null);
   let problema = $state<string | null>(null);
   let cancelar: (() => void) | null = null;
   let eligiendo = $state(false);
@@ -88,7 +93,7 @@
     const file = input.files?.[0];
     if (!file) return;
 
-    problema = validarMedio(file, 'video');
+    problema = validarMedio(file, 'video', { sinTamano: true });
     if (problema) {
       input.value = '';
       return;
@@ -102,9 +107,45 @@
       return;
     }
 
-    const id = crypto.randomUUID();
-    const destino = rutaVideo(coachId, id, file.type);
     subiendo = true;
+    resumen = null;
+
+    // 1 · Comprimir en el móvil. Si no se puede, devuelve el original y se
+    //     sube tal cual: nunca impide subir.
+    fase = 'comprimiendo';
+    progreso = 0;
+    const control = new AbortController();
+    cancelar = () => control.abort();
+    let archivo: File;
+    try {
+      const r = await comprimirVideo(file, {
+        signal: control.signal,
+        onProgress: (p) => (progreso = p)
+      });
+      archivo = r.archivo;
+      resumen = resumenCompresion(r);
+      console.info('[compresión]', resumen);
+    } catch (err) {
+      if ((err as DOMException)?.name !== 'AbortError') problema = (err as Error).message;
+      subiendo = false;
+      cancelar = null;
+      input.value = '';
+      return;
+    }
+
+    // El tope de peso, ahora sí: sobre lo que se va a subir.
+    problema = validarMedio(archivo, 'video');
+    if (problema) {
+      subiendo = false;
+      cancelar = null;
+      input.value = '';
+      return;
+    }
+
+    // 2 · Subir.
+    const id = crypto.randomUUID();
+    const destino = rutaVideo(coachId, id, archivo.type);
+    fase = 'subiendo';
     progreso = 0;
 
     const handle = uploadWithProgress({
@@ -112,7 +153,7 @@
       accessToken: token,
       bucket: BUCKET_COACH,
       path: destino,
-      file,
+      file: archivo,
       onProgress: (p) => (progreso = p)
     });
     cancelar = handle.abort;
@@ -127,7 +168,9 @@
       // y si no le vale, lo cambia — pero no se le obliga a inventar uno para
       // poder seguir.
       if (!nuevoNombre) nuevoNombre = file.name.replace(/\.[^.]+$/, '').slice(0, 80);
-      previaLocal = URL.createObjectURL(file);
+      // La previa es lo SUBIDO, no el original: así se ve si la compresión
+      // ha estropeado algo antes de guardar.
+      previaLocal = URL.createObjectURL(archivo);
       videoId = null;
       eligiendo = false;
     } catch (err) {
@@ -186,7 +229,9 @@
         <div class="h-full bg-accent transition-all duration-200" style="width: {progreso}%"></div>
       </div>
       <div class="flex items-center justify-between gap-3 text-sm">
-        <span class="text-text-mute tabular-nums">Subiendo… {progreso}%</span>
+        <span class="text-text-mute tabular-nums">
+          {fase === 'comprimiendo' ? 'Comprimiendo' : 'Subiendo'}… {progreso}%
+        </span>
         <button
           type="button"
           onclick={() => cancelar?.()}
@@ -210,6 +255,9 @@
           {:else}
             <span class="font-medium block">Vídeo nuevo, sin guardar todavía</span>
             <span class="text-2xs text-text-mute">Se añade a tu biblioteca al guardar</span>
+            {#if resumen}
+              <span class="text-2xs text-text-mute block tabular-nums">{resumen}</span>
+            {/if}
           {/if}
         </span>
         <button type="button" onclick={quitar} class="action-danger flex-shrink-0">Quitar</button>

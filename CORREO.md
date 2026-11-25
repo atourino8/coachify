@@ -72,20 +72,69 @@ adelanta.
 
 3. **Crear una API key** en Resend. Es la contraseña del SMTP.
 
-4. **Pegarlo en Supabase**: *Project Settings → Authentication → SMTP Settings*,
-   activar «Enable Custom SMTP» y rellenar:
+4. **Pegarlo en Supabase**: *Authentication → Email* (dentro de
+   «Notifications») *→ SMTP Settings*.
+
+   > Aquí había escrita una ruta que no existe —*Project Settings →
+   > Authentication*—, y costó un rato de búsqueda. Si vuelve a no aparecer,
+   > la dirección directa es `/dashboard/project/TU-PROYECTO/auth/smtp`: los
+   > paneles se reorganizan, las URL aguantan más.
+
+   Y rellenar:
 
    | Campo | Valor |
    | --- | --- |
    | Host | `smtp.resend.com` |
-   | Puerto | `465` |
+   | Puerto | `465` (si da guerra, `587`) |
    | Usuario | `resend` |
    | Contraseña | la API key |
    | Sender email | `hola@tudominio` (del dominio verificado) |
    | Sender name | `Treno` |
 
-5. **Subir el límite de envíos** en *Authentication → Rate Limits*, que sigue
-   bajo aunque el SMTP sea propio.
+5. **Subir el límite de envíos** en *Authentication → Rate Limits*. Al activar
+   SMTP propio, Supabase lo deja en **30 por hora** para proteger la reputación
+   del servicio nuevo. Es mejor que los 2 por hora del suyo, pero sigue siendo
+   poco para un entrenador invitando a quince clientes de golpe.
+
+### Estado: montado en pruebas el 17 de septiembre de 2026
+
+SMTP propio **activo y comprobado**. Resend con el remitente de pruebas
+`onboarding@resend.dev`, la clave pegada en Supabase, y una recuperación de
+contraseña real enviada y entregada (`Delivered` en el panel de Resend, correo
+recibido).
+
+Lo que eso demuestra: la cadena entera funciona —Treno → Supabase → Resend →
+buzón—. Lo que **no** demuestra: nada sobre invitar a clientes, porque con el
+remitente de pruebas solo hay un destinatario posible.
+
+Queda pendiente, por orden:
+
+1. **Traducir las plantillas** (*Authentication → Email Templates*). Salen en
+   inglés de fábrica: el primer correo de prueba llegó con el asunto «Reset
+   your password». Son cuatro, las de la tabla de arriba.
+
+   **Escritas y listas para pegar en `PLANTILLAS-CORREO.md`.**
+2. **Comprar el dominio** y verificarlo en Resend. Hasta entonces no se puede
+   invitar a nadie de fuera.
+3. Cambiar el remitente a `hola@eldominio` y **revocar la clave `treno-pruebas`**
+   creando otra para producción.
+
+### Mientras no haya dominio
+
+Se puede montar todo hoy con el remitente de pruebas `onboarding@resend.dev`,
+con **una limitación que conviene entender antes de empezar**: Resend solo
+entrega a la dirección con la que se abrió la cuenta. Cualquier otro
+destinatario devuelve un 403. Y eso incluye los alias con `+`, así que la regla
+3 de más abajo **no vale en esta fase**.
+
+Traducido: sirve para comprobar que la fontanería funciona —recuperar la
+contraseña de tu propia cuenta—, no para probar una invitación a un cliente,
+que necesitaría una segunda dirección.
+
+Para eso último hay un rodeo sin Resend: el SMTP por defecto de Supabase sí
+entrega a **cualquier miembro del equipo de la organización**, así que añadiendo
+otro correo tuyo al equipo se puede recorrer la invitación entera. A 2 correos
+por hora, que da para una prueba y no para el guion de prueba de concepto.
 
 6. **Probar**: invitar a una dirección tuya y comprobar que llega. Y mirar el
    panel de Resend, que ahí sí se ven los rebotes uno a uno — que es la otra

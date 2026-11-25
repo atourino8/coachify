@@ -22,7 +22,8 @@
       Nuevo ejercicio
     </h1>
     <p class="text-text-mute mt-1">
-      Por ahora puedes pegar una URL de YouTube/Vimeo como vídeo. La subida directa llega en Fase C.
+      Con el nombre y el grupo muscular basta. El vídeo, la imagen y las etiquetas se pueden
+      completar después desde su ficha.
     </p>
   </div>
 

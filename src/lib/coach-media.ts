@@ -46,6 +46,12 @@ function extPara(mime: string): string {
  * Guardarlo en `coach/ejercicio/video.mp4` diría que es de ese ejercicio, y
  * bastaría con borrar ese ejercicio para dejar sin vídeo a los otros dos que lo
  * usan. Cuelga de su propio id, que es de quien es.
+ *
+ * OJO SI ALGUIEN ESCRIBE UNA LIMPIEZA DE HUÉRFANOS: los vídeos anteriores a la
+ * 0026 siguen en `coach/<ejercicio>/video.mp4`. La migración copió el `path` sin
+ * mover ficheros, así que en el cubo conviven las dos formas y ambas son
+ * válidas. Lo que decide si un fichero está vivo es que alguna fila de
+ * `coach_videos` lo apunte, NUNCA la forma de la ruta.
  */
 export function rutaImagen(coachId: string, exerciseId: string, mime: string): string {
   return `${coachId}/${exerciseId}/imagen.${extPara(mime)}`;
@@ -55,13 +61,23 @@ export function rutaVideo(coachId: string, videoId: string, mime: string): strin
   return `${coachId}/videos/${videoId}.${extPara(mime)}`;
 }
 
-/** Valida antes de gastar ancho de banda en algo que vamos a rechazar. */
-export function validarMedio(file: File, tipo: MedioTipo): string | null {
+/**
+ * Valida antes de gastar ancho de banda en algo que vamos a rechazar.
+ *
+ * `sinTamano`: para el vídeo ANTES de comprimirlo. Un vídeo de 300 MB del
+ * móvil puede quedarse en 30 al comprimirlo, así que el tope de peso se mira
+ * después, sobre lo que de verdad se va a subir.
+ */
+export function validarMedio(
+  file: File,
+  tipo: MedioTipo,
+  { sinTamano = false }: { sinTamano?: boolean } = {}
+): string | null {
   if (tipo === 'video') {
     if (!VIDEO_MIME.includes(file.type)) {
       return 'Formato no admitido. Sube el vídeo en MP4, WebM o MOV.';
     }
-    if (file.size > MAX_VIDEO_BYTES) {
+    if (!sinTamano && file.size > MAX_VIDEO_BYTES) {
       return `El vídeo pesa ${Math.round(file.size / 1048576)} MB y el máximo son 100 MB.`;
     }
     return null;

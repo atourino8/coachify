@@ -10,12 +10,47 @@ sirve para enseñárselo a tu socio sin ir saltando de pantalla en pantalla.
 ## Antes de empezar
 
 ```
-node scripts/seed-demo.mjs <tu-email> --limpiar
-node scripts/seed-demo.mjs <tu-email>
+node scripts/cuentas-campo.mjs
+node scripts/seed-demo.mjs aaron@example.com
 ```
 
-Comprueba que las migraciones **0021 a 0025** están aplicadas. Si el sembrado
-falla, para: lo que salga después no significará nada.
+El primero crea **cuatro cuentas ficticias**, todas con la contraseña
+`demo1234`:
+
+| | |
+| --- | --- |
+| `aaron@example.com` | Entrenador |
+| `manuel@example.com` | Entrenador, sin clientes |
+| `toni@example.com` | Cliente de Aarón |
+| `toni.manuel@example.com` | Cliente de Manuel |
+
+El segundo le puebla las pantallas a Aarón. **Manuel se queda vacío a
+propósito**: es lo que se encuentra un entrenador nuevo el primer día, y esas
+pantallas son de las que menos se miran y peor impresión dejan. Entra con él un
+momento antes de empezar y apunta qué te hace sentir.
+
+Las direcciones son de `example.com`, reservado por la IANA: no existen, así que
+**no se manda ningún correo** y nada puede rebotar. El precio es que «He
+olvidado mi contraseña» tampoco funciona con ellas — si se pierde, se vuelve a
+lanzar el guion con `--limpiar`.
+
+Comprueba que las migraciones **0021 a 0026** están aplicadas (la 0026 es la de
+los vídeos). Si el sembrado falla, para: lo que salga después no significará
+nada.
+
+> **Para el acto 5 hacen falta dos clientes DEL MISMO entrenador**, cada uno en
+> un navegador, peleándose por una plaza.
+>
+> Tus dos cuentas no valen para eso: `toni@example.com` cuelga de Aarón y
+> `toni.manuel@example.com` de Manuel, así que no comparten clases. Usa
+> `toni@example.com` en un navegador y **cualquier cliente del sembrado** en el
+> otro —`demo.lucia@example.com`, por ejemplo— que también son de Aarón y
+> llevan la misma contraseña.
+>
+> Las dos cuentas tuyas sirven para otra cosa, igual de útil: comprobar qué se
+> siente al tener que salir y entrar para ver lo que te manda cada hermano. Si
+> eso molesta, el ADR-003 —clientes compartidos entre entrenadores— deja de ser
+> teoría.
 
 **Apunta lo que no cuadre tal cual pasó** —qué hiciste, qué esperabas, qué
 viste— sin diagnosticarlo. El diagnóstico sale más rápido del síntoma exacto

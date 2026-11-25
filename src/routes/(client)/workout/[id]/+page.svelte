@@ -15,6 +15,7 @@
     type UploadHandle
   } from '$lib/technique';
   import type { SetLog } from '$lib/supabase/types';
+  import { comprimirVideo, resumenCompresion } from '$lib/compresion-video';
 
   let { data, form } = $props();
 
@@ -24,7 +25,10 @@
   // Dos fases: la subida (lenta, con progreso real) y el guardado del registro
   // (instantáneo). Mezclarlas en una sola barra es lo que hacía que se quedara
   // parada en un número raro.
-  let uploadPhase = $state<'subiendo' | 'guardando'>('subiendo');
+  // Antes de subir, el vídeo se comprime en el móvil (compresion-video.ts).
+  let uploadPhase = $state<'comprimiendo' | 'subiendo' | 'guardando'>('subiendo');
+  let resumenCompresionTexto = $state<string | null>(null);
+  let controlCompresion: AbortController | null = null;
   let videoError = $state('');
   let consent = $state(false);
   let fileInput = $state<HTMLInputElement | null>(null);
@@ -42,7 +46,7 @@
     if (!file) return;
 
     videoError = '';
-    const problem = await validateVideo(file);
+    const problem = await validateVideo(file, { sinTamano: true });
     if (problem) {
       videoError = problem;
       return;
@@ -51,8 +55,44 @@
       videoError = 'Necesitas tener un entrenador asignado para enviar vídeos.';
       return;
     }
-    pendingFile = file;
-    await sendVideo(file);
+
+    // Comprimir en el móvil. Si no se puede, sale el original y se sube igual.
+    uploading = true;
+    uploadPhase = 'comprimiendo';
+    uploadPct = 0;
+    resumenCompresionTexto = null;
+    controlCompresion = new AbortController();
+    let aSubir: File;
+    try {
+      const r = await comprimirVideo(file, {
+        signal: controlCompresion.signal,
+        onProgress: (p) => (uploadPct = p)
+      });
+      aSubir = r.archivo;
+      resumenCompresionTexto = resumenCompresion(r);
+      console.info('[compresión]', resumenCompresionTexto);
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        videoError = err instanceof Error ? err.message : 'No se pudo preparar el vídeo.';
+      }
+      uploading = false;
+      uploadPct = 0;
+      return;
+    } finally {
+      controlCompresion = null;
+    }
+
+    // El tope de peso, sobre lo que de verdad se sube.
+    const tamano = await validateVideo(aSubir);
+    if (tamano) {
+      videoError = tamano;
+      uploading = false;
+      uploadPct = 0;
+      return;
+    }
+    // Se guarda YA comprimido: si la subida falla, el reintento no vuelve a comprimir.
+    pendingFile = aSubir;
+    await sendVideo(aSubir);
   }
 
   async function sendVideo(file: File) {
@@ -121,6 +161,7 @@
   }
 
   function cancelUpload() {
+    controlCompresion?.abort();
     currentUpload?.abort();
   }
 
@@ -466,12 +507,18 @@
         <div class="space-y-2">
           <div class="flex items-baseline justify-between gap-3 text-xs">
             <span class="font-medium">
-              {uploadPhase === 'guardando' ? 'Guardando…' : 'Subiendo vídeo'}
+              {uploadPhase === 'guardando'
+                ? 'Guardando…'
+                : uploadPhase === 'comprimiendo'
+                  ? 'Preparando vídeo'
+                  : 'Subiendo vídeo'}
             </span>
             {#if uploadPhase === 'subiendo'}
               <span class="tabular-nums text-text-mute">
                 {uploadPct}%{pendingFile ? ' de ' + formatBytes(pendingFile.size) : ''}
               </span>
+            {:else if uploadPhase === 'comprimiendo'}
+              <span class="tabular-nums text-text-mute">{uploadPct}%</span>
             {/if}
           </div>
           <div
@@ -489,7 +536,7 @@
           </div>
           <div class="flex items-center justify-between gap-3">
             <p class="text-xs text-text-mute">No cierres la página.</p>
-            {#if uploadPhase === 'subiendo'}
+            {#if uploadPhase !== 'guardando'}
               <button type="button" onclick={cancelUpload} class="action-neutral">Cancelar</button>
             {/if}
           </div>
@@ -505,6 +552,11 @@
           >
             Reintentar la subida
           </button>
+        {/if}
+        {#if resumenCompresionTexto && !videoError}
+          <p class="text-2xs text-text-mute text-center tabular-nums">
+            Último vídeo: {resumenCompresionTexto}
+          </p>
         {/if}
         <input
           bind:this={fileInput}

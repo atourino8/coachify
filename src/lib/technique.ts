@@ -51,12 +51,18 @@ export function readDuration(file: File): Promise<number | null> {
 
 /**
  * Valida tipo, tamaño y duración. Devuelve un mensaje de error o null si vale.
+ *
+ * `sinTamano`: antes de comprimir. El peso se mira después, sobre el vídeo
+ * comprimido, que es el que se sube (ver compresion-video.ts).
  */
-export async function validateVideo(file: File): Promise<string | null> {
+export async function validateVideo(
+  file: File,
+  { sinTamano = false }: { sinTamano?: boolean } = {}
+): Promise<string | null> {
   if (!ALLOWED_MIME.includes(file.type)) {
     return 'Formato no admitido. Graba el vídeo en MP4, WebM o MOV.';
   }
-  if (file.size > MAX_SIZE_BYTES) {
+  if (!sinTamano && file.size > MAX_SIZE_BYTES) {
     const mb = Math.round(file.size / 1024 / 1024);
     return `El vídeo pesa ${mb} MB y el máximo son 50 MB. Graba uno más corto o con menos calidad.`;
   }

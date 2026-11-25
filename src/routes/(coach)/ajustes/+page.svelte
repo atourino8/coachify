@@ -337,6 +337,22 @@
     </div>
   </section>
 
+  <!-- ================= Vídeo ================= -->
+  <section class="space-y-3">
+    <div>
+      <h2 class="text-lg font-display font-semibold">Vídeo</h2>
+      <p class="text-sm text-text-mute">
+        Los vídeos se comprimen en el móvil antes de subirlos. Aquí puedes probar cuánto pesan y cómo se ven, sin subir nada.
+      </p>
+    </div>
+    <div class="border-t border-line">
+      <a href="/ajustes/prueba-video" class="row-link">
+        <span class="flex-1 min-w-0 font-medium">Probar la compresión</span>
+        <span class="text-xs text-accent flex-shrink-0">Abrir</span>
+      </a>
+    </div>
+  </section>
+
   <!-- ================= Cuenta ================= -->
   <section class="space-y-3">
     <h2 class="text-lg font-display font-semibold">Cuenta</h2>

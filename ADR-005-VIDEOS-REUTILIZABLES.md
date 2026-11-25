@@ -69,8 +69,17 @@ nada, porque el modelo ya tiene dónde ponerla. No se hace ahora.
 
 - **Los vídeos de YouTube siguen valiendo.** Un `coach_videos` es o un fichero
   subido o un enlace, igual que antes, con la misma exclusión.
-- **El cubo `coach-media` se queda como está**, con sus políticas. Solo cambia
-  quién apunta a qué.
+- **El cubo `coach-media` se queda como está**, con sus políticas.
+
+  Con un matiz que esta decisión no anticipó y que apareció al implementarla:
+  **la forma de la ruta del vídeo sí cambió.** Antes era
+  `coach/ejercicio/video.mp4`. Si se hubiera dejado así, borrar ese ejercicio
+  dejaría sin vídeo a los otros dos que lo comparten — que es exactamente lo que
+  este ADR viene a evitar. Ahora es `coach/videos/<id-del-video>.mp4`: cuelga de
+  su propio id, que es de quien es.
+
+  Las políticas no se tocan porque **el primer segmento sigue siendo el id del
+  entrenador**, que es lo único que miran.
 - **La corrección de técnica** (`technique_videos`) es otra cosa: son vídeos que
   sube el CLIENTE para que el entrenador los corrija. No se toca.
 
@@ -115,6 +124,26 @@ nadie usándola.
   desenganchar de uno en uno antes de borrar, que es peor.
 - **Huérfanos en el cubo.** Al borrar la fila hay que borrar el fichero, como ya
   se hace con los avatares.
+
+- **En el cubo conviven DOS formas de ruta, y esto es una trampa.** La mudanza
+  copia el `path` que ya tenía cada ejercicio, sin mover ficheros: nada se
+  rompe, porque la ruta va guardada en la fila y se usa tal cual. Pero desde la
+  0026 el cubo tiene:
+
+  | Origen | Ruta |
+  | --- | --- |
+  | Vídeos anteriores a la 0026 | `coach/<id-del-ejercicio>/video.mp4` |
+  | Vídeos subidos después | `coach/videos/<id-del-video>.mp4` |
+
+  Quien algún día escriba una limpieza de huérfanos y recorra solo
+  `coach/videos/` **no verá los antiguos**, y si además da por huérfano todo lo
+  que hay fuera de esa carpeta, borrará vídeos vivos. La comprobación correcta
+  es siempre contra los `path` de `coach_videos`, nunca contra la forma de la
+  ruta.
+
+  Si molesta, se arregla con una mudanza de ficheros y un `update` de los
+  `path` en la misma transacción. No se hace ahora porque son cuatro ficheros y
+  el riesgo es mayor que la molestia.
 - **El reproductor se sacó a componente, pero a UN sitio y no a dos.**
   `Reproductor.svelte` lo usan la pantalla del cliente y la vista previa del
   selector, que es donde de verdad había duplicación: los dos reproducen
