@@ -1,5 +1,7 @@
 <script lang="ts">
   import FilaDesplazable from '$lib/components/FilaDesplazable.svelte';
+  import PestanasRuta from '$lib/components/PestanasRuta.svelte';
+  import { PESTANAS_CARTERA } from '$lib/navegacion';
   import { normalizar } from '$lib/texto';
   import { diaConAnio } from '$lib/formato';
   import { enhance } from '$app/forms';
@@ -127,18 +129,14 @@
 />
 
 <div class="space-y-6">
+  <PestanasRuta etiqueta="Clientes y grupos" pestanas={PESTANAS_CARTERA} activa="/clients" />
+
   <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
     <div class="min-w-0">
       <span class="eyebrow">tu cartera</span>
       <h1 class="text-2xl sm:text-3xl font-display font-semibold tracking-tight mt-2">Clientes</h1>
     </div>
     <div class="flex items-center gap-3">
-      <a
-        href="/groups"
-        class="text-sm text-text-mute hover:text-primary transition-colors whitespace-nowrap"
-      >
-        Grupos
-      </a>
       <button
         class="btn-primary whitespace-nowrap"
         onclick={() => {
@@ -673,7 +671,7 @@
                 type="email"
                 required
                 maxlength="100"
-                placeholder="naia.sg99@gmail.com"
+                placeholder="correo@ejemplo.com"
                 class="w-full px-4 py-3 bg-bg border border-text-mute/20 rounded-md focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>

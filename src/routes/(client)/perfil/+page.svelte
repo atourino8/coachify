@@ -6,7 +6,8 @@
   let { data, form } = $props();
 
   let nombre = $state(untrack(() => data.nombre));
-  let subiendo = $state(false);
+  // Sube o quita: el mismo formulario hace las dos cosas y el aviso dice cuál.
+  let foto = $state<'subiendo' | 'quitando' | null>(null);
   let guardando = $state(false);
 </script>
 
@@ -31,10 +32,10 @@
     action="?/foto"
     enctype="multipart/form-data"
     class="card flex flex-wrap items-center gap-4"
-    use:enhance={() => {
-      subiendo = true;
+    use:enhance={({ submitter }) => {
+      foto = submitter?.getAttribute('name') === 'quitar' ? 'quitando' : 'subiendo';
       return async ({ update }) => {
-        subiendo = false;
+        foto = null;
         await update();
       };
     }}
@@ -57,11 +58,11 @@
            subirla, no después. -->
       <p class="text-2xs text-text-mute">
         La ve tu entrenador. JPG, PNG o WEBP, hasta 5 MB.
-        {#if subiendo}<span class="text-accent">Subiendo…</span>{/if}
+        {#if foto}<span class="text-accent">{foto === 'quitando' ? 'Quitando…' : 'Subiendo…'}</span>{/if}
       </p>
     </div>
     {#if data.tieneFoto}
-      <button type="submit" name="quitar" value="1" class="action-neutral">Quitar</button>
+      <button type="submit" name="quitar" value="1" class="action-neutral" disabled={foto !== null}>Quitar</button>
     {/if}
   </form>
 

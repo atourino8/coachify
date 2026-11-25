@@ -114,6 +114,18 @@ summary::-webkit-details-marker {
 }
 
 /* ============== Componentes utilitarios reutilizables ============== */
+/* El texto de ejemplo de los campos. Tailwind trae un gris frío (#9CA3AF)
+   que no es de la paleta y, sobre el grafito, se lee casi tan claro como lo
+   escrito de verdad: en «Añadir cliente» parecía que el formulario venía ya
+   relleno. Se baja al gris de la casa a media opacidad. */
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--c-text-mute) / 0.55);
+    opacity: 1;
+  }
+}
+
 @layer components {
   /* ---- Titulares: serif con carácter, la jerarquía la marca el tipo ---- */
   .h-display {

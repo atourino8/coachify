@@ -163,9 +163,13 @@ export const actions: Actions = {
     });
 
     if (error) {
+      // Mismo trato que en Clientes: el error de envío de Supabase llega en
+      // inglés y no dice nada útil.
       const msg = error.message.includes('already')
         ? 'Ese email ya tiene cuenta. Pídele que entre y se vincule contigo.'
-        : error.message;
+        : /sending|smtp|email/i.test(error.message)
+          ? 'No se pudo enviar el correo de invitación. Puedes saltarte este paso e invitarle luego desde Clientes.'
+          : error.message;
       return fail(400, { error: msg });
     }
 

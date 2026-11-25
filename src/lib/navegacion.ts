@@ -36,3 +36,15 @@ export const PESTANAS_BIBLIOTECA: Pestana[] = [
   { href: '/exercises', texto: 'Ejercicios' },
   { href: '/templates', texto: 'Entrenamientos' }
 ];
+
+/**
+ * Cartera: las personas y cómo se agrupan.
+ *
+ * Grupos era un enlace gris al lado de «+ Invitar cliente», y en la prueba de
+ * concepto (noviembre de 2026) costó encontrarlo. Ahora es una pestaña, igual
+ * que Entrenamientos lo es de la biblioteca.
+ */
+export const PESTANAS_CARTERA: Pestana[] = [
+  { href: '/clients', texto: 'Clientes' },
+  { href: '/groups', texto: 'Grupos' }
+];

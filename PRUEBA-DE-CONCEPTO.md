@@ -82,6 +82,13 @@ que de una teoría intermedia.
    > amenazaron con cortarnos el envío. La aplicación ahora rechaza los dominios
    > reservados (`example.com`, `.test`, `.invalid`…), pero un dominio real
    > inventado —`asdf@gmail.com`— sí sale y sí rebota.
+   > **MIENTRAS NO HAYA DOMINIO PROPIO, ESTO NO SALE** (visto el 25 de noviembre):
+   > el remitente de pruebas de Resend solo entrega a la dirección dueña de la
+   > cuenta de Resend, y eso **incluye los alias con `+`** (CORREO.md). Cualquier
+   > otra da «No se pudo enviar el correo de invitación». Los pasos 5 y 6 se
+   > dejan para cuando esté el dominio, o se hacen una sola vez con la dirección
+   > exacta de la cuenta de Resend, si no tiene ya cuenta en Treno.
+
 5. Envía. Sale la **confirmación a pantalla completa**. Pulsa **«Añadir
    otro»**: el formulario vuelve vacío. Invita a un segundo y ahora sí,
    «Volver al listado».
@@ -98,9 +105,10 @@ que de una teoría intermedia.
 
 7. **Clientes**, vista **Lista**: cada fila con su cara, y bajo el nombre el
    **grupo** («Empleadas · Talleres López» o «Individual») y las etiquetas.
-   Las fotos las genera el sembrado —patrones, no caras de gente real— y
-   **Rubén se queda sin ninguna a propósito**: sirve para ver que su inicial
-   sigue saliendo y que la rejilla no se descuadra por el hueco.
+   Las fotos las genera el sembrado —patrones, no caras de gente real—.
+   Quien no tiene foto (Toni, de `cuentas-campo.mjs`) tiene que salir con su
+   inicial sin descuadrar la rejilla. Rubén, el del sembrado sin foto, no
+   está aquí: es la invitación pendiente, en la otra pestaña.
 8. Cambia a **Fotos**: rejilla de dos columnas. Arriba a la derecha de cada
    tarjeta, el **punto de estado**. Pasa el ratón por encima: tiene que decir
    «Al día», «Vence pronto» o «Vencido» con palabras.

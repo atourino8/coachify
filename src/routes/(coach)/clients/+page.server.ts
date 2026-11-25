@@ -174,6 +174,14 @@ async function sendInvite(
     let message = error.message;
     if (message.includes('already')) {
       message = 'Este email ya tiene cuenta en Treno. Pídele que entre y se vincule a ti.';
+    } else if (/sending|smtp|email/i.test(message)) {
+      // Supabase lo devuelve en inglés y sin pistas («Error sending invite
+      // email»). Casi siempre es el servidor de correo rechazando el envío:
+      // mientras se use el remitente de pruebas de Resend, solo entrega a la
+      // dirección dueña de la cuenta (ver CORREO.md).
+      console.error('[invite] El servidor de correo rechazó el envío:', message);
+      message =
+        'No se pudo enviar el correo de invitación. El cliente no se ha añadido; inténtalo más tarde o avísanos si se repite.';
     }
     return { error: message };
   }
@@ -227,21 +235,28 @@ export const actions: Actions = {
     const noInvitable = motivoNoInvitable(email);
     if (noInvitable) return fail(400, { error: noInvitable });
 
-    // Grupo: uno existente, o uno nuevo creado aquí mismo.
     let groupId = ((formData.get('group_id') as string) ?? '').trim() || null;
     const grupoNuevo = ((formData.get('grupo_nuevo') as string) ?? '').trim();
+
+    const res = await sendInvite(url.origin, user.id, email, full_name);
+    if ('error' in res) return fail(500, { error: res.error });
+
+    // El grupo nuevo se crea DESPUÉS de invitar, no antes. Antes iba primero,
+    // y si el correo fallaba quedaba un grupo vacío; al reintentar se creaba
+    // otro con el mismo nombre. Visto en la prueba de concepto.
     if (grupoNuevo) {
       const { data: creado, error: errGrupo } = await supabase
         .from('client_groups')
         .insert({ coach_id: user.id, name: grupoNuevo.slice(0, 80) } as never)
         .select('id')
         .single();
-      if (errGrupo) return fail(500, { error: errGrupo.message });
+      if (errGrupo) {
+        return fail(500, {
+          error: `La invitación salió, pero no se pudo crear el grupo «${grupoNuevo}». Añádelo desde Grupos.`
+        });
+      }
       groupId = (creado as { id: string }).id;
     }
-
-    const res = await sendInvite(url.origin, user.id, email, full_name);
-    if ('error' in res) return fail(500, { error: res.error });
 
     // El alta en el grupo va DESPUÉS de invitar y no antes: si el correo no
     // sale, no queda un grupo con un miembro fantasma que no existe todavía.

@@ -9,7 +9,10 @@
   let nombre = $state(untrack(() => data.nombre));
   let sitio = $state(untrack(() => data.sitio));
   let guardando = $state(false);
-  let subiendoFoto = $state(false);
+  // Qué se está haciendo con la foto: el mismo formulario sube y quita, y el
+  // aviso tiene que decir cuál de las dos cosas (antes ponía «Subiendo…» también
+  // al quitarla).
+  let foto = $state<'subiendo' | 'quitando' | null>(null);
   let renombrando = $state<string | null>(null);
   let textoNuevo = $state('');
 
@@ -88,11 +91,11 @@
       action="?/foto"
       enctype="multipart/form-data"
       class="card flex flex-wrap items-center gap-4"
-      use:enhance={() => {
-        subiendoFoto = true;
+      use:enhance={({ submitter }) => {
+        foto = submitter?.getAttribute('name') === 'quitar' ? 'quitando' : 'subiendo';
         return async ({ update }) => {
-          subiendoFoto = false;
           await update();
+          foto = null;
         };
       }}
     >
@@ -113,11 +116,13 @@
         />
         <p class="text-2xs text-text-mute">
           JPG, PNG o WEBP, hasta 5 MB. Sin foto se ve tu inicial.
-          {#if subiendoFoto}<span class="text-accent">Subiendo…</span>{/if}
+          {#if foto}<span class="text-accent">{foto === 'quitando' ? 'Quitando…' : 'Subiendo…'}</span>{/if}
         </p>
       </div>
       {#if data.tieneFoto}
-        <button type="submit" name="quitar" value="1" class="action-neutral">Quitar</button>
+        <button type="submit" name="quitar" value="1" class="action-neutral" disabled={foto !== null}
+          >Quitar</button
+        >
       {/if}
     </form>
 
